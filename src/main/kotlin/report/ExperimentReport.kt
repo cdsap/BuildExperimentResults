@@ -66,6 +66,7 @@ class ExperimentReport(
             cachePerformance.tags = it.tags
             cachePerformance.buildDuration = it.buildDuration
             cachePerformance.OS = os
+            cachePerformance.values = it.values
             builds.add(cachePerformance)
         }
     }
@@ -77,8 +78,55 @@ class ExperimentReport(
                 it.value.filter { it.experiment == Experiment.VARIANT_B }.dropLast(2),
                 it.key
             )
+
+        } + builds.groupBy { it.OS }.flatMap {
+            kotlinProcessMeasurement(
+                it.value.filter { it.experiment == Experiment.VARIANT_A }.first(),
+                it.value.filter { it.experiment == Experiment.VARIANT_B }.first(),
+                it.key
+            )
         }
     }
+
+    private fun kotlinProcessMeasurement(first: Build, first1: Build, key: OS): List<Measurement> {
+
+        val measurement = mutableListOf<Measurement>()
+        val variantAValues = processKotlinValues(first.values)
+        val variantBValues = processKotlinValues(first1.values)
+        if (variantAValues.size == variantBValues.size) {
+            variantAValues.forEach {
+                val variantB = variantBValues[it.key]!!
+                measurement.add(
+                    Measurement(
+                        name = it.key,
+                        variantA = it.value,
+                        variantB = variantB,
+                        category = "Last Kotlin process",
+                        OS = key
+                    )
+                )
+            }
+            return measurement.toList()
+        } else {
+            return emptyList()
+        }
+    }
+
+    private fun processKotlinValues(values: Array<CustomValue>): Map<String, String> {
+        return if (values.filter { it.name.contains("Kotlin-Process") }.isNotEmpty()) {
+            val measurements = mutableMapOf<String, String>()
+            values.filter { it.name.contains("Kotlin-Process") }.forEach {
+                val name = it.name.split("-").filterIndexed { index, _ ->
+                    index != 2 // you can also specify more interesting filters here...
+                }.joinToString("-")
+                measurements[name] = it.value
+            }
+            measurements
+        } else {
+            emptyMap()
+        }
+    }
+
 
     private fun javaMeasurements(
         variantABuilds: List<Build>,
