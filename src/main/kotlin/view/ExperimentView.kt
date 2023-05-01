@@ -72,6 +72,15 @@ class ExperimentView {
 
                             }
                         }
+                        if (it.variantA is String) {
+                            row {
+                                cell(it.name)
+                                cell(it.variantA)
+                                cell(it.variantB)
+                                cell("") {
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -93,6 +102,10 @@ class ExperimentView {
                 if (it.variantA is Int) {
                     output += "<tr><td>${it.name}</td><td>${it.variantA}</td><td>${it.variantB}</td><td>${it.diff()}</td></tr>"
                 }
+                if (it.variantA is String) {
+                    output += "<tr><td>${it.name}</td><td>${it.variantA}</td><td>${it.variantB}</td><td></td></tr>"
+                }
+
             }
         }
         output += "</table>"
