@@ -1,4 +1,4 @@
-package model
+package io.github.cdsap.compare.model
 
 import io.github.cdsap.geapi.client.model.OS
 

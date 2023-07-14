@@ -1,3 +1,5 @@
+package io.github.cdsap.compare
+
 import io.github.cdsap.geapi.client.model.Filter
 import io.github.cdsap.geapi.client.network.GEClient
 import io.github.cdsap.geapi.client.repository.impl.GradleRepositoryImpl
@@ -9,7 +11,7 @@ import io.github.cdsap.geapi.client.network.ClientConf
 
 
 import kotlinx.coroutines.runBlocking
-import report.ExperimentReport
+import io.github.cdsap.compare.report.ExperimentReport
 
 fun main(args: Array<String>) {
     Experiment().main(args)

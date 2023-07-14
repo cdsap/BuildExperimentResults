@@ -1,10 +1,8 @@
-package view
+package io.github.cdsap.compare.view
 
 import com.jakewharton.picnic.TextAlignment
 import com.jakewharton.picnic.table
-import io.github.cdsap.geapi.client.model.Build
-import io.github.cdsap.geapi.client.model.Filter
-import model.Measurement
+import io.github.cdsap.compare.model.Measurement
 import java.io.File
 
 class ExperimentView {

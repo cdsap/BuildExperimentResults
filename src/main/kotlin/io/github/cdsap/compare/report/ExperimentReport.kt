@@ -1,11 +1,11 @@
-package report
+package io.github.cdsap.compare.report
 
 import io.github.cdsap.geapi.client.domain.impl.GetBuildScansWithQueryImpl
 import io.github.cdsap.geapi.client.model.*
 import io.github.cdsap.geapi.client.repository.impl.GradleRepositoryImpl
 import io.github.cdsap.geapi.domain.model.Task
-import model.Measurement
-import view.ExperimentView
+import io.github.cdsap.compare.model.Measurement
+import io.github.cdsap.compare.view.ExperimentView
 
 
 class ExperimentReport(
