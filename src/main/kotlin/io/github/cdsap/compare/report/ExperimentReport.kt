@@ -6,6 +6,7 @@ import io.github.cdsap.geapi.client.repository.impl.GradleRepositoryImpl
 import io.github.cdsap.geapi.domain.model.Task
 import io.github.cdsap.compare.model.Measurement
 import io.github.cdsap.compare.view.ExperimentView
+import io.github.cdsap.geapi.client.domain.impl.GetCachePerformanceImpl
 
 
 class ExperimentReport(
@@ -15,61 +16,28 @@ class ExperimentReport(
 
     suspend fun process() {
         val getBuildScans = GetBuildScansWithQueryImpl(repository).get(filter)
-        val buildsFiltered = mutableListOf<Build>()
+        val getOutcome = GetCachePerformanceImpl(repository)
+        val outcome = getOutcome.get(getBuildScans, filter).filter { it.tags.contains(filter.experimentId) }
         if (filter.variants == null) {
             throw IllegalArgumentException("Variants can not be null")
         } else {
             val variants = filter.variants!!.split(",")
-            val variantA = variants[0].trim()
-            val variantB = variants[1].trim()
-            if (getBuildScans.isNotEmpty()) {
-                println("Processing build scan cache performance")
-                getBuildScans.map {
-                    if (filter.experimentId != null) {
-                        if (it.tags.contains(filter.experimentId) && it.tags.contains(variantB)) {
-                            collectBuild(it, buildsFiltered, Experiment.VARIANT_B)
-                        } else if (it.tags.contains(filter.experimentId) && it.tags.contains(variantA)) {
-                            collectBuild(it, buildsFiltered, Experiment.VARIANT_A)
-                        } else {
-
-                        }
-                    } else {
-                        if (it.tags.contains("experiment") && it.tags.contains(variantB)) {
-                            collectBuild(it, buildsFiltered, Experiment.VARIANT_B)
-                        } else if (it.tags.contains("experiment") && it.tags.contains(variantA)) {
-                            collectBuild(it, buildsFiltered, Experiment.VARIANT_A)
-                        }
-                    }
+            val variantA = "${filter.experimentId}_variant_experiment_${variants[0].trim()}"
+            val variantB = "${filter.experimentId}_variant_experiment_${variants[1].trim()}"
+            outcome.map {
+                if (it.tags.contains("experiment") && it.tags.contains(variantA)) {
+                    it.experiment = Experiment.VARIANT_A
+                }
+                if (it.tags.contains("experiment") && it.tags.contains(variantB)) {
+                    it.experiment = Experiment.VARIANT_B
                 }
             }
-            ExperimentView().print(get(buildsFiltered))
+
+
+            ExperimentView().print(get(outcome))
         }
     }
 
-    private suspend fun collectBuild(
-        it: ScanWithAttributes,
-        builds: MutableList<Build>,
-        experiment: Experiment
-    ) {
-        var os = if (it.tags.contains("Mac OS X")) {
-            OS.MAC
-        } else if (it.tags.contains("Linux")) {
-            OS.Linux
-        } else {
-            null
-        }
-        if (os != null) {
-            val cachePerformance = repository.getBuildScanGradleCachePerformance(it.id)
-            cachePerformance.experiment = experiment
-            cachePerformance.id = it.id
-            cachePerformance.requestedTask = it.requestedTasksGoals
-            cachePerformance.tags = it.tags
-            cachePerformance.buildDuration = it.buildDuration
-            cachePerformance.OS = os
-            cachePerformance.values = it.values
-            builds.add(cachePerformance)
-        }
-    }
 
     fun get(builds: List<Build>): List<Measurement> {
         return builds.groupBy { it.OS }.flatMap {
@@ -126,7 +94,6 @@ class ExperimentReport(
             emptyMap()
         }
     }
-
 
     private fun javaMeasurements(
         variantABuilds: List<Build>,
