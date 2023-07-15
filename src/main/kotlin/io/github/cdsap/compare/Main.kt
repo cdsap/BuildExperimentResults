@@ -24,6 +24,7 @@ class Experiment : CliktCommand() {
     private val project: String? by option()
     private val tags: List<String> by option().multiple(default = emptyList())
     private val concurrentCalls by option().int().default(150)
+    private val concurrentCallsCache by option().int().default(10)
     private val tasks: String? by option()
     private val experimentId: String? by option()
     private val user: String? by option()
@@ -40,7 +41,7 @@ class Experiment : CliktCommand() {
             requestedTask = tasks,
             experimentId =  experimentId,
             concurrentCalls = concurrentCalls,
-            concurrentCallsConservative = 0
+            concurrentCallsConservative = concurrentCallsCache
         )
         val repository = GradleRepositoryImpl(
             GEClient(
