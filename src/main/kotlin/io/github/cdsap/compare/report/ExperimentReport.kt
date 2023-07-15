@@ -34,7 +34,7 @@ class ExperimentReport(
             }
 
 
-            ExperimentView().print(get(outcome))
+            ExperimentView().print(get(outcome),variants[0],variants[1])
         }
     }
 
