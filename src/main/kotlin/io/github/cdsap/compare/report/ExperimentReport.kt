@@ -70,7 +70,7 @@ class ExperimentReport(
                         variantA = it.value,
                         variantB = variantB,
                         category = "Last Kotlin process",
-                        OS = key
+                        OS = OS.Linux
                     )
                 )
             }
