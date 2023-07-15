@@ -34,7 +34,7 @@ class ExperimentReport(
             }
 
 
-            ExperimentView().print(get(outcome),variants[0],variants[1])
+            ExperimentView().print(get(outcome), variants[0], variants[1])
         }
     }
 
@@ -141,7 +141,7 @@ class ExperimentReport(
                                 filterByExecutionAndType(it, task)
                                     .count()
                             },
-                        OS = os
+                        OS = OS.Linux
                     )
                 )
             }
