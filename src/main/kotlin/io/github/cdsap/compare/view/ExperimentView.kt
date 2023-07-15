@@ -10,9 +10,10 @@ class ExperimentView {
     private val LIMIT_DIFFERENCE_LONG = 1000L
     private val LIMIT_DIFFERENCE_INT = 1000
 
-    fun print(measurement: List<Measurement>) {
+    fun print(measurement: List<Measurement>, varianta: String, variantb: String) {
         println(generateTable(measurement))
-        File("results_experiment").writeText(generateHtmlTable(measurement))
+
+        File("results_experiment").writeText(generateHtmlTable(measurement, varianta, variantb))
     }
 
     private fun generateTable(measurement: List<Measurement>) =
@@ -84,10 +85,10 @@ class ExperimentView {
             }
         }
 
-    private fun generateHtmlTable(measurement: List<Measurement>): String {
+    private fun generateHtmlTable(measurement: List<Measurement>, varianta: String, variantb: String): String {
         var output = ""
         output += "<table><tr><td colspan=4>Experiment</td></tr>"
-        output += "<tr><td>Metric</td><td>VARIANT A</td><td>VARIANT B</td><td>Improvement</td></tr>"
+        output += "<tr><td>Metric</td><td>$varianta</td><td>$variantb</td><td>Improvement</td></tr>"
 
         measurement.groupBy {
             it.OS
