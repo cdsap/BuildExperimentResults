@@ -35,7 +35,8 @@ class ExperimentReport(
 
             val measurements = get(outcome)
             if (measurements.isNotEmpty()) {
-                ExperimentView().print(get(outcome), variants[0], variants[1])
+
+                ExperimentView().print(measurements, variants[0], variants[1])
             }
         }
     }
@@ -50,15 +51,15 @@ class ExperimentReport(
             )
 
         } + builds.groupBy { it.OS }.flatMap {
-            kotlinProcessMeasurement(
-                it.value.filter { it.experiment == Experiment.VARIANT_A }.first(),
-                it.value.filter { it.experiment == Experiment.VARIANT_B }.first(),
-                it.key
-            )
-        } + builds.groupBy { it.OS }.flatMap {
             kotlinBuildReportMeasurement(
                 it.value.filter { it.experiment == Experiment.VARIANT_A }.dropLast(2),
                 it.value.filter { it.experiment == Experiment.VARIANT_B }.dropLast(2),
+                it.key
+            )
+        } + builds.groupBy { it.OS }.flatMap {
+            kotlinProcessMeasurement(
+                it.value.filter { it.experiment == Experiment.VARIANT_A }.first(),
+                it.value.filter { it.experiment == Experiment.VARIANT_B }.first(),
                 it.key
             )
         }
@@ -77,7 +78,7 @@ class ExperimentReport(
                         name = it.key,
                         variantA = it.value,
                         variantB = variantB,
-                        category = "Last Kotlin process",
+                        category = "Last Kotlin process state",
                         OS = OS.Linux
                     )
                 )
@@ -131,7 +132,7 @@ class ExperimentReport(
             if (process) {
                 measurements.add(
                     Measurement(
-                        category = "Tasks Compiler",
+                        category = "Type Task mean",
                         name = task.taskType,
                         variantA = variantABuilds.sumOf {
                             filterByExecutionAndType(it, task)
@@ -309,3 +310,9 @@ class ExperimentReport(
 
 
 data class MetricKotlin(val desc: String, val value: String)
+
+data class Header(
+    val task: String,
+    val numberOfBuildsExperiment: Int,
+    val numberOfBuildsForExperiment: Int
+)
