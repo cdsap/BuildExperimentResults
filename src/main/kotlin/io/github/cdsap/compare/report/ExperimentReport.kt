@@ -230,7 +230,7 @@ class ExperimentReport(
         val valuesByTaskAggregatedB = aggregateBuilds(valuesVariantB)
 
 
-        valuesByTaskAggregated.forEach {
+        valuesByTaskAggregated.filter { it.key != "Total memory usage at the end of build" && it.key != "Start time of task action"}.forEach {
             val x = valuesByTaskAggregatedB[it.key]
             if (x != null && it.value.size == x.size) {
                 if (it.value.filter {
@@ -243,7 +243,6 @@ class ExperimentReport(
                     val valuesFormattedB = x.map { it.replace(",", "").replace("ms", "").split(" ")[0] }
                     val qualifierA = if (it.value.first().contains("ms")) "ms" else it.value.first().split(" ")[1]
                     val qualifierB = if (x.first().contains("ms")) "ms" else x.first().split(" ")[1]
-
 
                     val varianta =
                         (((valuesFormattedA.sumOf { it.toDouble() } / valuesFormattedA.size) * 100.0).roundToInt() / 100.0)
@@ -293,16 +292,10 @@ class ExperimentReport(
                             OS = OS.Linux
                         )
                     )
-
-                    // }
                 }
-
             }
-
         }
         return measurementsP
-
-
     }
 
     private fun aggregateBuilds(builds: Map<String, Map<String, MutableList<MetricKotlin>>>): MutableMap<String, MutableList<String>> {
@@ -313,7 +306,6 @@ class ExperimentReport(
                     if (!valuesByTaskAggregated.containsKey("${it.desc}")) {
                         valuesByTaskAggregated["${it.desc}"] = mutableListOf()
                     }
-
                     valuesByTaskAggregated["${it.desc}"]?.add(it.value)
                 }
             }
