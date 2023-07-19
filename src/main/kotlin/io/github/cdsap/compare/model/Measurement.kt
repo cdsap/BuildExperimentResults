@@ -49,3 +49,14 @@ class Measurement(
 }
 
 data class TaskFingerprintingSummary(val count: Int, val serialDuration: Long)
+
+data class MeasurementWithPercentiles(
+    val category: String, val name: String,
+    val variantAMean: Any,
+    val variantBMean: Any,
+    val variantAP50: Any,
+    val variantBP50: Any,
+    val variantAP90: Any,
+    val variantBP90: Any,
+    val OS: OS
+)
