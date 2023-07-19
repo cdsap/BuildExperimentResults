@@ -9,9 +9,9 @@ import java.io.File
 class ExperimentView {
 
     fun print(measurement: List<MeasurementWithPercentiles>, varianta: String, variantb: String, header: Header) {
-        println(generateTable(measurement, varianta, variantb,header))
+        println(generateTable(measurement, varianta, variantb, header))
 
-        File("results_experiment").writeText(generateHtmlTable(measurement, varianta, variantb,header))
+        File("results_experiment").writeText(generateHtmlTable(measurement, varianta, variantb, header))
     }
 
     private fun generateTable(
@@ -34,38 +34,39 @@ class ExperimentView {
                         alignment = TextAlignment.MiddleCenter
                     }
                 }
-
-                measurement.groupBy {
+                row {
+                    cell("Experiment id") {
+                    }
+                    cell("${header.experiment}") {
+                        columnSpan = 7
+                    }
+                }
+                row {
+                    cell("Experiment task") {
+                    }
+                    cell("${header.task}") {
+                        columnSpan = 7
+                    }
+                }
+                row {
+                    cell("$varianta") {
+                    }
+                    cell("Builds processed: ${header.numberOfBuildsForExperimentA}") {
+                        columnSpan = 7
+                    }
+                }
+                row {
+                    cell("$variantb") {
+                    }
+                    cell("Builds processed: ${header.numberOfBuildsForExperimentB}") {
+                        columnSpan = 7
+                    }
+                }
+                measurement.filter { !it.category.contains("process state") }.groupBy {
                     it.OS
                 }.forEach {
-                    row {
-                        cell("Experiment id") {
-                        }
-                        cell("${header.experiment}"){
-                            columnSpan = 7
-                        }
-                    }
-                    row {
-                        cell("Experiment task") {
-                        }
-                        cell("${header.task}"){
-                            columnSpan = 7
-                        }
-                    }
-                    row {
-                        cell("$varianta") {
-                        }
-                        cell("Builds processed: ${header.numberOfBuildsForExperimentA}"){
-                            columnSpan = 7
-                        }
-                    }
-                    row {
-                        cell("$variantb") {
-                        }
-                        cell("Builds processed: ${header.numberOfBuildsForExperimentB}"){
-                            columnSpan = 7
-                        }
-                    }
+
+
                     row {
                         cell("Category") {
                             rowSpan = 2
@@ -126,6 +127,49 @@ class ExperimentView {
                         }
 
                     }
+                    if (measurement.filter { it.category.contains("process state") }.isNotEmpty()) {
+                        row {
+                            cell("Processes") {
+                                alignment = TextAlignment.MiddleCenter
+                                columnSpan = 8
+                            }
+                        }
+                        row {
+                            cell("Category") {
+                                alignment = TextAlignment.MiddleCenter
+                            }
+                            cell("Metric") {
+                                alignment = TextAlignment.MiddleCenter
+                            }
+                            cell("$varianta") {
+                                alignment = TextAlignment.MiddleCenter
+                            }
+                            cell("$variantb") {
+                                alignment = TextAlignment.MiddleCenter
+                                columnSpan = 5
+                            }
+
+                        }
+                        measurement.filter { it.category.contains("process state") }.groupBy {
+                            it.OS
+                        }.forEach {
+
+                            it.value.forEach {
+                                row {
+                                    cell(it.category)
+                                    cell(it.name)
+                                    cell(it.variantAMean) {
+                                        alignment = TextAlignment.MiddleRight
+                                    }
+                                    cell(it.variantBMean) {
+                                        alignment = TextAlignment.MiddleRight
+                                        columnSpan = 5
+                                    }
+                                }
+
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -137,18 +181,30 @@ class ExperimentView {
         header: Header
     ): String {
         var output = ""
-        output += "<table><tr><td colspan=4>Experiment</td></tr>"
+        output += "<table><tr><td colspan=8>Experiment</td></tr>"
         output += "<tr><td>Task experiment</td><td colspan=7>${header.task}</td></tr>"
         output += "<tr><td>$varianta</td><td colspan=7>${header.numberOfBuildsForExperimentA} builds processed</td></tr>"
         output += "<tr><td>$variantb</td><td colspan=7>${header.numberOfBuildsForExperimentB} builds processed</td></tr>"
         output += "<tr><td rowspan=2>Category</td><td rowspan=2>Metric</td><td colspan=2>Mean</td><td colspan=2>P50</td><td colspan=2>P90</td></tr>"
         output += "<tr><td>$varianta</td><td>$variantb</td><td>$varianta</td><td>$variantb</td><td>$varianta</td><td>$variantb</td></tr>"
 
-        measurement.groupBy {
+        measurement.filter { !it.category.contains("process state") }.groupBy {
             it.OS
         }.forEach {
             it.value.forEach {
                 output += "<tr><td>${it.category}</td><td>${it.name}</td><td>${it.variantAMean}</td><td>${it.variantBMean}</td><td>${it.variantAP50}</td><td>${it.variantBP50}</td><td>${it.variantAP90}</td><td>${it.variantBP90}</td></tr>"
+            }
+        }
+        if (measurement.filter { it.category.contains("process state") }.isNotEmpty()) {
+
+            output += "<tr><td colspan=8>Processes</td></tr>"
+            output += "<tr><td>Category</td><td>Metric</td><td>$varianta</td><td colspan=5 >$variantb</td></tr>"
+            measurement.filter { it.category.contains("process state") }.groupBy {
+                it.OS
+            }.forEach {
+                it.value.forEach {
+                    output += "<tr><td>${it.category}</td><td>${it.name}</td><td>${it.variantAMean}</td><td colspan=5>${it.variantBMean}</td></tr>"
+                }
             }
         }
         output += "</table>"
