@@ -123,16 +123,18 @@ class ExperimentReport(
         if (variantAValues.size == variantBValues.size) {
             variantAValues.forEach {
                 val variantB = variantBValues[it.key]!!
-                MeasurementWithPercentiles(
-                    name = it.key,
-                    variantAMean = it.value,
-                    variantBMean = variantB,
-                    category = "Last Gradle process state",
-                    variantAP50 = "",
-                    variantBP50 = "",
-                    variantAP90 = "",
-                    variantBP90 = "",
-                    OS = OS.Linux
+                measurement.add(
+                    MeasurementWithPercentiles(
+                        name = it.key,
+                        variantAMean = it.value,
+                        variantBMean = variantB,
+                        category = "Last Gradle process state",
+                        variantAP50 = "",
+                        variantBP50 = "",
+                        variantAP90 = "",
+                        variantBP90 = "",
+                        OS = OS.Linux
+                    )
                 )
             }
             return measurement.toList()
