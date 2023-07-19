@@ -67,26 +67,72 @@ class ExperimentReport(
                         it.value.filter { it.experiment == Experiment.VARIANT_B }.dropLast(2),
                         it.key
                     )
+                } +
+                builds.groupBy { it.OS }.flatMap {
+                    kotlinProcessMeasurement(
+                        it.value.filter { it.experiment == Experiment.VARIANT_A }.first(),
+                        it.value.filter { it.experiment == Experiment.VARIANT_B }.first(),
+                        it.key
+                    )
+                } +
+                builds.groupBy { it.OS }.flatMap {
+                    gradleProcessMeasurement(
+                        it.value.filter { it.experiment == Experiment.VARIANT_A }.first(),
+                        it.value.filter { it.experiment == Experiment.VARIANT_B }.first(),
+                        it.key
+                    )
                 }
+
+
         }
     }
 
-    private fun kotlinProcessMeasurement(first: Build, first1: Build, key: OS): List<Measurement> {
+    private fun kotlinProcessMeasurement(first: Build, first1: Build, key: OS): List<MeasurementWithPercentiles> {
 
-        val measurement = mutableListOf<Measurement>()
+        val measurement = mutableListOf<MeasurementWithPercentiles>()
         val variantAValues = processKotlinValues(first.values)
         val variantBValues = processKotlinValues(first1.values)
         if (variantAValues.size == variantBValues.size) {
             variantAValues.forEach {
                 val variantB = variantBValues[it.key]!!
                 measurement.add(
-                    Measurement(
+                    MeasurementWithPercentiles(
                         name = it.key,
-                        variantA = it.value,
-                        variantB = variantB,
+                        variantAMean = it.value,
+                        variantBMean = variantB,
                         category = "Last Kotlin process state",
+                        variantAP50 = "",
+                        variantBP50 = "",
+                        variantAP90 = "",
+                        variantBP90 = "",
                         OS = OS.Linux
                     )
+                )
+            }
+            return measurement.toList()
+        } else {
+            return emptyList()
+        }
+    }
+
+    private fun gradleProcessMeasurement(first: Build, first1: Build, key: OS): List<MeasurementWithPercentiles> {
+
+        val measurement = mutableListOf<MeasurementWithPercentiles>()
+        val variantAValues = processGradleValues(first.values)
+        val variantBValues = processGradleValues(first1.values)
+        if (variantAValues.size == variantBValues.size) {
+            variantAValues.forEach {
+                val variantB = variantBValues[it.key]!!
+                MeasurementWithPercentiles(
+                    name = it.key,
+                    variantAMean = it.value,
+                    variantBMean = variantB,
+                    category = "Last Gradle process state",
+                    variantAP50 = "",
+                    variantBP50 = "",
+                    variantAP90 = "",
+                    variantBP90 = "",
+                    OS = OS.Linux
                 )
             }
             return measurement.toList()
@@ -99,6 +145,21 @@ class ExperimentReport(
         return if (values.filter { it.name.contains("Kotlin-Process") }.isNotEmpty()) {
             val measurements = mutableMapOf<String, String>()
             values.filter { it.name.contains("Kotlin-Process") }.forEach {
+                val name = it.name.split("-").filterIndexed { index, _ ->
+                    index != 2 // you can also specify more interesting filters here...
+                }.joinToString("-")
+                measurements[name] = it.value
+            }
+            measurements
+        } else {
+            emptyMap()
+        }
+    }
+
+    private fun processGradleValues(values: Array<CustomValue>): Map<String, String> {
+        return if (values.filter { it.name.contains("Gradle-Process") }.isNotEmpty()) {
+            val measurements = mutableMapOf<String, String>()
+            values.filter { it.name.contains("Gradle-Process") }.forEach {
                 val name = it.name.split("-").filterIndexed { index, _ ->
                     index != 2 // you can also specify more interesting filters here...
                 }.joinToString("-")
@@ -230,71 +291,72 @@ class ExperimentReport(
         val valuesByTaskAggregatedB = aggregateBuilds(valuesVariantB)
 
 
-        valuesByTaskAggregated.filter { it.key != "Total memory usage at the end of build" && it.key != "Start time of task action"}.forEach {
-            val x = valuesByTaskAggregatedB[it.key]
-            if (x != null && it.value.size == x.size) {
-                if (it.value.filter {
-                        it.contains("ms") || it.contains("GB") || it.contains("MB") || it.contains("KB") || it.contains(
-                            "B"
-                        )
-                    }.isNotEmpty()) {
+        valuesByTaskAggregated.filter { it.key != "Total memory usage at the end of build" && it.key != "Start time of task action" }
+            .forEach {
+                val x = valuesByTaskAggregatedB[it.key]
+                if (x != null && it.value.size == x.size) {
+                    if (it.value.filter {
+                            it.contains("ms") || it.contains("GB") || it.contains("MB") || it.contains("KB") || it.contains(
+                                "B"
+                            )
+                        }.isNotEmpty()) {
 
-                    val valuesFormattedA = it.value.map { it.replace(",", "").replace("ms", "").split(" ")[0] }
-                    val valuesFormattedB = x.map { it.replace(",", "").replace("ms", "").split(" ")[0] }
-                    val qualifierA = if (it.value.first().contains("ms")) "ms" else it.value.first().split(" ")[1]
-                    val qualifierB = if (x.first().contains("ms")) "ms" else x.first().split(" ")[1]
+                        val valuesFormattedA = it.value.map { it.replace(",", "").replace("ms", "").split(" ")[0] }
+                        val valuesFormattedB = x.map { it.replace(",", "").replace("ms", "").split(" ")[0] }
+                        val qualifierA = if (it.value.first().contains("ms")) "ms" else it.value.first().split(" ")[1]
+                        val qualifierB = if (x.first().contains("ms")) "ms" else x.first().split(" ")[1]
 
-                    val varianta =
-                        (((valuesFormattedA.sumOf { it.toDouble() } / valuesFormattedA.size) * 100.0).roundToInt() / 100.0)
-                    val variantb =
-                        (((valuesFormattedB.sumOf { it.toDouble() } / valuesFormattedB.size) * 100.0).roundToInt() / 100.0)
-                    val variantaP50 = valuesFormattedA.map { it.toDouble() }.percentile(50.0).roundToLong()
-                    val variantbP50 = valuesFormattedB.map { it.toDouble() }.percentile(50.0).roundToLong()
-                    val variantaP90 = valuesFormattedA.map { it.toDouble() }.percentile(90.0).roundToLong()
-                    val variantbP90 = valuesFormattedB.map { it.toDouble() }.percentile(90.0).roundToLong()
-                    if (varianta != variantb) {
+                        val varianta =
+                            (((valuesFormattedA.sumOf { it.toDouble() } / valuesFormattedA.size) * 100.0).roundToInt() / 100.0)
+                        val variantb =
+                            (((valuesFormattedB.sumOf { it.toDouble() } / valuesFormattedB.size) * 100.0).roundToInt() / 100.0)
+                        val variantaP50 = valuesFormattedA.map { it.toDouble() }.percentile(50.0).roundToLong()
+                        val variantbP50 = valuesFormattedB.map { it.toDouble() }.percentile(50.0).roundToLong()
+                        val variantaP90 = valuesFormattedA.map { it.toDouble() }.percentile(90.0).roundToLong()
+                        val variantbP90 = valuesFormattedB.map { it.toDouble() }.percentile(90.0).roundToLong()
+                        if (varianta != variantb) {
+                            measurementsP.add(
+                                MeasurementWithPercentiles(
+                                    category = "Kotlin Build Reports",
+                                    name = it.key,
+                                    variantAMean = "$varianta $qualifierA",
+                                    variantBMean = "$variantb $qualifierB",
+                                    variantAP50 = "$variantaP50 $qualifierA",
+                                    variantBP50 = "$variantbP50 $qualifierB",
+                                    variantAP90 = "$variantaP90 $qualifierA",
+                                    variantBP90 = "$variantbP90 $qualifierB",
+                                    OS = OS.Linux
+                                )
+                            )
+                        }
+                    } else {
+                        val valuesFormattedA = it.value.map { it.replace(",", "").split(" ")[0] }
+                        val valuesFormattedB = x.map { it.replace(",", "").split(" ")[0] }
+                        val varianta =
+                            (valuesFormattedA.sumOf { it.toLong() } / valuesFormattedA.size).toDouble().roundToLong()
+                        val variantb = valuesFormattedB.sumOf { it.toLong() } / valuesFormattedB.size
+                        val variantaP50 = valuesFormattedA.map { it.toDouble() }.percentile(50.0).roundToLong()
+                        val variantbP50 = valuesFormattedB.map { it.toDouble() }.percentile(50.0).roundToLong()
+                        val variantaP90 = valuesFormattedA.map { it.toDouble() }.percentile(90.0).roundToLong()
+                        val variantbP90 = valuesFormattedB.map { it.toDouble() }.percentile(90.0).roundToLong()
+
+                        //if (varianta != variantb) {
                         measurementsP.add(
                             MeasurementWithPercentiles(
                                 category = "Kotlin Build Reports",
                                 name = it.key,
-                                variantAMean = "$varianta $qualifierA",
-                                variantBMean = "$variantb $qualifierB",
-                                variantAP50 = "$variantaP50 $qualifierA",
-                                variantBP50 = "$variantbP50 $qualifierB",
-                                variantAP90 = "$variantaP90 $qualifierA",
-                                variantBP90 = "$variantbP90 $qualifierB",
+                                variantAMean = "$varianta",
+                                variantBMean = "$variantb",
+                                variantAP50 = "$variantaP50",
+                                variantBP50 = "$variantbP50",
+                                variantAP90 = "$variantaP90",
+                                variantBP90 = "$variantbP90",
                                 OS = OS.Linux
                             )
                         )
                     }
-                } else {
-                    val valuesFormattedA = it.value.map { it.replace(",", "").split(" ")[0] }
-                    val valuesFormattedB = x.map { it.replace(",", "").split(" ")[0] }
-                    val varianta =
-                        (valuesFormattedA.sumOf { it.toLong() } / valuesFormattedA.size).toDouble().roundToLong()
-                    val variantb = valuesFormattedB.sumOf { it.toLong() } / valuesFormattedB.size
-                    val variantaP50 = valuesFormattedA.map { it.toDouble() }.percentile(50.0).roundToLong()
-                    val variantbP50 = valuesFormattedB.map { it.toDouble() }.percentile(50.0).roundToLong()
-                    val variantaP90 = valuesFormattedA.map { it.toDouble() }.percentile(90.0).roundToLong()
-                    val variantbP90 = valuesFormattedB.map { it.toDouble() }.percentile(90.0).roundToLong()
-
-                    //if (varianta != variantb) {
-                    measurementsP.add(
-                        MeasurementWithPercentiles(
-                            category = "Kotlin Build Reports",
-                            name = it.key,
-                            variantAMean = "$varianta",
-                            variantBMean = "$variantb",
-                            variantAP50 = "$variantaP50",
-                            variantBP50 = "$variantbP50",
-                            variantAP90 = "$variantaP90",
-                            variantBP90 = "$variantbP90",
-                            OS = OS.Linux
-                        )
-                    )
                 }
             }
-        }
         return measurementsP
     }
 
