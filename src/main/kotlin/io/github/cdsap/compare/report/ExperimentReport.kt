@@ -406,15 +406,16 @@ class ExperimentReport(
                             // we found issues parsing lines like
                             // 1},2023-07-18T01:17:40,Number of times classpath snapshot is loaded
                             // to avoid that, we need to identify if the "," comes from a byte
-                            if ((values[auxCount + 1].contains("GB") || values[auxCount + 1].contains("MB") || values[auxCount + 1].contains(
-                                    "KB"
-                                ) || values[auxCount + 1].contains("B"))
-                            ) {
-                                value =
-                                    values[auxCount + 1].split(",").dropLast(1).joinToString { "" }.replace("}", "")
-                            } else {
-                                value = values[auxCount + 1].split(",")[0].replace("}", "")
-                            }
+                            value = values[auxCount + 1].split(",")[0].replace("}", "")
+//                            if ((values[auxCount + 1].contains("GB") || values[auxCount + 1].contains("MB") || values[auxCount + 1].contains(
+//                                    "KB"
+//                                ) || values[auxCount + 1].contains("B"))
+//                            ) {
+//                                value =
+//                                    values[auxCount + 1].split(",").dropLast(1).joinToString { "" }.replace("}", "")
+//                            } else {
+//                                value = values[auxCount + 1].split(",")[0].replace("}", "")
+//                            }
 
                         } else {
                             value = values[auxCount + 1].split(",")[0].replace("}", "")
