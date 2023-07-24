@@ -28,6 +28,7 @@ class Experiment : CliktCommand() {
     private val tasks: String? by option()
     private val experimentId: String? by option()
     private val user: String? by option()
+    private val profile by option().flag(default = false)
 
     override fun run() {
         val filter = Filter(
@@ -35,11 +36,11 @@ class Experiment : CliktCommand() {
             maxBuilds = maxBuilds,
             project = project,
             tags = tags,
-            variants = tags.joinToString (","),
+            variants = tags.joinToString(","),
             initFilter = System.currentTimeMillis(),
             user = user,
             requestedTask = tasks,
-            experimentId =  experimentId,
+            experimentId = experimentId,
             concurrentCalls = concurrentCalls,
             concurrentCallsConservative = concurrentCallsCache
         )
@@ -54,7 +55,9 @@ class Experiment : CliktCommand() {
         )
 
         runBlocking {
-            ExperimentReport(filter, repository).process()
+            ExperimentReport(filter, repository,profile).process()
+
+
         }
     }
 }
