@@ -15,7 +15,8 @@ import kotlin.math.roundToLong
 
 class ExperimentReport(
     private val filter: Filter,
-    private val repository: GradleRepositoryImpl
+    private val repository: GradleRepositoryImpl,
+    private val profile: Boolean
 ) {
 
     suspend fun process() {
@@ -37,8 +38,11 @@ class ExperimentReport(
                 }
             }
 
-            val buildsVariantA = outcome.filter { it.experiment == Experiment.VARIANT_A }.dropLast(2).size
-            val buildsVariantB = outcome.filter { it.experiment == Experiment.VARIANT_B }.dropLast(2).size
+
+            val buildsVariantA = if (profile) outcome.filter { it.experiment == Experiment.VARIANT_A }.dropLast(2).size
+            else outcome.filter { it.experiment == Experiment.VARIANT_A }.size
+            val buildsVariantB = if (profile) outcome.filter { it.experiment == Experiment.VARIANT_B }.dropLast(2).size
+            else outcome.filter { it.experiment == Experiment.VARIANT_B }.size
             val measurements = get(outcome)
             if (measurements.isNotEmpty()) {
                 ExperimentView().print(
@@ -57,14 +61,18 @@ class ExperimentReport(
     fun get(builds: List<Build>): List<MeasurementWithPercentiles> {
         return builds.groupBy { it.OS }.flatMap {
             javaMeasurements(
-                it.value.filter { it.experiment == Experiment.VARIANT_A }.dropLast(2),
-                it.value.filter { it.experiment == Experiment.VARIANT_B }.dropLast(2),
+                if (profile) it.value.filter { it.experiment == Experiment.VARIANT_A }.dropLast(2) else
+                    it.value.filter { it.experiment == Experiment.VARIANT_A },
+                if (profile) it.value.filter { it.experiment == Experiment.VARIANT_B }.dropLast(2) else
+                    it.value.filter { it.experiment == Experiment.VARIANT_B },
                 it.key
             ) +
                 builds.groupBy { it.OS }.flatMap {
                     kotlinBuildReportMeasurement(
-                        it.value.filter { it.experiment == Experiment.VARIANT_A }.dropLast(2),
-                        it.value.filter { it.experiment == Experiment.VARIANT_B }.dropLast(2),
+                        if (profile) it.value.filter { it.experiment == Experiment.VARIANT_A }.dropLast(2) else
+                            it.value.filter { it.experiment == Experiment.VARIANT_A },
+                        if (profile) it.value.filter { it.experiment == Experiment.VARIANT_B }.dropLast(2) else
+                            it.value.filter { it.experiment == Experiment.VARIANT_B },
                         it.key
                     )
                 } +
