@@ -190,23 +190,11 @@ class ExperimentView {
         output += "<tr><td rowspan=2>Category</td><td rowspan=2>Metric</td><td colspan=2>Mean</td><td colspan=2>P50</td><td colspan=2>P90</td></tr>"
         output += "<tr><td>$varianta</td><td>$variantb</td><td>$varianta</td><td>$variantb</td><td>$varianta</td><td>$variantb</td></tr>"
 
-        measurement.filter { !it.category.contains("process state") }.groupBy {
+        measurement.groupBy {
             it.OS
         }.forEach {
             it.value.forEach {
                 output += "<tr><td>${it.category}</td><td>${it.name}</td><td>${it.variantAMean}</td><td>${it.variantBMean}</td><td>${it.variantAP50}</td><td>${it.variantBP50}</td><td>${it.variantAP90}</td><td>${it.variantBP90}</td></tr>"
-            }
-        }
-        if (measurement.filter { it.category.contains("process state") }.isNotEmpty()) {
-
-            output += "<tr><td colspan=8>Processes</td></tr>"
-            output += "<tr><td>Category</td><td>Metric</td><td>$varianta</td><td colspan=5 >$variantb</td></tr>"
-            measurement.filter { it.category.contains("process state") }.groupBy {
-                it.OS
-            }.forEach {
-                it.value.forEach {
-                    output += "<tr><td>${it.category}</td><td>${it.name}</td><td>${it.variantAMean}</td><td colspan=5>${it.variantBMean}</td></tr>"
-                }
             }
         }
         output += "</table>"
