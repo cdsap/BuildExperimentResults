@@ -3,12 +3,14 @@ package io.github.cdsap.compare.report
 import io.github.cdsap.geapi.client.domain.impl.GetBuildScansWithQueryImpl
 import io.github.cdsap.geapi.client.model.*
 import io.github.cdsap.geapi.client.repository.impl.GradleRepositoryImpl
-import io.github.cdsap.geapi.domain.model.Task
-import io.github.cdsap.compare.model.Measurement
 import io.github.cdsap.compare.model.MeasurementWithPercentiles
+import io.github.cdsap.compare.report.measurements.KotlinBuildReportsMeasurements
+import io.github.cdsap.compare.report.measurements.ProcessMeasurement
+import io.github.cdsap.compare.report.measurements.TasksMeasurements
 import io.github.cdsap.compare.view.ExperimentView
 import io.github.cdsap.geapi.client.domain.impl.GetCachePerformanceImpl
 import org.nield.kotlinstatistics.percentile
+import java.lang.IllegalStateException
 import kotlin.math.roundToInt
 import kotlin.math.roundToLong
 
@@ -38,12 +40,14 @@ class ExperimentReport(
                 }
             }
 
-
-            val buildsVariantA = if (profile) outcome.filter { it.experiment == Experiment.VARIANT_A }.dropLast(2).size
-            else outcome.filter { it.experiment == Experiment.VARIANT_A }.size
-            val buildsVariantB = if (profile) outcome.filter { it.experiment == Experiment.VARIANT_B }.dropLast(2).size
-            else outcome.filter { it.experiment == Experiment.VARIANT_B }.size
-            val measurements = get(outcome)
+            val buildsVariantA =
+                filterbuildsWithProfile(outcome.filter { it.experiment == Experiment.VARIANT_A }, profile).size
+            val buildsVariantB =
+                filterbuildsWithProfile(outcome.filter { it.experiment == Experiment.VARIANT_B }, profile).size
+            if (buildsVariantA != buildsVariantB) {
+                throw IllegalStateException("Different number of builds: ${variants[0]} $buildsVariantA - ${variants[1]} $buildsVariantB")
+            }
+            val measurements = measurements(outcome)
             if (measurements.isNotEmpty()) {
                 ExperimentView().print(
                     measurements, variants[0], variants[1], Header(
@@ -57,404 +61,29 @@ class ExperimentReport(
         }
     }
 
+    private fun filterbuildsWithProfile(builds: List<Build>, profile: Boolean): List<Build> {
+        return if (profile) builds.dropLast(2)
+        else builds
+    }
 
-    fun get(builds: List<Build>): List<MeasurementWithPercentiles> {
+    private fun measurements(builds: List<Build>): List<MeasurementWithPercentiles> {
         return builds.groupBy { it.OS }.flatMap {
-            javaMeasurements(
-                if (profile) it.value.filter { it.experiment == Experiment.VARIANT_A }.dropLast(2) else
-                    it.value.filter { it.experiment == Experiment.VARIANT_A },
-                if (profile) it.value.filter { it.experiment == Experiment.VARIANT_B }.dropLast(2) else
-                    it.value.filter { it.experiment == Experiment.VARIANT_B },
-                it.key
-            ) +
-                builds.groupBy { it.OS }.flatMap {
-                    kotlinBuildReportMeasurement(
-                        if (profile) it.value.filter { it.experiment == Experiment.VARIANT_A }.dropLast(2) else
-                            it.value.filter { it.experiment == Experiment.VARIANT_A },
-                        if (profile) it.value.filter { it.experiment == Experiment.VARIANT_B }.dropLast(2) else
-                            it.value.filter { it.experiment == Experiment.VARIANT_B },
-                        it.key
-                    )
-                } +
-                builds.groupBy { it.OS }.flatMap {
-                    kotlinProcessMeasurement(
-                        it.value.filter { it.experiment == Experiment.VARIANT_A }.first(),
-                        it.value.filter { it.experiment == Experiment.VARIANT_B }.first(),
-                        it.key
-                    )
-                } +
-                builds.groupBy { it.OS }.flatMap {
-                    gradleProcessMeasurement(
-                        it.value.filter { it.experiment == Experiment.VARIANT_A }.first(),
-                        it.value.filter { it.experiment == Experiment.VARIANT_B }.first(),
-                        it.key
-                    )
-                }
+            val buildsVariantA = it.value.filter { it.experiment == Experiment.VARIANT_A }
+            val buildsVariantB = it.value.filter { it.experiment == Experiment.VARIANT_B }
 
-
+            TasksMeasurements(
+                filterbuildsWithProfile(buildsVariantA, profile),
+                filterbuildsWithProfile(buildsVariantB, profile)
+            ).get() +
+                KotlinBuildReportsMeasurements(
+                    filterbuildsWithProfile(buildsVariantA, profile),
+                    filterbuildsWithProfile(buildsVariantB, profile)
+                ).get() +
+                ProcessMeasurement(buildsVariantA, buildsVariantB, profile).get()
         }
     }
-
-    private fun kotlinProcessMeasurement(first: Build, first1: Build, key: OS): List<MeasurementWithPercentiles> {
-
-        val measurement = mutableListOf<MeasurementWithPercentiles>()
-        val variantAValues = processKotlinValues(first.values)
-        val variantBValues = processKotlinValues(first1.values)
-        if (variantAValues.size == variantBValues.size) {
-            variantAValues.forEach {
-                val variantB = variantBValues[it.key]!!
-                measurement.add(
-                    MeasurementWithPercentiles(
-                        name = it.key,
-                        variantAMean = it.value,
-                        variantBMean = variantB,
-                        category = "Last Kotlin process state",
-                        variantAP50 = "",
-                        variantBP50 = "",
-                        variantAP90 = "",
-                        variantBP90 = "",
-                        OS = OS.Linux
-                    )
-                )
-            }
-            return measurement.toList()
-        } else {
-            return emptyList()
-        }
-    }
-
-    private fun gradleProcessMeasurement(first: Build, first1: Build, key: OS): List<MeasurementWithPercentiles> {
-
-        val measurement = mutableListOf<MeasurementWithPercentiles>()
-        val variantAValues = processGradleValues(first.values)
-        val variantBValues = processGradleValues(first1.values)
-        if (variantAValues.size == variantBValues.size) {
-            variantAValues.forEach {
-                val variantB = variantBValues[it.key]!!
-                measurement.add(
-                    MeasurementWithPercentiles(
-                        name = it.key,
-                        variantAMean = it.value,
-                        variantBMean = variantB,
-                        category = "Last Gradle process state",
-                        variantAP50 = "",
-                        variantBP50 = "",
-                        variantAP90 = "",
-                        variantBP90 = "",
-                        OS = OS.Linux
-                    )
-                )
-            }
-            return measurement.toList()
-        } else {
-            return emptyList()
-        }
-    }
-
-    private fun processKotlinValues(values: Array<CustomValue>): Map<String, String> {
-        return if (values.filter { it.name.contains("Kotlin-Process") }.isNotEmpty()) {
-            val measurements = mutableMapOf<String, String>()
-            values.filter { it.name.contains("Kotlin-Process") }.forEach {
-                val name = it.name.split("-").filterIndexed { index, _ ->
-                    index != 2 // you can also specify more interesting filters here...
-                }.joinToString("-")
-                measurements[name] = it.value
-            }
-            measurements
-        } else {
-            emptyMap()
-        }
-    }
-
-    private fun processGradleValues(values: Array<CustomValue>): Map<String, String> {
-        return if (values.filter { it.name.contains("Gradle-Process") }.isNotEmpty()) {
-            val measurements = mutableMapOf<String, String>()
-            values.filter { it.name.contains("Gradle-Process") }.forEach {
-                val name = it.name.split("-").filterIndexed { index, _ ->
-                    index != 2 // you can also specify more interesting filters here...
-                }.joinToString("-")
-                measurements[name] = it.value
-            }
-            measurements
-        } else {
-            emptyMap()
-        }
-    }
-
-    private fun javaMeasurements(
-        variantABuilds: List<Build>,
-        variantBBuilds: List<Build>,
-        os: OS
-    ): List<MeasurementWithPercentiles> {
-
-        val taskTypes = variantABuilds[0].taskExecution.filter {
-            (it.avoidanceOutcome == "executed_cacheable")
-        }.distinctBy { it.taskType }
-
-        val variantAAggregatedTaskType = mutableMapOf<String, MutableList<Long>>()
-        val variantBAggregatedTaskType = mutableMapOf<String, MutableList<Long>>()
-        val variantAAggregatedTaskPath = mutableMapOf<String, MutableList<Long>>()
-        val variantBAggregatedTaskPath = mutableMapOf<String, MutableList<Long>>()
-        variantABuilds.forEach {
-            it.taskExecution.filter { (it.avoidanceOutcome == "executed_cacheable") }
-                .forEach {
-                    if (variantAAggregatedTaskType.contains(it.taskType)) {
-                        variantAAggregatedTaskType[it.taskType]?.add(it.duration)
-                    } else {
-                        variantAAggregatedTaskType[it.taskType] = mutableListOf()
-                        variantAAggregatedTaskType[it.taskType]?.add(it.duration)
-                    }
-                }
-        }
-        variantBBuilds.forEach {
-            it.taskExecution.filter { (it.avoidanceOutcome == "executed_cacheable") }
-                .forEach {
-                    if (variantBAggregatedTaskType.contains(it.taskType)) {
-                        variantBAggregatedTaskType[it.taskType]?.add(it.duration)
-                    } else {
-                        variantBAggregatedTaskType[it.taskType] = mutableListOf()
-                        variantBAggregatedTaskType[it.taskType]?.add(it.duration)
-                    }
-                }
-        }
-        variantABuilds.forEach {
-            it.taskExecution.filter { (it.avoidanceOutcome == "executed_cacheable") }
-                .forEach {
-                    if (variantAAggregatedTaskPath.contains(it.taskPath)) {
-                        variantAAggregatedTaskPath[it.taskPath]?.add(it.duration)
-                    } else {
-                        variantAAggregatedTaskPath[it.taskPath] = mutableListOf()
-                        variantAAggregatedTaskPath[it.taskPath]?.add(it.duration)
-                    }
-                }
-        }
-        variantBBuilds.forEach {
-            it.taskExecution.filter { (it.avoidanceOutcome == "executed_cacheable") }
-                .forEach {
-                    if (variantBAggregatedTaskPath.contains(it.taskPath)) {
-                        variantBAggregatedTaskPath[it.taskPath]?.add(it.duration)
-                    } else {
-                        variantBAggregatedTaskPath[it.taskPath] = mutableListOf()
-                        variantBAggregatedTaskPath[it.taskPath]?.add(it.duration)
-                    }
-                }
-        }
-        val measurements = mutableListOf<Measurement>()
-        val measurementsP = mutableListOf<MeasurementWithPercentiles>()
-
-        variantAAggregatedTaskType.forEach {
-
-            val x = variantBAggregatedTaskType[it.key]
-            if (x != null) {
-
-                measurementsP.add(
-                    MeasurementWithPercentiles(
-                        category = "Task Type",
-                        name = it.key,
-                        variantAMean = "${it.value.sumOf { it.toDouble() }.roundToLong() / it.value.size} ms",
-                        variantBMean = "${x.sumOf { it.toDouble().roundToLong() } / x.size} ms",
-                        variantAP50 = "${it.value.percentile(50.0).roundToLong()} ms",
-                        variantBP50 = "${x.percentile(50.0).roundToLong()} ms",
-                        variantAP90 = "${it.value.percentile(90.0).roundToLong()} ms",
-                        variantBP90 = "${x.percentile(90.0).roundToLong()} ms",
-                        OS = OS.Linux
-                    )
-                )
-            }
-        }
-
-        variantAAggregatedTaskPath.forEach {
-            val x = variantBAggregatedTaskPath[it.key]
-            if (x != null) {
-//                measurementsP.add(
-//                    MeasurementWithPercentiles(
-//                        category = " Task Path",
-//                        name = it.key,
-//                        variantAMean = it.value.sumOf { it.toLong() } / it.value.size,
-//                        variantBMean = x.sumOf { it.toLong() } / x.size,
-//                        variantAP50 = it.value.percentile(50.0),
-//                        variantBP50 = x.percentile(50.0),
-//                        variantAP90 = it.value.percentile(90.0),
-//                        variantBP90 = x.percentile(90.0),
-//                        OS = OS.Linux
-//                    )
-//                )
-            }
-
-        }
-
-
-        return measurementsP
-
-    }
-
-    private fun kotlinBuildReportMeasurement(
-        variantABuilds: List<Build>,
-        variantBBuilds: List<Build>, key: OS
-    ): List<MeasurementWithPercentiles> {
-        val measurements = mutableListOf<Measurement>()
-        val measurementsP = mutableListOf<MeasurementWithPercentiles>()
-        val valuesVariantA = extracted(variantABuilds)
-        val valuesVariantB = extracted(variantBBuilds)
-
-        val valuesByTaskAggregated = aggregateBuilds(valuesVariantA)
-        val valuesByTaskAggregatedB = aggregateBuilds(valuesVariantB)
-
-
-        valuesByTaskAggregated.filter { it.key != "Total memory usage at the end of build" && it.key != "Start time of task action" }
-            .forEach {
-                val x = valuesByTaskAggregatedB[it.key]
-                if (x != null && it.value.size == x.size) {
-                    if (it.value.filter {
-                            it.contains("ms") || it.contains("GB") || it.contains("MB") || it.contains("KB") || it.contains(
-                                "B"
-                            )
-                        }.isNotEmpty()) {
-
-                        val valuesFormattedA = it.value.map { it.replace(",", "").replace("ms", "").split(" ")[0] }
-                        val valuesFormattedB = x.map { it.replace(",", "").replace("ms", "").split(" ")[0] }
-                        val qualifierA = if (it.value.first().contains("ms")) "ms" else it.value.first().split(" ")[1]
-                        val qualifierB = if (x.first().contains("ms")) "ms" else x.first().split(" ")[1]
-
-                        val varianta =
-                            (((valuesFormattedA.sumOf { it.toDouble() } / valuesFormattedA.size) * 100.0).roundToInt() / 100.0)
-                        val variantb =
-                            (((valuesFormattedB.sumOf { it.toDouble() } / valuesFormattedB.size) * 100.0).roundToInt() / 100.0)
-                        val variantaP50 = valuesFormattedA.map { it.toDouble() }.percentile(50.0).roundToLong()
-                        val variantbP50 = valuesFormattedB.map { it.toDouble() }.percentile(50.0).roundToLong()
-                        val variantaP90 = valuesFormattedA.map { it.toDouble() }.percentile(90.0).roundToLong()
-                        val variantbP90 = valuesFormattedB.map { it.toDouble() }.percentile(90.0).roundToLong()
-                        if (varianta != variantb) {
-                            measurementsP.add(
-                                MeasurementWithPercentiles(
-                                    category = "Kotlin Build Reports",
-                                    name = it.key,
-                                    variantAMean = "$varianta $qualifierA",
-                                    variantBMean = "$variantb $qualifierB",
-                                    variantAP50 = "$variantaP50 $qualifierA",
-                                    variantBP50 = "$variantbP50 $qualifierB",
-                                    variantAP90 = "$variantaP90 $qualifierA",
-                                    variantBP90 = "$variantbP90 $qualifierB",
-                                    OS = OS.Linux
-                                )
-                            )
-                        }
-                    } else {
-                        val valuesFormattedA = it.value.map { it.replace(",", "").split(" ")[0] }
-                        val valuesFormattedB = x.map { it.replace(",", "").split(" ")[0] }
-                        val varianta =
-                            (valuesFormattedA.sumOf { it.toLong() } / valuesFormattedA.size).toDouble().roundToLong()
-                        val variantb = valuesFormattedB.sumOf { it.toLong() } / valuesFormattedB.size
-                        val variantaP50 = valuesFormattedA.map { it.toDouble() }.percentile(50.0).roundToLong()
-                        val variantbP50 = valuesFormattedB.map { it.toDouble() }.percentile(50.0).roundToLong()
-                        val variantaP90 = valuesFormattedA.map { it.toDouble() }.percentile(90.0).roundToLong()
-                        val variantbP90 = valuesFormattedB.map { it.toDouble() }.percentile(90.0).roundToLong()
-
-                        //if (varianta != variantb) {
-                        measurementsP.add(
-                            MeasurementWithPercentiles(
-                                category = "Kotlin Build Reports",
-                                name = it.key,
-                                variantAMean = "$varianta",
-                                variantBMean = "$variantb",
-                                variantAP50 = "$variantaP50",
-                                variantBP50 = "$variantbP50",
-                                variantAP90 = "$variantaP90",
-                                variantBP90 = "$variantbP90",
-                                OS = OS.Linux
-                            )
-                        )
-                    }
-                }
-            }
-        return measurementsP
-    }
-
-    private fun aggregateBuilds(builds: Map<String, Map<String, MutableList<MetricKotlin>>>): MutableMap<String, MutableList<String>> {
-        val valuesByTaskAggregated = mutableMapOf<String, MutableList<String>>()
-        builds.forEach {
-            it.value.forEach {
-                it.value.forEach {
-                    if (!valuesByTaskAggregated.containsKey("${it.desc}")) {
-                        valuesByTaskAggregated["${it.desc}"] = mutableListOf()
-                    }
-                    valuesByTaskAggregated["${it.desc}"]?.add(it.value)
-                }
-            }
-
-        }
-        return valuesByTaskAggregated
-    }
-
-    private fun extracted(
-        buildsPerVariant: List<Build>
-    ): MutableMap<String, Map<String, MutableList<MetricKotlin>>> {
-        val variantBuild = mutableMapOf<String, Map<String, MutableList<MetricKotlin>>>()
-        buildsPerVariant.forEach {
-            val buildId = it.id
-            val buildsWithKotlinBuildReports =
-                it.values.filter { it.name.contains("Kotlin") && it.value.contains("Non incremental build because") }
-            val tasksWithMetrics = mutableMapOf<String, MutableList<MetricKotlin>>()
-            if (buildsWithKotlinBuildReports.isNotEmpty()) {
-                buildsWithKotlinBuildReports.forEach {
-                    val key = it.name
-                    val values = it.value.split("Performance: [")[1].split("]")[0].split(": ")
-                    var auxCount = 0
-                    while (auxCount < values.size - 1) {
-                        var key2 = ""
-                        var value = ""
-                        if (auxCount == 0) {
-                            key2 = values[auxCount]
-                        } else {
-                            key2 = values[auxCount].split(",").last()
-                        }
-
-                        if (values[auxCount + 1].split(",").count() > 2) {
-
-                            // we found issues parsing lines like
-                            // 1},2023-07-18T01:17:40,Number of times classpath snapshot is loaded
-                            // to avoid that, we need to identify if the "," comes from a byte
-                            value = values[auxCount + 1].split(",")[0].replace("}", "")
-//                            if ((values[auxCount + 1].contains("GB") || values[auxCount + 1].contains("MB") || values[auxCount + 1].contains(
-//                                    "KB"
-//                                ) || values[auxCount + 1].contains("B"))
-//                            ) {
-//                                value =
-//                                    values[auxCount + 1].split(",").dropLast(1).joinToString { "" }.replace("}", "")
-//                            } else {
-//                                value = values[auxCount + 1].split(",")[0].replace("}", "")
-//                            }
-
-                        } else {
-                            value = values[auxCount + 1].split(",")[0].replace("}", "")
-                        }
-                        if (!tasksWithMetrics.containsKey(key)) {
-                            tasksWithMetrics[key] = mutableListOf()
-                        }
-                        tasksWithMetrics[key]?.add(MetricKotlin(key2, value))
-                        auxCount += 1
-
-                    }
-                }
-                variantBuild[buildId] = tasksWithMetrics
-            }
-        }
-        return variantBuild
-    }
-
-
-    private fun filterByExecutionAndType(
-        it: Build,
-        task: Task
-    ) = it.taskExecution.filter {
-        (it.avoidanceOutcome == "executed_cacheable" || it.avoidanceOutcome == "executed_not_cacheable")
-            && it.taskType == task.taskType
-    }
-
 }
 
-
-data class MetricKotlin(val desc: String, val value: String)
 
 data class Header(
     val task: String,

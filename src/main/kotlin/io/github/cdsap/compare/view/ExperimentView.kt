@@ -62,7 +62,9 @@ class ExperimentView {
                         columnSpan = 7
                     }
                 }
-                measurement.filter { !it.category.contains("process state") }.groupBy {
+                measurement
+                    //.filter { !it.category.contains("process state") }
+                    .groupBy {
                     it.OS
                 }.forEach {
 
@@ -127,49 +129,49 @@ class ExperimentView {
                         }
 
                     }
-                    if (measurement.filter { it.category.contains("process state") }.isNotEmpty()) {
-                        row {
-                            cell("Processes") {
-                                alignment = TextAlignment.MiddleCenter
-                                columnSpan = 8
-                            }
-                        }
-                        row {
-                            cell("Category") {
-                                alignment = TextAlignment.MiddleCenter
-                            }
-                            cell("Metric") {
-                                alignment = TextAlignment.MiddleCenter
-                            }
-                            cell("$varianta") {
-                                alignment = TextAlignment.MiddleCenter
-                            }
-                            cell("$variantb") {
-                                alignment = TextAlignment.MiddleCenter
-                                columnSpan = 5
-                            }
-
-                        }
-                        measurement.filter { it.category.contains("process state") }.groupBy {
-                            it.OS
-                        }.forEach {
-
-                            it.value.forEach {
-                                row {
-                                    cell(it.category)
-                                    cell(it.name)
-                                    cell(it.variantAMean) {
-                                        alignment = TextAlignment.MiddleRight
-                                    }
-                                    cell(it.variantBMean) {
-                                        alignment = TextAlignment.MiddleRight
-                                        columnSpan = 5
-                                    }
-                                }
-
-                            }
-                        }
-                    }
+                //    if (measurement.filter { it.category.contains("process state") }.isNotEmpty()) {
+//                        row {
+//                            cell("Processes") {
+//                                alignment = TextAlignment.MiddleCenter
+//                                columnSpan = 8
+//                            }
+//                        }
+//                        row {
+//                            cell("Category") {
+//                                alignment = TextAlignment.MiddleCenter
+//                            }
+//                            cell("Metric") {
+//                                alignment = TextAlignment.MiddleCenter
+//                            }
+//                            cell("$varianta") {
+//                                alignment = TextAlignment.MiddleCenter
+//                            }
+//                            cell("$variantb") {
+//                                alignment = TextAlignment.MiddleCenter
+//                                columnSpan = 5
+//                            }
+//
+//                        }
+//                        measurement.filter { it.category.contains("process state") }.groupBy {
+//                            it.OS
+//                        }.forEach {
+//
+//                            it.value.forEach {
+//                                row {
+//                                    cell(it.category)
+//                                    cell(it.name)
+//                                    cell(it.variantAMean) {
+//                                        alignment = TextAlignment.MiddleRight
+//                                    }
+//                                    cell(it.variantBMean) {
+//                                        alignment = TextAlignment.MiddleRight
+//                                        columnSpan = 5
+//                                    }
+//                                }
+//
+//                            }
+//                        }
+//                    }
                 }
             }
         }
