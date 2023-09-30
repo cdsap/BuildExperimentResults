@@ -1,93 +1,84 @@
 package io.github.cdsap.compare.report
 
-import io.github.cdsap.geapi.client.domain.impl.GetBuildScansWithQueryImpl
+import io.github.cdsap.compare.model.*
 import io.github.cdsap.geapi.client.model.*
 import io.github.cdsap.geapi.client.repository.impl.GradleRepositoryImpl
-import io.github.cdsap.compare.model.MeasurementWithPercentiles
-import io.github.cdsap.compare.report.measurements.KotlinBuildReportsMeasurements
-import io.github.cdsap.compare.report.measurements.ProcessMeasurement
-import io.github.cdsap.compare.report.measurements.TasksMeasurements
+import io.github.cdsap.compare.report.measurements.MeasurementsByReport
 import io.github.cdsap.compare.view.ExperimentView
-import io.github.cdsap.geapi.client.domain.impl.GetCachePerformanceImpl
-import org.nield.kotlinstatistics.percentile
-import java.lang.IllegalStateException
-import kotlin.math.roundToInt
-import kotlin.math.roundToLong
+import io.github.cdsap.compare.view.GeneralCsvOutputView
+import io.github.cdsap.geapi.client.domain.impl.GetBuildsFromQueryWithAttributesRequest
+import io.github.cdsap.geapi.client.domain.impl.GetBuildsWithCachePerformanceRequest
 
 
 class ExperimentReport(
     private val filter: Filter,
     private val repository: GradleRepositoryImpl,
-    private val profile: Boolean
+    private val profile: Boolean,
+    private val experimentId: String,
+    private val variants: List<String>,
+    private val report: Report,
+    private val warmupsToDiscard: Int
 ) {
 
     suspend fun process() {
-        val getBuildScans = GetBuildScansWithQueryImpl(repository).get(filter)
-        val getOutcome = GetCachePerformanceImpl(repository)
-        val outcome = getOutcome.get(getBuildScans, filter).filter { it.tags.contains(filter.experimentId) }
-        if (filter.variants == null) {
-            throw IllegalArgumentException("Variants can not be null")
-        } else {
-            val variants = filter.variants!!.split(",")
-            val variantA = "${filter.experimentId}_variant_experiment_${variants[0].trim()}"
-            val variantB = "${filter.experimentId}_variant_experiment_${variants[1].trim()}"
-            outcome.map {
-                if (it.tags.contains("experiment") && it.tags.contains(variantA)) {
-                    it.experiment = Experiment.VARIANT_A
-                }
-                if (it.tags.contains("experiment") && it.tags.contains(variantB)) {
-                    it.experiment = Experiment.VARIANT_B
-                }
-            }
+        val getBuildScans = GetBuildsFromQueryWithAttributesRequest(repository).get(filter)
 
-            val buildsVariantA =
-                filterbuildsWithProfile(outcome.filter { it.experiment == Experiment.VARIANT_A }, profile).size
-            val buildsVariantB =
-                filterbuildsWithProfile(outcome.filter { it.experiment == Experiment.VARIANT_B }, profile).size
-            if (buildsVariantA != buildsVariantB) {
-                throw IllegalStateException("Different number of builds: ${variants[0]} $buildsVariantA - ${variants[1]} $buildsVariantB")
-            }
-            val measurements = measurements(outcome)
+
+        val getOutcome = GetBuildsWithCachePerformanceRequest(repository)
+        val outcome = getOutcome.get(getBuildScans, filter).filter { it.tags.contains(experimentId) }
+        if (variants.size != 2) {
+            throw IllegalArgumentException("The numbers of variants to provide is two")
+        } else {
+            val variantA = "${experimentId}_variant_experiment_${variants[0].trim()}"
+            val variantB = "${experimentId}_variant_experiment_${variants[1].trim()}"
+
+            val buildsVariantA = buildsByVariant(outcome, variantA)
+            val buildsVariantB = buildsByVariant(outcome, variantB)
+
+            val measurements =
+                MeasurementsByReport(report, profile, warmupsToDiscard).get(buildsVariantA, buildsVariantB)
+
             if (measurements.isNotEmpty()) {
                 ExperimentView().print(
                     measurements, variants[0], variants[1], Header(
                         task = filter.requestedTask.toString(),
-                        numberOfBuildsForExperimentA = buildsVariantA,
-                        numberOfBuildsForExperimentB = buildsVariantB,
-                        experiment = filter.experimentId!!
+                        numberOfBuildsForExperimentA = if (profile) buildsVariantA.dropLast(warmupsToDiscard).size else buildsVariantA.size,
+                        numberOfBuildsForExperimentB = if (profile) buildsVariantB.dropLast(warmupsToDiscard).size else buildsVariantB.size,
+                        experiment = experimentId
                     )
                 )
+                GeneralCsvOutputView(measurements, variants[0], variants[1]).write()
+
             }
         }
     }
 
-    private fun filterbuildsWithProfile(builds: List<Build>, profile: Boolean): List<Build> {
-        return if (profile) builds.dropLast(2)
-        else builds
-    }
+    // Future release of the max diff per util
+    private fun extracted(measurements: List<MeasurementWithPercentiles>) {
+        val a = mutableListOf<Measurement>()
+        measurements.filter { it.metric != Metric.TASK_KOTLIN_BUILD_REPORT }.forEach {
+            a.add(
+                Measurement(
+                    variantA = it.variantAP50.toString(),
+                    variantB = it.variantBP50.toString(),
+                    name = "${it.category}-${it.name}"
+                )
+            )
+        }
 
-    private fun measurements(builds: List<Build>): List<MeasurementWithPercentiles> {
-        return builds.groupBy { it.OS }.flatMap {
-            val buildsVariantA = it.value.filter { it.experiment == Experiment.VARIANT_A }
-            val buildsVariantB = it.value.filter { it.experiment == Experiment.VARIANT_B }
+        a.forEach {
+            println("${it.name} ==== ${it.diff()}")
 
-            TasksMeasurements(
-                filterbuildsWithProfile(buildsVariantA, profile),
-                filterbuildsWithProfile(buildsVariantB, profile)
-            ).get() +
-                KotlinBuildReportsMeasurements(
-                    filterbuildsWithProfile(buildsVariantA, profile),
-                    filterbuildsWithProfile(buildsVariantB, profile)
-                ).get() +
-                ProcessMeasurement(buildsVariantA, buildsVariantB, profile).get()
+        }
+
+        a.sortedBy { it.diff() }.forEach {
+            println("${it.name} ==== ${it.diff()}")
         }
     }
+
+    private fun buildsByVariant(
+        outcome: List<Build>,
+        variant: String
+    ) = outcome.filter { it.tags.contains("experiment") && it.tags.contains(experimentId) && it.tags.contains(variant) }
+
 }
-
-
-data class Header(
-    val task: String,
-    val numberOfBuildsForExperimentA: Int,
-    val numberOfBuildsForExperimentB: Int,
-    val experiment: String
-)

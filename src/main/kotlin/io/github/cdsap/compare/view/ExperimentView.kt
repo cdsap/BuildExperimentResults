@@ -2,8 +2,10 @@ package io.github.cdsap.compare.view
 
 import com.jakewharton.picnic.TextAlignment
 import com.jakewharton.picnic.table
+import io.github.cdsap.compare.model.Header
 import io.github.cdsap.compare.model.MeasurementWithPercentiles
-import io.github.cdsap.compare.report.Header
+import io.github.cdsap.compare.model.Metric
+
 import java.io.File
 
 class ExperimentView {
@@ -63,116 +65,72 @@ class ExperimentView {
                     }
                 }
                 measurement
-                    //.filter { !it.category.contains("process state") }
                     .groupBy {
-                    it.OS
-                }.forEach {
+                        it.OS
+                    }.forEach {
 
 
-                    row {
-                        cell("Category") {
-                            rowSpan = 2
-                            alignment = TextAlignment.MiddleCenter
-                        }
-                        cell("Metric") {
-                            rowSpan = 2
-                            alignment = TextAlignment.MiddleCenter
-                        }
-                        cell(" Mean") {
-                            columnSpan = 2
-                            alignment = TextAlignment.MiddleCenter
-                        }
-
-                        cell("P50")
-                        {
-                            columnSpan = 2
-                            alignment = TextAlignment.MiddleCenter
-                        }
-                        cell(" P90")
-                        {
-                            columnSpan = 2
-                            alignment = TextAlignment.MiddleCenter
-                        }
-
-
-                    }
-                    row {
-                        cell("$varianta") { alignment = TextAlignment.MiddleCenter }
-                        cell("$variantb") { alignment = TextAlignment.MiddleCenter }
-                        cell("$varianta") { alignment = TextAlignment.MiddleCenter }
-                        cell("$variantb") { alignment = TextAlignment.MiddleCenter }
-                        cell("$varianta") { alignment = TextAlignment.MiddleCenter }
-                        cell("$variantb") { alignment = TextAlignment.MiddleCenter }
-                    }
-                    it.value.forEach {
                         row {
-                            cell(it.category)
-                            cell(it.name)
-                            cell(it.variantAMean) {
-                                alignment = TextAlignment.MiddleRight
+                            cell("Category") {
+                                rowSpan = 2
+                                alignment = TextAlignment.MiddleCenter
                             }
-                            cell(it.variantBMean) {
-                                alignment = TextAlignment.MiddleRight
+                            cell("Metric") {
+                                rowSpan = 2
+                                alignment = TextAlignment.MiddleCenter
                             }
-                            cell(it.variantAP50) {
-                                alignment = TextAlignment.MiddleRight
+                            cell(" Mean") {
+                                columnSpan = 2
+                                alignment = TextAlignment.MiddleCenter
                             }
-                            cell(it.variantBP50) {
-                                alignment = TextAlignment.MiddleRight
-                            }
-                            cell(it.variantAP90) {
-                                alignment = TextAlignment.MiddleRight
-                            }
-                            cell(it.variantBP90) {
-                                alignment = TextAlignment.MiddleRight
-                            }
-                        }
 
+                            cell("P50")
+                            {
+                                columnSpan = 2
+                                alignment = TextAlignment.MiddleCenter
+                            }
+                            cell(" P90")
+                            {
+                                columnSpan = 2
+                                alignment = TextAlignment.MiddleCenter
+                            }
+
+
+                        }
+                        row {
+                            cell("$varianta".splitString()) { alignment = TextAlignment.MiddleCenter }
+                            cell("$variantb".splitString()) { alignment = TextAlignment.MiddleCenter }
+                            cell("$varianta".splitString()) { alignment = TextAlignment.MiddleCenter }
+                            cell("$variantb".splitString()) { alignment = TextAlignment.MiddleCenter }
+                            cell("$varianta".splitString()) { alignment = TextAlignment.MiddleCenter }
+                            cell("$variantb".splitString()) { alignment = TextAlignment.MiddleCenter }
+                        }
+                        it.value.forEach {
+                            row {
+                                cell(it.category.splitString())
+                                cell(it.name.splitString())
+                                cell("${it.variantAMean} ${it.qualifier}".splitSmallString()) {
+                                    alignment = TextAlignment.MiddleRight
+                                }
+                                cell("${it.variantBMean} ${it.qualifier}".splitSmallString()) {
+                                    alignment = TextAlignment.MiddleRight
+                                }
+                                cell("${it.variantAP50} ${it.qualifier}".splitSmallString()) {
+                                    alignment = TextAlignment.MiddleRight
+                                }
+                                cell("${it.variantBP50} ${it.qualifier}".splitSmallString()) {
+                                    alignment = TextAlignment.MiddleRight
+                                }
+                                cell("${it.variantAP90} ${it.qualifier}".splitSmallString()) {
+                                    alignment = TextAlignment.MiddleRight
+                                }
+                                cell("${it.variantBP90} ${it.qualifier}".splitSmallString()) {
+                                    alignment = TextAlignment.MiddleRight
+                                }
+                            }
+
+                        }
                     }
-                //    if (measurement.filter { it.category.contains("process state") }.isNotEmpty()) {
-//                        row {
-//                            cell("Processes") {
-//                                alignment = TextAlignment.MiddleCenter
-//                                columnSpan = 8
-//                            }
-//                        }
-//                        row {
-//                            cell("Category") {
-//                                alignment = TextAlignment.MiddleCenter
-//                            }
-//                            cell("Metric") {
-//                                alignment = TextAlignment.MiddleCenter
-//                            }
-//                            cell("$varianta") {
-//                                alignment = TextAlignment.MiddleCenter
-//                            }
-//                            cell("$variantb") {
-//                                alignment = TextAlignment.MiddleCenter
-//                                columnSpan = 5
-//                            }
-//
-//                        }
-//                        measurement.filter { it.category.contains("process state") }.groupBy {
-//                            it.OS
-//                        }.forEach {
-//
-//                            it.value.forEach {
-//                                row {
-//                                    cell(it.category)
-//                                    cell(it.name)
-//                                    cell(it.variantAMean) {
-//                                        alignment = TextAlignment.MiddleRight
-//                                    }
-//                                    cell(it.variantBMean) {
-//                                        alignment = TextAlignment.MiddleRight
-//                                        columnSpan = 5
-//                                    }
-//                                }
-//
-//                            }
-//                        }
-//                    }
-                }
             }
         }
 
@@ -190,14 +148,46 @@ class ExperimentView {
         output += "<tr><td rowspan=2>Category</td><td rowspan=2>Metric</td><td colspan=2>Mean</td><td colspan=2>P50</td><td colspan=2>P90</td></tr>"
         output += "<tr><td>$varianta</td><td>$variantb</td><td>$varianta</td><td>$variantb</td><td>$varianta</td><td>$variantb</td></tr>"
 
-        measurement.groupBy {
-            it.OS
-        }.forEach {
-            it.value.forEach {
-                output += "<tr><td>${it.category}</td><td>${it.name}</td><td>${it.variantAMean}</td><td>${it.variantBMean}</td><td>${it.variantAP50}</td><td>${it.variantBP50}</td><td>${it.variantAP90}</td><td>${it.variantBP90}</td></tr>"
-            }
+        var outputTaskPath = ""
+        measurement.filter { it.metric == Metric.TASK_PATH }.forEach {
+            outputTaskPath += "<tr><td>${it.category}</td><td>${it.name}</td><td>${it.variantAMean} ${it.qualifier}</td><td>${it.variantBMean} ${it.qualifier}</td><td>${it.variantAP50} ${it.qualifier}</td><td>${it.variantBP50} ${it.qualifier}</td><td>${it.variantAP90} ${it.qualifier}</td><td>${it.variantBP90} ${it.qualifier}</td></tr>"
         }
+
+        var outputTaskType = ""
+        measurement.filter { it.metric == Metric.TASK_TYPE }.forEach {
+            outputTaskType += "<tr><td>${it.category}</td><td>${it.name}</td><td>${it.variantAMean} ${it.qualifier}</td><td>${it.variantBMean} ${it.qualifier}</td><td>${it.variantAP50} ${it.qualifier}</td><td>${it.variantBP50} ${it.qualifier}</td><td>${it.variantAP90} ${it.qualifier}</td><td>${it.variantBP90} ${it.qualifier}</td></tr>"
+        }
+
+        var outputProcesses = ""
+        measurement.filter { it.metric == Metric.PROCESS }.forEach {
+            outputProcesses += "<tr><td>${it.category}</td><td>${it.name}</td><td>${it.variantAMean} ${it.qualifier}</td><td>${it.variantBMean} ${it.qualifier}</td><td>${it.variantAP50} ${it.qualifier}</td><td>${it.variantBP50} ${it.qualifier}</td><td>${it.variantAP90} ${it.qualifier}</td><td>${it.variantBP90} ${it.qualifier}</td></tr>"
+        }
+
+        var outputKotlinBuildReports = ""
+        measurement.filter { it.metric == Metric.KOTLIN_BUILD_REPORT }.forEach {
+            outputKotlinBuildReports += "<tr><td>${it.category}</td><td>${it.name}</td><td>${it.variantAMean} ${it.qualifier}</td><td>${it.variantBMean} ${it.qualifier}</td><td>${it.variantAP50} ${it.qualifier}</td><td>${it.variantBP50} ${it.qualifier}</td><td>${it.variantAP90} ${it.qualifier}</td><td>${it.variantBP90} ${it.qualifier}</td></tr>"
+        }
+
+        var tasksOutputKotlinBuildReports = ""
+        measurement.filter { it.metric == Metric.TASK_KOTLIN_BUILD_REPORT }.forEach {
+            tasksOutputKotlinBuildReports += "<tr><td>${it.category}</td><td>${it.name}</td><td>${it.variantAMean} ${it.qualifier}</td><td>${it.variantBMean} ${it.qualifier}</td><td>${it.variantAP50} ${it.qualifier}</td><td>${it.variantBP50} ${it.qualifier}</td><td>${it.variantAP90} ${it.qualifier}</td><td>${it.variantBP90} ${it.qualifier}</td></tr>"
+        }
+
+        if (output.length + outputTaskPath.length + outputTaskType.length + outputProcesses.length + outputKotlinBuildReports.length + tasksOutputKotlinBuildReports.length > 1000000) {
+            if (output.length + outputTaskPath.length + outputTaskType.length + outputProcesses.length + outputKotlinBuildReports.length > 1000000) {
+                output += outputTaskType + outputTaskPath + outputProcesses
+            } else {
+                output += outputTaskType + outputTaskPath + outputProcesses + outputKotlinBuildReports
+            }
+        } else {
+            output += outputTaskType + outputTaskPath + outputProcesses + outputKotlinBuildReports + tasksOutputKotlinBuildReports
+        }
+
         output += "</table>"
         return output
     }
 }
+
+fun String.splitString() = this.chunked(22).joinToString("\n")
+
+fun String.splitSmallString() = this.chunked(15).joinToString("\n")
