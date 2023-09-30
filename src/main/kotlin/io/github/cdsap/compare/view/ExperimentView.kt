@@ -148,6 +148,11 @@ class ExperimentView {
         output += "<tr><td rowspan=2>Category</td><td rowspan=2>Metric</td><td colspan=2>Mean</td><td colspan=2>P50</td><td colspan=2>P90</td></tr>"
         output += "<tr><td>$varianta</td><td>$variantb</td><td>$varianta</td><td>$variantb</td><td>$varianta</td><td>$variantb</td></tr>"
 
+        var buildReport = ""
+        measurement.filter { it.metric == Metric.BUILD }.forEach {
+            buildReport += "<tr><td>${it.category}</td><td>${it.name}</td><td>${it.variantAMean} ${it.qualifier}</td><td>${it.variantBMean} ${it.qualifier}</td><td>${it.variantAP50} ${it.qualifier}</td><td>${it.variantBP50} ${it.qualifier}</td><td>${it.variantAP90} ${it.qualifier}</td><td>${it.variantBP90} ${it.qualifier}</td></tr>"
+        }
+
         var outputTaskPath = ""
         measurement.filter { it.metric == Metric.TASK_PATH }.forEach {
             outputTaskPath += "<tr><td>${it.category}</td><td>${it.name}</td><td>${it.variantAMean} ${it.qualifier}</td><td>${it.variantBMean} ${it.qualifier}</td><td>${it.variantAP50} ${it.qualifier}</td><td>${it.variantBP50} ${it.qualifier}</td><td>${it.variantAP90} ${it.qualifier}</td><td>${it.variantBP90} ${it.qualifier}</td></tr>"
