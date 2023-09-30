@@ -1,6 +1,8 @@
 package io.github.cdsap.compare.report.measurements
 
 import io.github.cdsap.compare.model.MeasurementWithPercentiles
+import io.github.cdsap.compare.model.Metric
+import io.github.cdsap.compare.report.measurements.parser.ProcessesReportParser
 import io.github.cdsap.geapi.client.model.Build
 import io.github.cdsap.geapi.client.model.CustomValue
 import io.github.cdsap.geapi.client.model.OS
@@ -15,8 +17,9 @@ class ProcessMeasurement(
 
     fun get(): List<MeasurementWithPercentiles> {
         return proccessMeasurement(variantA, variantB, profile, "Gradle") +
-            proccessMeasurement(variantA,variantB,profile,"Kotlin"
-        )
+            proccessMeasurement(
+                variantA, variantB, profile, "Kotlin"
+            )
 
     }
 
@@ -29,8 +32,9 @@ class ProcessMeasurement(
         if (profile) {
 
             val measurement = mutableListOf<MeasurementWithPercentiles>()
-            val variantAValues = parseProcess(variantA.first().values, value)
-            val variantBValues = parseProcess(variantB.first().values, value)
+            val processesParser = ProcessesReportParser()
+            val variantAValues = processesParser.parse(variantA.first().values, value)
+            val variantBValues = processesParser.parse(variantB.first().values, value)
             if (variantAValues.size == variantBValues.size) {
                 variantAValues.forEach {
                     val variantB = variantBValues[it.key]!!
@@ -44,7 +48,9 @@ class ProcessMeasurement(
                             variantBP50 = "",
                             variantAP90 = "",
                             variantBP90 = "",
-                            OS = OS.Linux
+                            OS = OS.Linux,
+                            qualifier = "",
+                            metric = Metric.PROCESS
                         )
                     )
                 }
@@ -55,16 +61,16 @@ class ProcessMeasurement(
             return emptyList()
         } else {
             val measurement = mutableListOf<MeasurementWithPercentiles>()
-            val listVariantAValues = getListByValues(variantA, value)
-            val listVariantBValues = getListByValues(variantB, value)
+            val processesParser = ProcessesReportParser()
+            val listVariantAValues = processesParser.parseByVariant(variantA, value)
+            val listVariantBValues = processesParser.parseByVariant(variantB, value)
             val listVariantAValuesFormatted = formatListValues(listVariantAValues)
             val listVariantBValuesFormatted = formatListValues(listVariantBValues)
 
 
             listVariantAValuesFormatted.forEach {
-
-                val qualifierInfo = listVariantAValues[it.key]!!.first().split(" ")[1]
                 val x = listVariantBValuesFormatted[it.key]!!
+
                 val varianta =
                     (((it.value.sumOf { it } / it.value.size) * 100.0).roundToInt() / 100.0)
                 val variantb =
@@ -76,14 +82,16 @@ class ProcessMeasurement(
                 measurement.add(
                     MeasurementWithPercentiles(
                         name = it.key,
-                        variantAMean = "$varianta $qualifierInfo",
-                        variantBMean = "$variantb $qualifierInfo",
+                        variantAMean = "$varianta",
+                        variantBMean = "$variantb",
                         category = "$value process state",
-                        variantAP50 = "$variantaP50 $qualifierInfo",
-                        variantBP50 = "$variantbP50 $qualifierInfo",
-                        variantAP90 = "$variantaP90 $qualifierInfo",
-                        variantBP90 = "$variantbP90 $qualifierInfo",
-                        OS = OS.Linux
+                        variantAP50 = "$variantaP50",
+                        variantBP50 = "$variantbP50",
+                        variantAP90 = "$variantaP90",
+                        variantBP90 = "$variantbP90",
+                        OS = OS.Linux,
+                        qualifier = "",
+                        metric = Metric.PROCESS
                     )
                 )
             }
@@ -91,22 +99,7 @@ class ProcessMeasurement(
         }
     }
 
-    private fun getListByValues(builds: List<Build>,value: String): Map<String, MutableList<String>> {
-        val listVariantValues = mutableMapOf<String, MutableList<String>>()
-
-        builds.forEach {
-            val variantAValues = parseProcess(it.values, value)
-            variantAValues.forEach {
-                if (!listVariantValues.contains(it.key)) {
-                    listVariantValues[it.key] = mutableListOf()
-                }
-                listVariantValues[it.key]!!.add(it.value)
-            }
-        }
-        return listVariantValues
-    }
-
-    private fun formatListValues(values:  Map<String, MutableList<String>>) : Map<String, MutableList<Double>> {
+    private fun formatListValues(values: Map<String, MutableList<String>>): Map<String, MutableList<Double>> {
         val listValuesFormatted = mutableMapOf<String, MutableList<Double>>()
 
         values.forEach {
@@ -116,28 +109,12 @@ class ProcessMeasurement(
                     val valuesNo = it.split(" ")
                     aux.add(valuesNo[0].toDouble())
                 }
-
                 listValuesFormatted[it.key] = aux
             }
-
         }
         return listValuesFormatted
     }
 
-    private fun parseProcess(values: Array<CustomValue>, value: String): Map<String, String> {
-        return if (values.filter { it.name.contains("$value-Process") }.isNotEmpty()) {
-            val measurements = mutableMapOf<String, String>()
-            values.filter { it.name.contains("$value-Process") }.forEach {
-                val name = it.name.split("-").filterIndexed { index, _ ->
-                    index != 2 // you can also specify more interesting filters here...
-                }.joinToString("-")
-                measurements[name] = it.value
-            }
-            measurements
-        } else {
-            emptyMap()
-        }
-    }
 }
 
 
