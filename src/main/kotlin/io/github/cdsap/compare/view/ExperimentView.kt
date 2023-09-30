@@ -180,12 +180,12 @@ class ExperimentView {
 
         if (output.length + outputTaskPath.length + outputTaskType.length + outputProcesses.length + outputKotlinBuildReports.length + tasksOutputKotlinBuildReports.length > 1000000) {
             if (output.length + outputTaskPath.length + outputTaskType.length + outputProcesses.length + outputKotlinBuildReports.length > 1000000) {
-                output += outputTaskType + outputTaskPath + outputProcesses
+                output += buildReport + outputTaskType + outputTaskPath + outputProcesses
             } else {
-                output += outputTaskType + outputTaskPath + outputProcesses + outputKotlinBuildReports
+                output +=  buildReport + outputTaskType + outputTaskPath + outputProcesses + outputKotlinBuildReports
             }
         } else {
-            output += outputTaskType + outputTaskPath + outputProcesses + outputKotlinBuildReports + tasksOutputKotlinBuildReports
+            output += buildReport + outputTaskType + outputTaskPath + outputProcesses + outputKotlinBuildReports + tasksOutputKotlinBuildReports
         }
 
         output += "</table>"
