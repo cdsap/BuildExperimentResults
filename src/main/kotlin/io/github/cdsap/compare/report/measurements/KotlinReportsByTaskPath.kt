@@ -4,99 +4,57 @@ import io.github.cdsap.compare.model.CustomValuesPerVariant
 import io.github.cdsap.compare.model.MeasurementWithPercentiles
 import io.github.cdsap.compare.model.Metric
 import io.github.cdsap.compare.model.MetricKotlin
-import io.github.cdsap.geapi.client.model.OS
-import org.nield.kotlinstatistics.percentile
 import kotlin.math.roundToInt
 import kotlin.math.roundToLong
 
-class KotlinReportsByTaskPath(val kotlinBuildReportsParserCustomValues: CustomValuesPerVariant) {
+class KotlinReportsByTaskPath(private val kotlinBuildReportsParserCustomValues: CustomValuesPerVariant) :
+    KotlinBuildReports() {
 
     fun get(excludedList: List<String>): List<MeasurementWithPercentiles> {
-        val measurementsP = mutableListOf<MeasurementWithPercentiles>()
+        val measurements = mutableListOf<MeasurementWithPercentiles>()
         val tasksWithPathA = aggregateBuilds2(kotlinBuildReportsParserCustomValues.variantA)
         val tasksWithPathB = aggregateBuilds2(kotlinBuildReportsParserCustomValues.variantB)
         tasksWithPathA.forEach {
             val key = it.key
             if (tasksWithPathB.contains(it.key)) {
-                val xa = tasksWithPathB[it.key]
+                val variantBBuilds = tasksWithPathB[it.key]
 
                 it.value.filter { !excludedList.contains(it.key) }
                     .forEach {
-                        val x = xa!![it.key]
-                        if (x != null && it.value.size == x.size) {
-                            if (it.value.filter {
-                                    it.contains("ms") || it.contains("GB") || it.contains("MB") || it.contains("KB") || it.contains(
-                                        "B"
-                                    )
-                                }.isNotEmpty()) {
-
-                                val valuesFormattedA =
-                                    it.value.map { it.replace(",", "").replace("ms", "").split(" ")[0] }
-                                val valuesFormattedB = x.map { it.replace(",", "").replace("ms", "").split(" ")[0] }
-                                val qualifier =
-                                    if (it.value.first().contains("ms")) "ms" else it.value.first().split(" ")[1]
-
-                                val varianta =
-                                    (((valuesFormattedA.sumOf { it.toDouble() } / valuesFormattedA.size) * 100.0).roundToInt() / 100.0)
-                                val variantb =
-                                    (((valuesFormattedB.sumOf { it.toDouble() } / valuesFormattedB.size) * 100.0).roundToInt() / 100.0)
-                                val variantaP50 = valuesFormattedA.map { it.toDouble() }.percentile(50.0).roundToLong()
-                                val variantbP50 = valuesFormattedB.map { it.toDouble() }.percentile(50.0).roundToLong()
-                                val variantaP90 = valuesFormattedA.map { it.toDouble() }.percentile(90.0).roundToLong()
-                                val variantbP90 = valuesFormattedB.map { it.toDouble() }.percentile(90.0).roundToLong()
-                                if (varianta != variantb) {
-                                    measurementsP.add(
-                                        MeasurementWithPercentiles(
-                                            category = "$key",
-                                            name = it.key,
-                                            variantAMean = "$varianta",
-                                            variantBMean = "$variantb",
-                                            variantAP50 = "$variantaP50",
-                                            variantBP50 = "$variantbP50",
-                                            variantAP90 = "$variantaP90",
-                                            variantBP90 = "$variantbP90",
-                                            OS = OS.Linux,
-                                            qualifier = qualifier,
-                                            metric = Metric.TASK_KOTLIN_BUILD_REPORT
-                                        )
-                                    )
-                                }
+                        val buildsVariantB = variantBBuilds!![it.key]
+                        if (buildsVariantB != null && it.value.size == buildsVariantB.size) {
+                            val buildsA = it.value.map { format(it) }
+                            val buildsB = buildsVariantB.map { format(it) }
+                            var qualifier = ""
+                            var medianA: Number
+                            var medianB: Number
+                            if (itHasQualifier(it)) {
+                                qualifier = getQualifier(it.value.first())
+                                medianA =
+                                    ((buildsA.sumOf { it.toDouble() } / buildsA.size) * 100.0).roundToInt() / 100.0
+                                medianB =
+                                    ((buildsB.sumOf { it.toDouble() } / buildsB.size) * 100.0).roundToInt() / 100.0
                             } else {
-                                val valuesFormattedA = it.value.map { it.replace(",", "").split(" ")[0] }
-                                val valuesFormattedB = x.map { it.replace(",", "").split(" ")[0] }
-                                val varianta =
-                                    (valuesFormattedA.sumOf { it.toLong() } / valuesFormattedA.size).toDouble()
-                                        .roundToLong()
-                                val variantb = valuesFormattedB.sumOf { it.toLong() } / valuesFormattedB.size
-                                val variantaP50 = valuesFormattedA.map { it.toDouble() }.percentile(50.0).roundToLong()
-                                val variantbP50 = valuesFormattedB.map { it.toDouble() }.percentile(50.0).roundToLong()
-                                val variantaP90 = valuesFormattedA.map { it.toDouble() }.percentile(90.0).roundToLong()
-                                val variantbP90 = valuesFormattedB.map { it.toDouble() }.percentile(90.0).roundToLong()
-
-                                if (varianta != variantb) {
-                                    measurementsP.add(
-                                        MeasurementWithPercentiles(
-                                            category = "$key",
-                                            name = it.key,
-                                            variantAMean = "$varianta",
-                                            variantBMean = "$variantb",
-                                            variantAP50 = "$variantaP50",
-                                            variantBP50 = "$variantbP50",
-                                            variantAP90 = "$variantaP90",
-                                            variantBP90 = "$variantbP90",
-                                            OS = OS.Linux,
-                                            qualifier = "",
-                                            metric = Metric.TASK_KOTLIN_BUILD_REPORT
-                                        )
-                                    )
-                                }
+                                medianA = (buildsA.sumOf { it.toLong() } / buildsA.size).toDouble().roundToLong()
+                                medianB = buildsB.sumOf { it.toLong() } / buildsB.size
                             }
+                            measurements.add(
+                                insertMeasurement(
+                                    "$key",
+                                    buildsA,
+                                    buildsB,
+                                    it.key,
+                                    medianA,
+                                    medianB,
+                                    qualifier,
+                                    Metric.TASK_KOTLIN_BUILD_REPORT
+                                )
+                            )
                         }
-
                     }
             }
         }
-        return measurementsP
+        return measurements
     }
 
     private fun aggregateBuilds2(builds: Map<String, Map<String, MutableList<MetricKotlin>>>): MutableMap<String, MutableMap<String, MutableList<String>>> {
