@@ -4,7 +4,6 @@ import io.github.cdsap.compare.model.MeasurementWithPercentiles
 import io.github.cdsap.compare.model.Metric
 import io.github.cdsap.compare.report.measurements.parser.ProcessesReportParser
 import io.github.cdsap.geapi.client.model.Build
-import io.github.cdsap.geapi.client.model.CustomValue
 import io.github.cdsap.geapi.client.model.OS
 import org.nield.kotlinstatistics.percentile
 import kotlin.math.roundToInt
@@ -16,14 +15,14 @@ class ProcessMeasurement(
 ) {
 
     fun get(): List<MeasurementWithPercentiles> {
-        return proccessMeasurement(variantA, variantB, profile, "Gradle") +
-            proccessMeasurement(
+        return processMeasurement(variantA, variantB, profile, "Gradle") +
+            processMeasurement(
                 variantA, variantB, profile, "Kotlin"
             )
 
     }
 
-    private fun proccessMeasurement(
+    private fun processMeasurement(
         variantA: List<Build>,
         variantB: List<Build>,
         profile: Boolean,
