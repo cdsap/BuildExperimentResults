@@ -2,19 +2,34 @@ package io.github.cdsap.compare.view
 
 import com.jakewharton.picnic.TextAlignment
 import com.jakewharton.picnic.table
-import io.github.cdsap.compare.model.Header
-import io.github.cdsap.compare.model.MeasurementWithPercentiles
-import io.github.cdsap.compare.model.Metric
+import io.github.cdsap.compare.model.*
 
 import java.io.File
 
-class ExperimentView {
+class ExperimentView(
+    val report: Report,
+    val task: String
+) {
 
-    fun print(measurement: List<MeasurementWithPercentiles>, varianta: String, variantb: String, header: Header) {
-        println(generateTable(measurement, varianta, variantb, header))
-
-        File("results_experiment").writeText(generateHtmlTable(measurement, varianta, variantb, header))
+    fun print(measurement: List<MeasurementWithPercentiles>, variants: BuildsPerVariant) {
+        val header = header(variants)
+        println(generateTable(measurement, report.variants[0], report.variants[1], header))
+        File("results_experiment").writeText(
+            generateHtmlTable(
+                measurement,
+                report.variants[0],
+                report.variants[1],
+                header
+            )
+        )
     }
+
+    private fun header(variants: BuildsPerVariant) = Header(
+        task = task,
+        numberOfBuildsForExperimentA = variants.variantA.size,
+        numberOfBuildsForExperimentB = variants.variantB.size,
+        experiment = report.experimentId
+    )
 
     private fun generateTable(
         measurement: List<MeasurementWithPercentiles>,
@@ -182,7 +197,7 @@ class ExperimentView {
             if (output.length + outputTaskPath.length + outputTaskType.length + outputProcesses.length + outputKotlinBuildReports.length > 1000000) {
                 output += buildReport + outputTaskType + outputTaskPath + outputProcesses
             } else {
-                output +=  buildReport + outputTaskType + outputTaskPath + outputProcesses + outputKotlinBuildReports
+                output += buildReport + outputTaskType + outputTaskPath + outputProcesses + outputKotlinBuildReports
             }
         } else {
             output += buildReport + outputTaskType + outputTaskPath + outputProcesses + outputKotlinBuildReports + tasksOutputKotlinBuildReports

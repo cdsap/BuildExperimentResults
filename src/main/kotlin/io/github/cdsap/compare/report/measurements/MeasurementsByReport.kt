@@ -1,50 +1,31 @@
 package io.github.cdsap.compare.report.measurements
 
+import io.github.cdsap.compare.model.BuildsPerVariant
 import io.github.cdsap.compare.model.MeasurementWithPercentiles
 import io.github.cdsap.compare.model.Report
 import io.github.cdsap.geapi.client.model.Build
 
 class MeasurementsByReport(
-    private val report: Report, private val profile: Boolean,
-    private val warmupsToDiscard: Int
+    private val report: Report
 ) {
 
-    fun get(
-        buildsVariantA: List<Build>,
-        buildsVariantB: List<Build>
-    ): List<MeasurementWithPercentiles> {
+    fun get(variants: BuildsPerVariant): List<MeasurementWithPercentiles> {
         val measurements = mutableListOf<MeasurementWithPercentiles>()
         if (report.buildReport) {
-            measurements += BuildMeasurement(
-                filterBuildsWithProfile(buildsVariantA, profile),
-                filterBuildsWithProfile(buildsVariantB, profile)).get()
+            measurements += BuildMeasurement(variants.variantA, variants.variantB).get()
         }
         if (report.processesReport) {
-            measurements += ProcessMeasurement(buildsVariantA, buildsVariantB, profile).get()
+            measurements += ProcessMeasurement(variants.variantA, variants.variantB, report.isProfile).get()
         }
         if (report.taskTypeReport) {
-            measurements += TasksTypeMeasurements(
-                filterBuildsWithProfile(buildsVariantA, profile),
-                filterBuildsWithProfile(buildsVariantB, profile)
-            ).get()
+            measurements += TasksTypeMeasurements(variants.variantA, variants.variantB).get()
         }
         if (report.taskPathReport) {
-            measurements += TasksPathMeasurements(
-                filterBuildsWithProfile(buildsVariantA, profile),
-                filterBuildsWithProfile(buildsVariantB, profile)
-            ).get()
+            measurements += TasksPathMeasurements(variants.variantA, variants.variantB).get()
         }
         if (report.kotlinBuildReport) {
-            measurements += KotlinBuildReportsMeasurements(
-                filterBuildsWithProfile(buildsVariantA, profile),
-                filterBuildsWithProfile(buildsVariantB, profile)
-            ).get()
+            measurements += KotlinBuildReportsMeasurements(variants.variantA, variants.variantB).get()
         }
         return measurements
-    }
-
-    private fun filterBuildsWithProfile(builds: List<Build>, profile: Boolean): List<Build> {
-        return if (profile) builds.dropLast(warmupsToDiscard)
-        else builds
     }
 }
