@@ -23,7 +23,7 @@ class Experiment : CliktCommand() {
     private val url by option().required()
     private val maxBuilds by option().int().default(500).check("max builds to process 1000") { it <= 1000 }
     private val project: String? by option()
-    private val tasks: String? by option()
+    private val requestedTask: String? by option().required()
     private val variants: List<String> by option().multiple(default = emptyList())
     private val experimentId by option().required()
     private val profile by option().flag(default = false)
@@ -42,30 +42,28 @@ class Experiment : CliktCommand() {
             maxBuilds = maxBuilds,
             project = project,
             tags = listOf(experimentId, "experiment"),
-            requestedTask = tasks,
+            requestedTask = requestedTask,
             exclusiveTags = true,
             clientType = ClientType.CLI
 
         )
-        val repository = GradleRepositoryImpl(
-            GEClient(apiKey, url)
-        )
+        val repository = GradleRepositoryImpl( GEClient(apiKey, url))
 
         runBlocking {
             ExperimentReport(
                 filter = filter,
                 repository = repository,
-                profile = profile,
-                experimentId = experimentId,
-                variants = variants,
                 Report(
                     taskPathReport = taskPathReport,
                     taskTypeReport = taskTypeReport,
                     kotlinBuildReport = kotlinBuildReport,
                     processesReport = processesReport,
                     buildReport = buildReport,
-                ),
-                warmupsToDiscard = warmupsToDiscard
+                    experimentId = experimentId,
+                    warmupsToDiscard = warmupsToDiscard,
+                    variants = variants,
+                    isProfile = profile
+                )
             ).process()
         }
     }
