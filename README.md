@@ -1,4 +1,5 @@
 ## Builds Comparison
+CLI comparing build scans information for a sequence of builds executed under two different variants in a common experiment.
 
 ### Usage
 ```
@@ -7,11 +8,11 @@
     --url $GE_URL
 ```
 
-* --experiment-id
-* --variants
-* --requested-task
-* --api-key
-* --url
+* --experiment-id: experiment id tag
+* --variants: name of the branches/variants of the experiment
+* --requested-task: requested task in the experiment
+* --api-key: Develocity Key
+* --url: Develocity url
 
 ## Output
 
@@ -111,11 +112,41 @@ Used in GitHub Action summaries
 </table>
 ```
 
-### Metrics generated
-* Build
-* Task Path
-* Task Type
-* Processes information
-* Kotlin Build Reports
+### Metrics
+The CLI generates the following metrics for the experiment
+* Build time
+* Duration by task type
+* Duration by task path
+* Processes information (Requires Info Kotlin process and/or Info Gradle process)
+* Kotlin Build Reports (Requires Kotlin Build Reports)
+
+
+### Complete list of parameters
+
+| Name                | Description                                                 | Default | Required | Example                                  |
+|---------------------|-------------------------------------------------------------|---------|----------|------------------------------------------|
+| api-key             | String token                                                |         | Yes      | --api-key=$GE_KEY                        |
+| url                 | Gradle Enterprise instance                                  |         | Yes      | --url=https://ge.acme.dev                |
+| requested-task      | Requested task in the build                                 |         | Yes      | --requested-task=assemble                |
+| variants            | name of the branches/variants of the experiment             |         | Yes      | --variants=main --variants=gradle_8_4    |
+| experiment-id       | experiment-id (represented as tag)                          | empty   | Yes      | --experiment-id=experiment_gradle_8_4    |
+| max-builds          | Max builds to be processed                                  | 500     | No       | --max-builds=600                         |
+| profile             | Starting build to apply the reverse search                  | false   | No       | --profile                                |
+| build-report        | Generates build report metrics                              | true    | No       | Exclude it with --no-build-report        |
+| task-path-report    | Generates task path report metrics                          | true    | No       | Exclude it with --no-task-path-report    |
+| task-type-report    | Generates task type report metrics                          | true    | No       | Exclude it with --no-task-type-report    |
+| process-report      | Generates process report metrics                            | true    | No       | Exclude it with --no-process-report      |
+| kotlin-build-report | Generates Kotlin build report metrics                       | true    | No       | Exclude it with --no-kotlin-build-report |
+| warmups-to-discard  | If is a Gradle Profiler experiment, the warmpups to discard |         | No       | --exclusive-tags                         |
+`
+### Examples
+* https://github.com/cdsap/Pagan/actions/runs/5672476887
+* Using Gradle Profiler https://github.com/cdsap/Pagan/actions/runs/6382400113
+
+### Libraries used
+* picnic
+* geapi-data
+* clickt
+* kotlin-statistics
 
 
