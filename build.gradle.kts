@@ -21,7 +21,7 @@ fatBinary {
 dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4")
     implementation("io.github.cdsap:geapi-data:0.2.4")
-    implementation("com.google.code.gson:gson:2.7")
+    implementation("com.google.code.gson:gson:2.8.9")
     implementation("com.jakewharton.picnic:picnic:0.6.0")
     implementation("com.github.ajalt.clikt:clikt:3.5.0")
     implementation("org.nield:kotlin-statistics:1.2.1")
