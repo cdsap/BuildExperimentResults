@@ -14,7 +14,7 @@ class GeneralCsvOutputView(
         val variantB = report.variants[1]
         val headers =
             "type,metric,mean_$variantA,mean_$variantB,mean_unit," +
-                "p50_$variantA,p50_$variantB,p50_unit,p90_$variantA,p50_$variantB,p90_unit\n"
+                "p50_$variantA,p50_$variantB,p50_unit,p90_$variantA,p90_$variantB,p90_unit\n"
 
         var values = ""
         measurements.forEach {
