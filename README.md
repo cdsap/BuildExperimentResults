@@ -1,9 +1,9 @@
-## Builds Comparison
+## BuildExperimentResults
 CLI comparing build scans information for a sequence of builds executed under two different variants in a common experiment.
 
 ### Usage
 ```
-./buildsComparison --experiment-id 154 --variants lint-4-1 --variants lint-2-1 \
+./build-experiment-results --experiment-id 154 --variants lint-4-1 --variants lint-2-1 \
     --requested-task lintDemoRelease --api-key $GE_API \
     --url $GE_URL
 ```
