@@ -15,7 +15,7 @@ repositories {
 
 fatBinary {
     mainClass = "io.github.cdsap.compare.Main"
-    name = "buildsComparison"
+    name = "build-experiment-results"
 }
 
 dependencies {
