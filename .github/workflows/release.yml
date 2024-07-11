@@ -44,6 +44,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./buildsComparison
-          asset_name: buildsComparison
+          asset_path: ./build-experiment-results
+          asset_name: build-experiment-results
           asset_content_type: application/octet-stream
