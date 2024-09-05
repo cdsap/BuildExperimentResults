@@ -2,119 +2,273 @@ package io.github.cdsap.compare.report.measurements
 
 import io.github.cdsap.compare.model.MeasurementWithPercentiles
 import io.github.cdsap.compare.model.Metric
-import io.github.cdsap.compare.report.measurements.parser.ProcessesReportParser
-import io.github.cdsap.geapi.client.model.Build
+import io.github.cdsap.geapi.client.model.BuildWithResourceUsage
 import io.github.cdsap.geapi.client.model.OS
-import io.github.cdsap.geapi.client.model.PerformanceUsage
+import org.nield.kotlinstatistics.median
 import org.nield.kotlinstatistics.percentile
-import kotlin.math.roundToInt
+import kotlin.math.roundToLong
 
-class ProcessMeasurement(
-    private val variantA: List<PerformanceUsage>,
-    private val variantB: List<PerformanceUsage>,
-    private val profile: Boolean
+class ResourceUsageMeasurement(
+    private val variantA: List<BuildWithResourceUsage>,
+    private val variantB: List<BuildWithResourceUsage>
 ) {
 
     fun get(): List<MeasurementWithPercentiles> {
-        return processMeasurement(variantA, variantB, profile, "Gradle") +
-            processMeasurement(
-                variantA, variantB, profile, "Kotlin"
-            )
-
+        if (variantA.any { it.total == null } || variantB.any { it.total == null }) {
+            return emptyList()
+        } else {
+            return processMeasurement(variantA, variantB)
+        }
     }
 
     private fun processMeasurement(
-        variantA: List<PerformanceUsage>,
-        variantB: List<PerformanceUsage>,
-        profile: Boolean,
-        value: String
+        variantA: List<BuildWithResourceUsage>,
+        variantB: List<BuildWithResourceUsage>
     ): List<MeasurementWithPercentiles> {
-        if (profile) {
+        val measurement = mutableListOf<MeasurementWithPercentiles>()
 
-            val measurement = mutableListOf<MeasurementWithPercentiles>()
-            val processesParser = ProcessesReportParser()
-            val variantAValues = processesParser.parse(variantA.first().values, value)
-            val variantBValues = processesParser.parse(variantB.first().values, value)
-            if (variantAValues.size == variantBValues.size) {
-                variantAValues.forEach {
-                    val variantB = variantBValues[it.key]!!
-                    measurement.add(
-                        MeasurementWithPercentiles(
-                            name = it.key,
-                            variantAMean = it.value,
-                            variantBMean = variantB,
-                            category = "Last $value process state",
-                            variantAP50 = "",
-                            variantBP50 = "",
-                            variantAP90 = "",
-                            variantBP90 = "",
-                            OS = OS.Linux,
-                            qualifier = "",
-                            metric = Metric.PROCESS
-                        )
-                    )
-                }
-                return measurement.toList()
-            } else {
-                return emptyList()
-            }
-            return emptyList()
+        extracted(
+            variantA.flatMap { listOf(it.total.allProcessesCpu.max) },
+            variantB.flatMap { listOf(it.total.allProcessesCpu.max) },
+            "Max",
+            "All processes cpu",
+            measurement,
+            "percentage"
+        )
+
+        extracted(
+            variantA.flatMap { listOf(it.total.allProcessesCpu.median) },
+            variantB.flatMap { listOf(it.total.allProcessesCpu.median) },
+            "Median",
+            "All processes cpu",
+            measurement,
+            "percentage"
+        )
+        extracted(
+            variantA.flatMap { listOf(it.total.allProcessesCpu.average) },
+            variantB.flatMap { listOf(it.total.allProcessesCpu.average) },
+            "Average",
+            "All processes cpu",
+            measurement,
+            "percentage"
+        )
+
+        extracted(
+            variantA.flatMap { listOf(it.total.allProcessesMemory.max) },
+            variantB.flatMap { listOf(it.total.allProcessesMemory.max) },
+            "Max",
+            "All processes memory",
+            measurement,
+            "bytes"
+        )
+
+        extracted(
+            variantA.flatMap { listOf(it.total.allProcessesMemory.median) },
+            variantB.flatMap { listOf(it.total.allProcessesMemory.median) },
+            "Median",
+            "All processes memory",
+            measurement,
+            "bytes"
+        )
+        extracted(
+            variantA.flatMap { listOf(it.total.allProcessesMemory.average) },
+            variantB.flatMap { listOf(it.total.allProcessesMemory.average) },
+            "Average",
+            "All processes memory",
+            measurement,
+            "bytes"
+        )
+
+        extracted(
+            variantA.flatMap { listOf(it.total.buildProcessCpu.max) },
+            variantB.flatMap { listOf(it.total.buildProcessCpu.max) },
+            "Max",
+            "Build process cpu",
+            measurement,
+            "percentage"
+        )
+
+        extracted(
+            variantA.flatMap { listOf(it.total.buildProcessCpu.median) },
+            variantB.flatMap { listOf(it.total.buildProcessCpu.median) },
+            "Median",
+            "Build process cpu",
+            measurement,
+            "percentage"
+        )
+        extracted(
+            variantA.flatMap { listOf(it.total.buildProcessCpu.average) },
+            variantB.flatMap { listOf(it.total.buildProcessCpu.average) },
+            "Average",
+            "Build process cpu",
+            measurement,
+            "percentage"
+        )
+
+        extracted(
+            variantA.flatMap { listOf(it.total.buildProcessMemory.max) },
+            variantB.flatMap { listOf(it.total.buildProcessMemory.max) },
+            "Max",
+            "Build processes memory",
+            measurement,
+            "bytes"
+        )
+
+        extracted(
+            variantA.flatMap { listOf(it.total.buildProcessMemory.median) },
+            variantB.flatMap { listOf(it.total.buildProcessMemory.median) },
+            "Median",
+            "Build processes memory",
+            measurement,
+            "bytes"
+        )
+        extracted(
+            variantA.flatMap { listOf(it.total.buildProcessMemory.average) },
+            variantB.flatMap { listOf(it.total.buildProcessMemory.average) },
+            "Average",
+            "Build processes memory",
+            measurement,
+            "bytes"
+        )
+
+        extracted(
+            variantA.flatMap { listOf(it.total.buildChildProcessesCpu.max) },
+            variantB.flatMap { listOf(it.total.buildChildProcessesCpu.max) },
+            "Max",
+            "Build child processes cpu",
+            measurement,
+            "percentage"
+        )
+
+        extracted(
+            variantA.flatMap { listOf(it.total.buildChildProcessesCpu.median) },
+            variantB.flatMap { listOf(it.total.buildChildProcessesCpu.median) },
+            "Median",
+            "Build child processes cpu",
+            measurement,
+            "percentage"
+        )
+        extracted(
+            variantA.flatMap { listOf(it.total.buildChildProcessesCpu.average) },
+            variantB.flatMap { listOf(it.total.buildChildProcessesCpu.average) },
+            "Average",
+            "Build processes cpu",
+            measurement,
+            "percentage"
+        )
+
+        extracted(
+            variantA.flatMap { listOf(it.total.buildChildProcessesMemory.max) },
+            variantB.flatMap { listOf(it.total.buildChildProcessesMemory.max) },
+            "Max",
+            "Build child processes memory",
+            measurement,
+            "bytes"
+        )
+
+        extracted(
+            variantA.flatMap { listOf(it.total.buildChildProcessesMemory.median) },
+            variantB.flatMap { listOf(it.total.buildChildProcessesMemory.median) },
+            "Median",
+            "Build child processes memory",
+            measurement,
+            "bytes"
+        )
+        extracted(
+            variantA.flatMap { listOf(it.total.buildChildProcessesMemory.average) },
+            variantB.flatMap { listOf(it.total.buildChildProcessesMemory.average) },
+            "Average",
+            "Build child processes memory",
+            measurement,
+            "bytes"
+        )
+
+        return measurement.toList()
+    }
+
+    private fun extracted(
+        variantAValues: List<Long>,
+        variantBValues: List<Long>,
+        name: String,
+        category: String,
+        measurements: MutableList<MeasurementWithPercentiles>,
+        type: String
+    ) {
+        val variantAMedian = if (type == "bytes") {
+            "${
+            bytesToGigabytes(
+                variantAValues.median()
+            )
+            }"
         } else {
-            val measurement = mutableListOf<MeasurementWithPercentiles>()
-            val processesParser = ProcessesReportParser()
-            val listVariantAValues = processesParser.parseByVariant(variantA, value)
-            val listVariantBValues = processesParser.parseByVariant(variantB, value)
-            val listVariantAValuesFormatted = formatListValues(listVariantAValues)
-            val listVariantBValuesFormatted = formatListValues(listVariantBValues)
-
-
-            listVariantAValuesFormatted.forEach {
-                val x = listVariantBValuesFormatted[it.key]!!
-
-                val varianta =
-                    (((it.value.sumOf { it } / it.value.size) * 100.0).roundToInt() / 100.0)
-                val variantb =
-                    (((x.sumOf { it } / x.size) * 100.0).roundToInt() / 100.0)
-                val variantaP50 = (it.value.percentile(50.0) * 100.0).roundToInt() / 100.0
-                val variantbP50 = (x.map { it }.percentile(50.0) * 100.0).roundToInt() / 100.0
-                val variantaP90 = (it.value.map { it }.percentile(90.0) * 100.0).roundToInt() / 100.0
-                val variantbP90 = (x.map { it }.percentile(90.0) * 100.0).roundToInt() / 100.0
-                measurement.add(
-                    MeasurementWithPercentiles(
-                        name = it.key,
-                        variantAMean = "$varianta",
-                        variantBMean = "$variantb",
-                        category = "$value process state",
-                        variantAP50 = "$variantaP50",
-                        variantBP50 = "$variantbP50",
-                        variantAP90 = "$variantaP90",
-                        variantBP90 = "$variantbP90",
-                        OS = OS.Linux,
-                        qualifier = "",
-                        metric = Metric.PROCESS
-                    )
-                )
-            }
-            return measurement.toList()
+            "${variantAValues.median()}"
         }
+        val variantBMedian = if (type == "bytes") {
+            "${
+            bytesToGigabytes(
+                variantBValues.median()
+            )
+            }"
+        } else {
+            "${variantBValues.median()}"
+        }
+        val variantAMean = if (type == "bytes") {
+            "${
+            bytesToGigabytes(
+                variantAValues.average()
+            )
+            }"
+        } else {
+            "${variantAValues.average()}"
+        }
+        val variantBMean = if (type == "bytes") {
+            "${
+            bytesToGigabytes(
+                variantBValues.average()
+            )
+            }"
+        } else {
+            "${variantBValues.average()}"
+        }
+        val variantAP90 = if (type == "bytes") {
+            "${
+            bytesToGigabytes(
+                variantAValues.percentile(90.0)
+            )
+            }"
+        } else {
+            "${variantAValues.percentile(90.0).roundToLong()}"
+        }
+        val variantBP90 = if (type == "bytes") {
+            "${
+            bytesToGigabytes(
+                variantBValues.percentile(90.0)
+            )
+            }"
+        } else {
+            "${variantBValues.percentile(90.0).roundToLong()}"
+        }
+
+        val unit = if (type == "bytes") "Gb" else "%"
+
+        measurements.add(
+            MeasurementWithPercentiles(
+                name = name,
+                variantAMean = variantAMean,
+                variantBMean = variantBMean,
+                category = category,
+                variantAP50 = variantAMedian,
+                variantBP50 = variantBMedian,
+                variantAP90 = variantAP90,
+                variantBP90 = variantBP90,
+                OS = OS.Linux,
+                qualifier = unit,
+                metric = Metric.RESOURCE_USAGE
+            )
+        )
     }
 
-    private fun formatListValues(values: Map<String, MutableList<String>>): Map<String, MutableList<Double>> {
-        val listValuesFormatted = mutableMapOf<String, MutableList<Double>>()
-
-        values.forEach {
-            if (it.value.filter { it.contains("GB") || it.contains("minutes") }.isNotEmpty()) {
-                val aux = mutableListOf<Double>()
-                it.value.filter { it.contains("GB") || it.contains("minutes") }.forEach {
-                    val valuesNo = it.split(" ")
-                    aux.add(valuesNo[0].toDouble())
-                }
-                listValuesFormatted[it.key] = aux
-            }
-        }
-        return listValuesFormatted
+    private fun bytesToGigabytes(bytes: Double): Double {
+        return String.format("%.2f", bytes / (1024.0 * 1024.0 * 1024.0)).toDouble()
     }
-
 }
-
-

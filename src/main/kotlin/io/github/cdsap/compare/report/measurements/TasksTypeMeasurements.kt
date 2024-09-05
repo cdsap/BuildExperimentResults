@@ -2,14 +2,14 @@ package io.github.cdsap.compare.report.measurements
 
 import io.github.cdsap.compare.model.MeasurementWithPercentiles
 import io.github.cdsap.compare.model.Metric
-import io.github.cdsap.geapi.client.model.Build
+import io.github.cdsap.geapi.client.model.BuildWithResourceUsage
 import io.github.cdsap.geapi.client.model.OS
 import org.nield.kotlinstatistics.percentile
 import kotlin.math.roundToLong
 
 class TasksTypeMeasurements(
-    private val variantA: List<Build>,
-    private val variantB: List<Build>
+    private val variantA: List<BuildWithResourceUsage>,
+    private val variantB: List<BuildWithResourceUsage>
 ) {
     fun get(): List<MeasurementWithPercentiles> {
         return getTaskTypeMeasurements()
@@ -22,10 +22,8 @@ class TasksTypeMeasurements(
         val measurementsP = mutableListOf<MeasurementWithPercentiles>()
 
         variantAAggregatedTaskType.forEach {
-
             val x = variantBAggregatedTaskType[it.key]
             if (x != null) {
-
                 measurementsP.add(
                     MeasurementWithPercentiles(
                         category = "Task Type",
@@ -46,7 +44,7 @@ class TasksTypeMeasurements(
         return measurementsP
     }
 
-    private fun getTasksByType(builds: List<Build>): Map<String, MutableList<Long>> {
+    private fun getTasksByType(builds: List<BuildWithResourceUsage>): Map<String, MutableList<Long>> {
         val variantAggregatedTaskType = mutableMapOf<String, MutableList<Long>>()
         builds.forEach {
             it.taskExecution.filter { (it.avoidanceOutcome == "executed_cacheable") }
