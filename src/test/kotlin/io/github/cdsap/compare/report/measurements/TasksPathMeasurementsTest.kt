@@ -1,44 +1,51 @@
 package io.github.cdsap.compare.report.measurements
 
 import io.github.cdsap.geapi.client.model.AvoidanceSavingsSummary
-import io.github.cdsap.geapi.client.model.Build
+import io.github.cdsap.geapi.client.model.BuildWithResourceUsage
 import io.github.cdsap.geapi.client.model.Task
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
 class TasksPathMeasurementsTest {
+    private val BuildWithResourceUsageProvider = BuildWithResourceUsageProvider()
 
     @Test
     fun `test getTaskPathMeasurements`() {
-
         val variantA = listOf(
-            Build(
+            BuildWithResourceUsage(
                 builtTool = "A",
                 taskExecution = arrayOf(
                     Task("compile", ":app:compileDebugKotlin", "executed_cacheable", 1500, 10),
                     Task("compile", ":core:compileDebugKotlin", "executed_cacheable", 2000, 20)
                 ),
                 goalExecution = emptyArray(),
-                avoidanceSavingsSummary = AvoidanceSavingsSummary("","","")
+                avoidanceSavingsSummary = AvoidanceSavingsSummary("", "", ""),
+                execution = BuildWithResourceUsageProvider.get(),
+                nonExecution = BuildWithResourceUsageProvider.get(),
+                total = BuildWithResourceUsageProvider.get(),
+                totalMemory = 0L
             )
         )
 
         val variantB = listOf(
-            Build(
+            BuildWithResourceUsage(
                 builtTool = "B",
                 taskExecution = arrayOf(
                     Task("compile", ":app:compileDebugKotlin", "executed_cacheable", 3000, 15),
                     Task("compile", ":core:compileDebugKotlin", "executed_cacheable", 4000, 25)
                 ),
                 goalExecution = emptyArray(),
-                avoidanceSavingsSummary = AvoidanceSavingsSummary("","","")
+                avoidanceSavingsSummary = AvoidanceSavingsSummary("", "", ""),
+                execution = BuildWithResourceUsageProvider.get(),
+                nonExecution = BuildWithResourceUsageProvider.get(),
+                total = BuildWithResourceUsageProvider.get(),
+                totalMemory = 0L
             )
         )
 
         val tasksPathMeasurements = TasksPathMeasurements(variantA, variantB)
         val measurements = tasksPathMeasurements.get()
-
 
         assertEquals(2, measurements.size)
         assertEquals("Task Path", measurements[0].category)
@@ -51,5 +58,4 @@ class TasksPathMeasurementsTest {
         assertTrue(measurements[0].variantBP90.toString().startsWith("3000"))
         assertEquals("ms", measurements[0].qualifier)
     }
-
 }
