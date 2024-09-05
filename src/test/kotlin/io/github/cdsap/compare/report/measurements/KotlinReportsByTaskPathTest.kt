@@ -2,18 +2,19 @@ package io.github.cdsap.compare.report.measurements
 
 import io.github.cdsap.compare.report.measurements.parser.KotlinBuildReportsParserCustomValues
 import io.github.cdsap.geapi.client.model.AvoidanceSavingsSummary
-import io.github.cdsap.geapi.client.model.Build
+import io.github.cdsap.geapi.client.model.BuildWithResourceUsage
 import io.github.cdsap.geapi.client.model.CustomValue
 import io.github.cdsap.geapi.client.model.Task
-import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
 class KotlinReportsByTaskPathTest {
+    private val BuildWithResourceUsageProvider = BuildWithResourceUsageProvider()
 
     @Test
     fun buildsWithKotlinBuildReportsReturnAggregatedData() {
         val buildA = listOf(
-            Build(
+            BuildWithResourceUsage(
                 id = "1",
                 builtTool = "A",
                 taskExecution = arrayOf(
@@ -31,11 +32,15 @@ class KotlinReportsByTaskPathTest {
                         ":task2:kaptGenerateStubsDemoReleaseKotlin",
                         "Non incremental build because: [Unknown Gradle changes]; Kotlin language version: 1.9; Performance: [Shrink current classpath snapshot non-incrementally: 100ms,Connect to Kotlin daemon: 100ms]"
                     )
-                )
+                ),
+                execution = BuildWithResourceUsageProvider.get(),
+                nonExecution = BuildWithResourceUsageProvider.get(),
+                total = BuildWithResourceUsageProvider.get(),
+                totalMemory = 0L
             )
         )
         val buildB = listOf(
-            Build(
+            BuildWithResourceUsage(
                 id = "2",
                 builtTool = "A",
                 taskExecution = arrayOf(
@@ -53,7 +58,11 @@ class KotlinReportsByTaskPathTest {
                         ":task2:kaptGenerateStubsDemoReleaseKotlin",
                         "Non incremental build because: [Unknown Gradle changes]; Kotlin language version: 1.9; Performance: [Shrink current classpath snapshot non-incrementally: 500ms,Connect to Kotlin daemon: 500ms]"
                     )
-                )
+                ),
+                execution = BuildWithResourceUsageProvider.get(),
+                nonExecution = BuildWithResourceUsageProvider.get(),
+                total = BuildWithResourceUsageProvider.get(),
+                totalMemory = 0L
             )
         )
         val kotlinReportsParserCustomValues =
@@ -71,7 +80,7 @@ class KotlinReportsByTaskPathTest {
     @Test
     fun buildsWithKotlinBuildReportsWithOutQualifiersReturnAggregatedData() {
         val buildA = listOf(
-            Build(
+            BuildWithResourceUsage(
                 id = "1",
                 builtTool = "A",
                 taskExecution = arrayOf(
@@ -89,11 +98,15 @@ class KotlinReportsByTaskPathTest {
                         ":task2:kaptGenerateStubsDemoReleaseKotlin",
                         "Non incremental build because: [Unknown Gradle changes]; Kotlin language version: 1.9; Performance: [lines analyzed: 10]"
                     )
-                )
+                ),
+                execution = BuildWithResourceUsageProvider.get(),
+                nonExecution = BuildWithResourceUsageProvider.get(),
+                total = BuildWithResourceUsageProvider.get(),
+                totalMemory = 0L
             )
         )
         val buildB = listOf(
-            Build(
+            BuildWithResourceUsage(
                 id = "2",
                 builtTool = "A",
                 taskExecution = arrayOf(
@@ -111,7 +124,11 @@ class KotlinReportsByTaskPathTest {
                         ":task2:kaptGenerateStubsDemoReleaseKotlin",
                         "Non incremental build because: [Unknown Gradle changes]; Kotlin language version: 1.9; Performance: [lines analyzed: 10]"
                     )
-                )
+                ),
+                execution = BuildWithResourceUsageProvider.get(),
+                nonExecution = BuildWithResourceUsageProvider.get(),
+                total = BuildWithResourceUsageProvider.get(),
+                totalMemory = 0L
             )
         )
         val kotlinReportsParserCustomValues =
@@ -128,7 +145,7 @@ class KotlinReportsByTaskPathTest {
     @Test
     fun whenIncludingExclusionMetricReturnsEmpty() {
         val buildA = listOf(
-            Build(
+            BuildWithResourceUsage(
                 id = "1",
                 builtTool = "A",
                 taskExecution = arrayOf(
@@ -146,11 +163,15 @@ class KotlinReportsByTaskPathTest {
                         ":task2:kaptGenerateStubsDemoReleaseKotlin",
                         "Non incremental build because: [Unknown Gradle changes]; Kotlin language version: 1.9; Performance: [Worker submit time: 10]"
                     )
-                )
+                ),
+                execution = BuildWithResourceUsageProvider.get(),
+                nonExecution = BuildWithResourceUsageProvider.get(),
+                total = BuildWithResourceUsageProvider.get(),
+                totalMemory = 0L
             )
         )
         val buildB = listOf(
-            Build(
+            BuildWithResourceUsage(
                 id = "2",
                 builtTool = "A",
                 taskExecution = arrayOf(
@@ -168,7 +189,11 @@ class KotlinReportsByTaskPathTest {
                         ":task2:kaptGenerateStubsDemoReleaseKotlin",
                         "Non incremental build because: [Unknown Gradle changes]; Kotlin language version: 1.9; Performance: [Worker submit time: 10]"
                     )
-                )
+                ),
+                execution = BuildWithResourceUsageProvider.get(),
+                nonExecution = BuildWithResourceUsageProvider.get(),
+                total = BuildWithResourceUsageProvider.get(),
+                totalMemory = 0L
             )
         )
         val kotlinReportsParserCustomValues =
@@ -182,7 +207,7 @@ class KotlinReportsByTaskPathTest {
     @Test
     fun whenBuildsDontIncludeSameMetricsReturnsEmpty() {
         val buildA = listOf(
-            Build(
+            BuildWithResourceUsage(
                 id = "1",
                 builtTool = "A",
                 taskExecution = arrayOf(
@@ -200,11 +225,15 @@ class KotlinReportsByTaskPathTest {
                         ":task2:kaptGenerateStubsDemoReleaseKotlin",
                         "Non incremental build because: [Unknown Gradle changes]; Kotlin language version: 1.9; Performance: [first: 10]"
                     )
-                )
+                ),
+                execution = BuildWithResourceUsageProvider.get(),
+                nonExecution = BuildWithResourceUsageProvider.get(),
+                total = BuildWithResourceUsageProvider.get(),
+                totalMemory = 0L
             )
         )
         val buildB = listOf(
-            Build(
+            BuildWithResourceUsage(
                 id = "2",
                 builtTool = "A",
                 taskExecution = arrayOf(
@@ -222,7 +251,11 @@ class KotlinReportsByTaskPathTest {
                         ":task2:kaptGenerateStubsDemoReleaseKotlin",
                         "Non incremental build because: [Unknown Gradle changes]; Kotlin language version: 1.9; Performance: [another_mer: 10]"
                     )
-                )
+                ),
+                execution = BuildWithResourceUsageProvider.get(),
+                nonExecution = BuildWithResourceUsageProvider.get(),
+                total = BuildWithResourceUsageProvider.get(),
+                totalMemory = 0L
             )
         )
         val kotlinReportsParserCustomValues =
@@ -232,6 +265,4 @@ class KotlinReportsByTaskPathTest {
 
         assertTrue(measurements.isEmpty())
     }
-
 }
-

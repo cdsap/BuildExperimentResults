@@ -1,9 +1,10 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    kotlin("jvm") version "1.7.21"
+    kotlin("jvm") version "1.9.24"
     application
     id("io.github.cdsap.fatbinary") version "1.0"
+    id("org.jlleitschuh.gradle.ktlint") version "11.5.1"
 }
 
 group = "org.example"
@@ -20,7 +21,7 @@ fatBinary {
 
 dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4")
-    implementation("io.github.cdsap:geapi-data:0.2.5")
+    implementation("io.github.cdsap:geapi-data:0.3.0")
     implementation("com.google.code.gson:gson:2.8.9")
     implementation("com.jakewharton.picnic:picnic:0.6.0")
     implementation("com.github.ajalt.clikt:clikt:3.5.0")
