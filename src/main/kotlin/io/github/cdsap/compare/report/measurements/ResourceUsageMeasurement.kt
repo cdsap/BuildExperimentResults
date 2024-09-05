@@ -37,43 +37,9 @@ class ResourceUsageMeasurement(
         )
 
         extracted(
-            variantA.flatMap { listOf(it.total.allProcessesCpu.median) },
-            variantB.flatMap { listOf(it.total.allProcessesCpu.median) },
-            "Median",
-            "All processes cpu",
-            measurement,
-            "percentage"
-        )
-        extracted(
-            variantA.flatMap { listOf(it.total.allProcessesCpu.average) },
-            variantB.flatMap { listOf(it.total.allProcessesCpu.average) },
-            "Average",
-            "All processes cpu",
-            measurement,
-            "percentage"
-        )
-
-        extracted(
             variantA.flatMap { listOf(it.total.allProcessesMemory.max) },
             variantB.flatMap { listOf(it.total.allProcessesMemory.max) },
             "Max",
-            "All processes memory",
-            measurement,
-            "bytes"
-        )
-
-        extracted(
-            variantA.flatMap { listOf(it.total.allProcessesMemory.median) },
-            variantB.flatMap { listOf(it.total.allProcessesMemory.median) },
-            "Median",
-            "All processes memory",
-            measurement,
-            "bytes"
-        )
-        extracted(
-            variantA.flatMap { listOf(it.total.allProcessesMemory.average) },
-            variantB.flatMap { listOf(it.total.allProcessesMemory.average) },
-            "Average",
             "All processes memory",
             measurement,
             "bytes"
@@ -89,43 +55,9 @@ class ResourceUsageMeasurement(
         )
 
         extracted(
-            variantA.flatMap { listOf(it.total.buildProcessCpu.median) },
-            variantB.flatMap { listOf(it.total.buildProcessCpu.median) },
-            "Median",
-            "Build process cpu",
-            measurement,
-            "percentage"
-        )
-        extracted(
-            variantA.flatMap { listOf(it.total.buildProcessCpu.average) },
-            variantB.flatMap { listOf(it.total.buildProcessCpu.average) },
-            "Average",
-            "Build process cpu",
-            measurement,
-            "percentage"
-        )
-
-        extracted(
             variantA.flatMap { listOf(it.total.buildProcessMemory.max) },
             variantB.flatMap { listOf(it.total.buildProcessMemory.max) },
             "Max",
-            "Build processes memory",
-            measurement,
-            "bytes"
-        )
-
-        extracted(
-            variantA.flatMap { listOf(it.total.buildProcessMemory.median) },
-            variantB.flatMap { listOf(it.total.buildProcessMemory.median) },
-            "Median",
-            "Build processes memory",
-            measurement,
-            "bytes"
-        )
-        extracted(
-            variantA.flatMap { listOf(it.total.buildProcessMemory.average) },
-            variantB.flatMap { listOf(it.total.buildProcessMemory.average) },
-            "Average",
             "Build processes memory",
             measurement,
             "bytes"
@@ -141,43 +73,9 @@ class ResourceUsageMeasurement(
         )
 
         extracted(
-            variantA.flatMap { listOf(it.total.buildChildProcessesCpu.median) },
-            variantB.flatMap { listOf(it.total.buildChildProcessesCpu.median) },
-            "Median",
-            "Build child processes cpu",
-            measurement,
-            "percentage"
-        )
-        extracted(
-            variantA.flatMap { listOf(it.total.buildChildProcessesCpu.average) },
-            variantB.flatMap { listOf(it.total.buildChildProcessesCpu.average) },
-            "Average",
-            "Build processes cpu",
-            measurement,
-            "percentage"
-        )
-
-        extracted(
             variantA.flatMap { listOf(it.total.buildChildProcessesMemory.max) },
             variantB.flatMap { listOf(it.total.buildChildProcessesMemory.max) },
             "Max",
-            "Build child processes memory",
-            measurement,
-            "bytes"
-        )
-
-        extracted(
-            variantA.flatMap { listOf(it.total.buildChildProcessesMemory.median) },
-            variantB.flatMap { listOf(it.total.buildChildProcessesMemory.median) },
-            "Median",
-            "Build child processes memory",
-            measurement,
-            "bytes"
-        )
-        extracted(
-            variantA.flatMap { listOf(it.total.buildChildProcessesMemory.average) },
-            variantB.flatMap { listOf(it.total.buildChildProcessesMemory.average) },
-            "Average",
             "Build child processes memory",
             measurement,
             "bytes"

@@ -24,9 +24,9 @@ class ExperimentReport(
             val getBuildScans = GetBuildsFromQueryWithAttributesRequest(repository).get(filter)
             val getOutcome = GetBuildsWithCachePerformanceRequest(repository)
             val outcome = getOutcome.get(getBuildScans, filter)
-            val BuildWithResourceUsage = GetBuildsResourceUsageRequest(repository).get(getBuildScans, filter)
+            val buildWithResourceUsage = GetBuildsResourceUsageRequest(repository).get(getBuildScans, filter)
             outcome.forEach { build ->
-                val usage = BuildWithResourceUsage.find { build.id == it.id }
+                val usage = buildWithResourceUsage.find { build.id == it.id }
                 usage?.requestedTask = build.requestedTask
                 usage?.values = build.values
                 usage?.tags = build.tags
@@ -37,12 +37,12 @@ class ExperimentReport(
                 usage?.taskExecution = build.taskExecution
             }
 
-            val variants = FilterBuildsPerVariant(report).get(BuildWithResourceUsage)
+            val variants = FilterBuildsPerVariant(report).get(buildWithResourceUsage)
 
             val measurements = MeasurementsByReport(report).get(variants)
 
             if (measurements.isNotEmpty()) {
-                ExperimentView(report, filter.requestedTask!!).print(measurements, variants)
+                ExperimentView(report).print(measurements, variants)
                 GeneralCsvOutputView(report).write(measurements)
             }
         }

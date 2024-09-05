@@ -25,7 +25,7 @@ class Experiment : CliktCommand() {
     private val url by option().required()
     private val maxBuilds by option().int().default(500).check("max builds to process 1000") { it <= 1000 }
     private val project: String? by option()
-    private val requestedTask: String? by option().required()
+    private val requestedTask: String? by option()
     private val variants: List<String> by option().multiple(default = emptyList())
     private val experimentId by option().required()
     private val profile by option().flag(default = false)
