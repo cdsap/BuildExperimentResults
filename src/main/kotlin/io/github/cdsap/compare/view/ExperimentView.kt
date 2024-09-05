@@ -10,10 +10,8 @@ import io.github.cdsap.compare.model.Report
 import java.io.File
 
 class ExperimentView(
-    val report: Report,
-    val task: String
+    val report: Report
 ) {
-
     fun print(measurement: List<MeasurementWithPercentiles>, variants: BuildsPerVariant) {
         val header = header(variants)
         println(generateTable(measurement, report.variants[0], report.variants[1], header))
@@ -28,7 +26,7 @@ class ExperimentView(
     }
 
     private fun header(variants: BuildsPerVariant) = Header(
-        task = task,
+        task = variants.variantA.first().requestedTask.joinToString(","),
         numberOfBuildsForExperimentA = variants.variantA.size,
         numberOfBuildsForExperimentB = variants.variantB.size,
         experiment = report.experimentId
