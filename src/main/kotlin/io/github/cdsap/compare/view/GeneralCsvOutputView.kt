@@ -25,4 +25,3 @@ class GeneralCsvOutputView(
         println("File $csv created")
     }
 }
-

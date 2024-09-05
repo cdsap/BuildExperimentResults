@@ -2,8 +2,11 @@ package io.github.cdsap.compare.view
 
 import com.jakewharton.picnic.TextAlignment
 import com.jakewharton.picnic.table
-import io.github.cdsap.compare.model.*
-
+import io.github.cdsap.compare.model.BuildsPerVariant
+import io.github.cdsap.compare.model.Header
+import io.github.cdsap.compare.model.MeasurementWithPercentiles
+import io.github.cdsap.compare.model.Metric
+import io.github.cdsap.compare.model.Report
 import java.io.File
 
 class ExperimentView(
@@ -83,8 +86,6 @@ class ExperimentView(
                     .groupBy {
                         it.OS
                     }.forEach {
-
-
                         row {
                             cell("Category") {
                                 rowSpan = 2
@@ -99,18 +100,14 @@ class ExperimentView(
                                 alignment = TextAlignment.MiddleCenter
                             }
 
-                            cell("P50")
-                            {
+                            cell("P50") {
                                 columnSpan = 2
                                 alignment = TextAlignment.MiddleCenter
                             }
-                            cell(" P90")
-                            {
+                            cell(" P90") {
                                 columnSpan = 2
                                 alignment = TextAlignment.MiddleCenter
                             }
-
-
                         }
                         row {
                             cell("$varianta".splitString()) { alignment = TextAlignment.MiddleCenter }
@@ -143,7 +140,6 @@ class ExperimentView(
                                     alignment = TextAlignment.MiddleRight
                                 }
                             }
-
                         }
                     }
             }
@@ -165,6 +161,10 @@ class ExperimentView(
 
         var buildReport = ""
         measurement.filter { it.metric == Metric.BUILD }.forEach {
+            buildReport += "<tr><td>${it.category}</td><td>${it.name}</td><td>${it.variantAMean} ${it.qualifier}</td><td>${it.variantBMean} ${it.qualifier}</td><td>${it.variantAP50} ${it.qualifier}</td><td>${it.variantBP50} ${it.qualifier}</td><td>${it.variantAP90} ${it.qualifier}</td><td>${it.variantBP90} ${it.qualifier}</td></tr>"
+        }
+        var usageReport = ""
+        measurement.filter { it.metric == Metric.RESOURCE_USAGE }.forEach {
             buildReport += "<tr><td>${it.category}</td><td>${it.name}</td><td>${it.variantAMean} ${it.qualifier}</td><td>${it.variantBMean} ${it.qualifier}</td><td>${it.variantAP50} ${it.qualifier}</td><td>${it.variantBP50} ${it.qualifier}</td><td>${it.variantAP90} ${it.qualifier}</td><td>${it.variantBP90} ${it.qualifier}</td></tr>"
         }
 
@@ -195,12 +195,12 @@ class ExperimentView(
 
         if (output.length + outputTaskPath.length + outputTaskType.length + outputProcesses.length + outputKotlinBuildReports.length + tasksOutputKotlinBuildReports.length > 1000000) {
             if (output.length + outputTaskPath.length + outputTaskType.length + outputProcesses.length + outputKotlinBuildReports.length > 1000000) {
-                output += buildReport + outputTaskType + outputTaskPath + outputProcesses
+                output += buildReport + usageReport + outputTaskType + outputTaskPath
             } else {
-                output += buildReport + outputTaskType + outputTaskPath + outputProcesses + outputKotlinBuildReports
+                output += buildReport + usageReport + outputTaskType + outputTaskPath + outputProcesses + outputKotlinBuildReports
             }
         } else {
-            output += buildReport + outputTaskType + outputTaskPath + outputProcesses + outputKotlinBuildReports + tasksOutputKotlinBuildReports
+            output += buildReport + usageReport + outputTaskType + outputTaskPath + outputProcesses + outputKotlinBuildReports + tasksOutputKotlinBuildReports
         }
 
         output += "</table>"

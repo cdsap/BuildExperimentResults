@@ -4,7 +4,9 @@ import io.github.cdsap.geapi.client.model.OS
 import kotlin.math.abs
 
 class Measurement(
-    val name: String, val variantA: String, val variantB: String
+    val name: String,
+    val variantA: String,
+    val variantB: String
 ) {
     fun diff(): Int {
         println(variantA)
@@ -21,17 +23,16 @@ class Measurement(
             val s = (abs * 100) / variantA.toDouble()
             return s.toInt()
         } else {
-           return 0
+            return 0
         }
-
     }
-
 }
 
 data class TaskFingerprintingSummary(val count: Int, val serialDuration: Long)
 
 data class MeasurementWithPercentiles(
-    val category: String, val name: String,
+    val category: String,
+    val name: String,
     val variantAMean: Any,
     val variantBMean: Any,
     val variantAP50: Any,
@@ -75,4 +76,3 @@ fun isLong(str: String): Boolean {
         return false
     }
 }
-

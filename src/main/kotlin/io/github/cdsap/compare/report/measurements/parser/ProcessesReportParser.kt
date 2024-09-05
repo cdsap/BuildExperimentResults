@@ -1,6 +1,6 @@
 package io.github.cdsap.compare.report.measurements.parser
 
-import io.github.cdsap.geapi.client.model.Build
+import io.github.cdsap.geapi.client.model.BuildWithResourceUsage
 import io.github.cdsap.geapi.client.model.CustomValue
 
 class ProcessesReportParser {
@@ -20,7 +20,7 @@ class ProcessesReportParser {
         }
     }
 
-    fun parseByVariant(builds: List<Build>, value: String): Map<String, MutableList<String>> {
+    fun parseByVariant(builds: List<BuildWithResourceUsage>, value: String): Map<String, MutableList<String>> {
         val listVariantValues = mutableMapOf<String, MutableList<String>>()
 
         builds.forEach {

@@ -3,13 +3,15 @@ package io.github.cdsap.compare.report.measurements
 import com.google.gson.Gson
 import io.github.cdsap.compare.model.Metric
 import io.github.cdsap.compare.model.Report
-import io.github.cdsap.geapi.client.model.Build
-import org.junit.jupiter.api.Assertions.*
+import io.github.cdsap.geapi.client.model.BuildWithResourceUsage
+import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import java.io.BufferedReader
 import java.io.InputStreamReader
 
 class MeasurementsByReportTest {
+    private val BuildWithResourceUsageProvider = BuildWithResourceUsageProvider()
 
     @Test
     fun allMetricsAreReturned() {
@@ -21,6 +23,7 @@ class MeasurementsByReportTest {
                 kotlinBuildReport = true,
                 processesReport = true,
                 buildReport = true,
+                resourceUsageReport = false,
                 isProfile = false,
                 warmupsToDiscard = 2,
                 variants = listOf("lint-4-1-different-process", "lint-2-1-different-process"),
@@ -29,12 +32,12 @@ class MeasurementsByReportTest {
         val measurements = MeasurementsByReport(report).get(FilterBuildsPerVariant(report).get(builds))
 
         assertTrue(measurements.isNotEmpty())
-        assertTrue(measurements.any{ it.metric == Metric.KOTLIN_BUILD_REPORT})
-        assertTrue(measurements.any{ it.metric == Metric.BUILD})
-        assertTrue(measurements.any{ it.metric == Metric.TASK_TYPE})
-        assertTrue(measurements.any{ it.metric == Metric.TASK_PATH})
-        assertTrue(measurements.any{ it.metric == Metric.PROCESS})
-        assertTrue(measurements.any{ it.metric == Metric.TASK_KOTLIN_BUILD_REPORT})
+        assertTrue(measurements.any { it.metric == Metric.KOTLIN_BUILD_REPORT })
+        assertTrue(measurements.any { it.metric == Metric.BUILD })
+        assertTrue(measurements.any { it.metric == Metric.TASK_TYPE })
+        assertTrue(measurements.any { it.metric == Metric.TASK_PATH })
+        assertTrue(measurements.any { it.metric == Metric.PROCESS })
+        assertTrue(measurements.any { it.metric == Metric.TASK_KOTLIN_BUILD_REPORT })
     }
 
     @Test
@@ -48,6 +51,7 @@ class MeasurementsByReportTest {
                 processesReport = true,
                 buildReport = true,
                 isProfile = false,
+                resourceUsageReport = false,
                 warmupsToDiscard = 2,
                 variants = listOf("lint-4-1-different-process", "lint-2-1-different-process"),
                 experimentId = "154"
@@ -55,12 +59,12 @@ class MeasurementsByReportTest {
         val measurements = MeasurementsByReport(report).get(FilterBuildsPerVariant(report).get(builds))
 
         assertTrue(measurements.isNotEmpty())
-        assertFalse(measurements.any{ it.metric == Metric.KOTLIN_BUILD_REPORT})
-        assertTrue(measurements.any{ it.metric == Metric.BUILD})
-        assertTrue(measurements.any{ it.metric == Metric.TASK_TYPE})
-        assertTrue(measurements.any{ it.metric == Metric.TASK_PATH})
-        assertTrue(measurements.any{ it.metric == Metric.PROCESS})
-        assertFalse(measurements.any{ it.metric == Metric.TASK_KOTLIN_BUILD_REPORT})
+        assertFalse(measurements.any { it.metric == Metric.KOTLIN_BUILD_REPORT })
+        assertTrue(measurements.any { it.metric == Metric.BUILD })
+        assertTrue(measurements.any { it.metric == Metric.TASK_TYPE })
+        assertTrue(measurements.any { it.metric == Metric.TASK_PATH })
+        assertTrue(measurements.any { it.metric == Metric.PROCESS })
+        assertFalse(measurements.any { it.metric == Metric.TASK_KOTLIN_BUILD_REPORT })
     }
 
     @Test
@@ -74,6 +78,7 @@ class MeasurementsByReportTest {
                 processesReport = true,
                 buildReport = true,
                 isProfile = false,
+                resourceUsageReport = false,
                 warmupsToDiscard = 2,
                 variants = listOf("lint-4-1-different-process", "lint-2-1-different-process"),
                 experimentId = "154"
@@ -81,12 +86,12 @@ class MeasurementsByReportTest {
         val measurements = MeasurementsByReport(report).get(FilterBuildsPerVariant(report).get(builds))
 
         assertTrue(measurements.isNotEmpty())
-        assertTrue(measurements.any{ it.metric == Metric.KOTLIN_BUILD_REPORT})
-        assertTrue(measurements.any{ it.metric == Metric.BUILD})
-        assertTrue(measurements.any{ it.metric == Metric.TASK_TYPE})
-        assertFalse(measurements.any{ it.metric == Metric.TASK_PATH})
-        assertTrue(measurements.any{ it.metric == Metric.PROCESS})
-        assertTrue(measurements.any{ it.metric == Metric.TASK_KOTLIN_BUILD_REPORT})
+        assertTrue(measurements.any { it.metric == Metric.KOTLIN_BUILD_REPORT })
+        assertTrue(measurements.any { it.metric == Metric.BUILD })
+        assertTrue(measurements.any { it.metric == Metric.TASK_TYPE })
+        assertFalse(measurements.any { it.metric == Metric.TASK_PATH })
+        assertTrue(measurements.any { it.metric == Metric.PROCESS })
+        assertTrue(measurements.any { it.metric == Metric.TASK_KOTLIN_BUILD_REPORT })
     }
 
     @Test
@@ -100,6 +105,7 @@ class MeasurementsByReportTest {
                 processesReport = true,
                 buildReport = false,
                 isProfile = false,
+                resourceUsageReport = false,
                 warmupsToDiscard = 2,
                 variants = listOf("lint-4-1-different-process", "lint-2-1-different-process"),
                 experimentId = "154"
@@ -107,12 +113,12 @@ class MeasurementsByReportTest {
         val measurements = MeasurementsByReport(report).get(FilterBuildsPerVariant(report).get(builds))
 
         assertTrue(measurements.isNotEmpty())
-        assertTrue(measurements.any{ it.metric == Metric.KOTLIN_BUILD_REPORT})
-        assertFalse(measurements.any{ it.metric == Metric.BUILD})
-        assertTrue(measurements.any{ it.metric == Metric.TASK_TYPE})
-        assertTrue(measurements.any{ it.metric == Metric.TASK_PATH})
-        assertTrue(measurements.any{ it.metric == Metric.PROCESS})
-        assertTrue(measurements.any{ it.metric == Metric.TASK_KOTLIN_BUILD_REPORT})
+        assertTrue(measurements.any { it.metric == Metric.KOTLIN_BUILD_REPORT })
+        assertFalse(measurements.any { it.metric == Metric.BUILD })
+        assertTrue(measurements.any { it.metric == Metric.TASK_TYPE })
+        assertTrue(measurements.any { it.metric == Metric.TASK_PATH })
+        assertTrue(measurements.any { it.metric == Metric.PROCESS })
+        assertTrue(measurements.any { it.metric == Metric.TASK_KOTLIN_BUILD_REPORT })
     }
 
     @Test
@@ -126,6 +132,7 @@ class MeasurementsByReportTest {
                 processesReport = true,
                 buildReport = true,
                 isProfile = false,
+                resourceUsageReport = false,
                 warmupsToDiscard = 2,
                 variants = listOf("lint-4-1-different-process", "lint-2-1-different-process"),
                 experimentId = "154"
@@ -133,12 +140,12 @@ class MeasurementsByReportTest {
         val measurements = MeasurementsByReport(report).get(FilterBuildsPerVariant(report).get(builds))
 
         assertTrue(measurements.isNotEmpty())
-        assertTrue(measurements.any{ it.metric == Metric.KOTLIN_BUILD_REPORT})
-        assertTrue(measurements.any{ it.metric == Metric.BUILD})
-        assertFalse(measurements.any{ it.metric == Metric.TASK_TYPE})
-        assertTrue(measurements.any{ it.metric == Metric.TASK_PATH})
-        assertTrue(measurements.any{ it.metric == Metric.PROCESS})
-        assertTrue(measurements.any{ it.metric == Metric.TASK_KOTLIN_BUILD_REPORT})
+        assertTrue(measurements.any { it.metric == Metric.KOTLIN_BUILD_REPORT })
+        assertTrue(measurements.any { it.metric == Metric.BUILD })
+        assertFalse(measurements.any { it.metric == Metric.TASK_TYPE })
+        assertTrue(measurements.any { it.metric == Metric.TASK_PATH })
+        assertTrue(measurements.any { it.metric == Metric.PROCESS })
+        assertTrue(measurements.any { it.metric == Metric.TASK_KOTLIN_BUILD_REPORT })
     }
 
     @Test
@@ -152,6 +159,7 @@ class MeasurementsByReportTest {
                 processesReport = false,
                 buildReport = true,
                 isProfile = false,
+                resourceUsageReport = false,
                 warmupsToDiscard = 2,
                 variants = listOf("lint-4-1-different-process", "lint-2-1-different-process"),
                 experimentId = "154"
@@ -159,19 +167,19 @@ class MeasurementsByReportTest {
         val measurements = MeasurementsByReport(report).get(FilterBuildsPerVariant(report).get(builds))
 
         assertTrue(measurements.isNotEmpty())
-        assertTrue(measurements.any{ it.metric == Metric.KOTLIN_BUILD_REPORT})
-        assertTrue(measurements.any{ it.metric == Metric.BUILD})
-        assertTrue(measurements.any{ it.metric == Metric.TASK_TYPE})
-        assertTrue(measurements.any{ it.metric == Metric.TASK_PATH})
-        assertFalse(measurements.any{ it.metric == Metric.PROCESS})
-        assertTrue(measurements.any{ it.metric == Metric.TASK_KOTLIN_BUILD_REPORT})
+        assertTrue(measurements.any { it.metric == Metric.KOTLIN_BUILD_REPORT })
+        assertTrue(measurements.any { it.metric == Metric.BUILD })
+        assertTrue(measurements.any { it.metric == Metric.TASK_TYPE })
+        assertTrue(measurements.any { it.metric == Metric.TASK_PATH })
+        assertFalse(measurements.any { it.metric == Metric.PROCESS })
+        assertTrue(measurements.any { it.metric == Metric.TASK_KOTLIN_BUILD_REPORT })
     }
 
-    private fun builds(): List<Build> {
-        val builds: List<Build> =
+    private fun builds(): List<BuildWithResourceUsage> {
+        val builds: List<BuildWithResourceUsage> =
             Gson().fromJson(
                 BufferedReader(InputStreamReader(javaClass.classLoader.getResourceAsStream("outcome.json"))).readText(),
-                Array<Build>::class.java
+                Array<BuildWithResourceUsage>::class.java
             ).toList()
         return builds
     }

@@ -2,18 +2,18 @@ package io.github.cdsap.compare.report.measurements.parser
 
 import io.github.cdsap.compare.model.CustomValuesPerVariant
 import io.github.cdsap.compare.model.MetricKotlin
-import io.github.cdsap.geapi.client.model.Build
+import io.github.cdsap.geapi.client.model.BuildWithResourceUsage
 
 class KotlinBuildReportsParserCustomValues(
-    private val variantA: List<Build>,
-    private val variantB: List<Build>
+    private val variantA: List<BuildWithResourceUsage>,
+    private val variantB: List<BuildWithResourceUsage>
 ) {
     fun parse(): CustomValuesPerVariant {
         return CustomValuesPerVariant(extracted(variantA), extracted(variantB))
     }
 
     private fun extracted(
-        buildsPerVariant: List<Build>
+        buildsPerVariant: List<BuildWithResourceUsage>
     ): MutableMap<String, Map<String, MutableList<MetricKotlin>>> {
         val variantBuild = mutableMapOf<String, Map<String, MutableList<MetricKotlin>>>()
         buildsPerVariant.forEach {
@@ -36,7 +36,6 @@ class KotlinBuildReportsParserCustomValues(
                         }
 
                         if (values[auxCount + 1].split(",").count() > 2) {
-
                             // we found issues parsing lines like
                             // 1},2023-07-18T01:17:40,Number of times classpath snapshot is loaded
                             // to avoid that, we need to identify if the "," comes from a byte
@@ -49,7 +48,6 @@ class KotlinBuildReportsParserCustomValues(
                         }
                         tasksWithMetrics[key]?.add(MetricKotlin(key2, value))
                         auxCount += 1
-
                     }
                 }
                 variantBuild[buildId] = tasksWithMetrics

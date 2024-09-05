@@ -2,11 +2,12 @@ package io.github.cdsap.compare.report.measurements
 
 import io.github.cdsap.compare.model.Metric
 import io.github.cdsap.geapi.client.model.AvoidanceSavingsSummary
-import io.github.cdsap.geapi.client.model.Build
+import io.github.cdsap.geapi.client.model.BuildWithResourceUsage
 import io.github.cdsap.geapi.client.model.Task
 import org.junit.jupiter.api.Test
 
 class BuildMeasurementTest {
+    private val BuildWithResourceUsageProvider = BuildWithResourceUsageProvider()
 
     @Test
     fun testPercentilesAreCalculatedCorrectly() {
@@ -16,70 +17,118 @@ class BuildMeasurementTest {
         )
         val avoidanceSavingsSummary = AvoidanceSavingsSummary("", "", "")
         val buildsA = listOf(
-            Build(
+            BuildWithResourceUsage(
                 builtTool = "A",
                 taskExecution = tasks,
                 goalExecution = emptyArray(),
                 avoidanceSavingsSummary = avoidanceSavingsSummary,
-                buildDuration = 10
-            ), Build(
+                buildDuration = 10,
+                execution = BuildWithResourceUsageProvider.get(),
+                nonExecution = BuildWithResourceUsageProvider.get(),
+                total = BuildWithResourceUsageProvider.get(),
+                totalMemory = 0L
+            ),
+            BuildWithResourceUsage(
                 builtTool = "A",
                 taskExecution = tasks,
                 goalExecution = emptyArray(),
                 avoidanceSavingsSummary = avoidanceSavingsSummary,
-                buildDuration = 20
-            ), Build(
+                buildDuration = 20,
+                execution = BuildWithResourceUsageProvider.get(),
+                nonExecution = BuildWithResourceUsageProvider.get(),
+                total = BuildWithResourceUsageProvider.get(),
+                totalMemory = 0L
+            ),
+            BuildWithResourceUsage(
                 builtTool = "A",
                 taskExecution = tasks,
                 goalExecution = emptyArray(),
                 avoidanceSavingsSummary = avoidanceSavingsSummary,
-                buildDuration = 30
-            ), Build(
+                buildDuration = 30,
+                execution = BuildWithResourceUsageProvider.get(),
+                nonExecution = BuildWithResourceUsageProvider.get(),
+                total = BuildWithResourceUsageProvider.get(),
+                totalMemory = 0L
+            ),
+            BuildWithResourceUsage(
                 builtTool = "A",
                 taskExecution = tasks,
                 goalExecution = emptyArray(),
                 avoidanceSavingsSummary = avoidanceSavingsSummary,
-                buildDuration = 40
-            ), Build(
+                buildDuration = 40,
+                execution = BuildWithResourceUsageProvider.get(),
+                nonExecution = BuildWithResourceUsageProvider.get(),
+                total = BuildWithResourceUsageProvider.get(),
+                totalMemory = 0L
+            ),
+            BuildWithResourceUsage(
                 builtTool = "A",
                 taskExecution = tasks,
                 goalExecution = emptyArray(),
                 avoidanceSavingsSummary = avoidanceSavingsSummary,
-                buildDuration = 50
+                buildDuration = 50,
+                execution = BuildWithResourceUsageProvider.get(),
+                nonExecution = BuildWithResourceUsageProvider.get(),
+                total = BuildWithResourceUsageProvider.get(),
+                totalMemory = 0L
             )
         )
 
         val buildsB = listOf(
-            Build(
+            BuildWithResourceUsage(
                 builtTool = "A",
                 taskExecution = tasks,
                 goalExecution = emptyArray(),
                 avoidanceSavingsSummary = avoidanceSavingsSummary,
-                buildDuration = 1000
-            ), Build(
+                buildDuration = 1000,
+                execution = BuildWithResourceUsageProvider.get(),
+                nonExecution = BuildWithResourceUsageProvider.get(),
+                total = BuildWithResourceUsageProvider.get(),
+                totalMemory = 0L
+            ),
+            BuildWithResourceUsage(
                 builtTool = "A",
                 taskExecution = tasks,
                 goalExecution = emptyArray(),
                 avoidanceSavingsSummary = avoidanceSavingsSummary,
-                buildDuration = 1000
-            ), Build(
+                buildDuration = 1000,
+                execution = BuildWithResourceUsageProvider.get(),
+                nonExecution = BuildWithResourceUsageProvider.get(),
+                total = BuildWithResourceUsageProvider.get(),
+                totalMemory = 0L
+            ),
+            BuildWithResourceUsage(
                 builtTool = "A",
                 taskExecution = tasks,
                 goalExecution = emptyArray(),
                 avoidanceSavingsSummary = avoidanceSavingsSummary,
-                buildDuration = 1000
-            ), Build(
+                buildDuration = 1000,
+                execution = BuildWithResourceUsageProvider.get(),
+                nonExecution = BuildWithResourceUsageProvider.get(),
+                total = BuildWithResourceUsageProvider.get(),
+                totalMemory = 0L
+            ),
+            BuildWithResourceUsage(
                 builtTool = "A",
                 taskExecution = tasks,
                 goalExecution = emptyArray(),
                 avoidanceSavingsSummary = avoidanceSavingsSummary,
-                buildDuration = 1000
-            ), Build(
+                buildDuration = 1000,
+                execution = BuildWithResourceUsageProvider.get(),
+                nonExecution = BuildWithResourceUsageProvider.get(),
+                total = BuildWithResourceUsageProvider.get(),
+                totalMemory = 0L
+            ),
+            BuildWithResourceUsage(
                 builtTool = "A",
                 taskExecution = tasks,
                 goalExecution = emptyArray(),
                 avoidanceSavingsSummary = avoidanceSavingsSummary,
-                buildDuration = 1000
+                buildDuration = 1000,
+                execution = BuildWithResourceUsageProvider.get(),
+                nonExecution = BuildWithResourceUsageProvider.get(),
+                total = BuildWithResourceUsageProvider.get(),
+                totalMemory = 0L
             )
         )
 
@@ -98,7 +147,7 @@ class BuildMeasurementTest {
     }
 
     @Test
-    fun whenVariantBIsEmptyNoMetricsAreProvided(){
+    fun whenVariantBIsEmptyNoMetricsAreProvided() {
         @Test
         fun testPercentilesAreCalculatedCorrectly() {
             val tasks = arrayOf(
@@ -107,40 +156,64 @@ class BuildMeasurementTest {
             )
             val avoidanceSavingsSummary = AvoidanceSavingsSummary("", "", "")
             val buildsA = listOf(
-                Build(
+                BuildWithResourceUsage(
                     builtTool = "A",
                     taskExecution = tasks,
                     goalExecution = emptyArray(),
                     avoidanceSavingsSummary = avoidanceSavingsSummary,
-                    buildDuration = 10
-                ), Build(
+                    buildDuration = 10,
+                    execution = BuildWithResourceUsageProvider.get(),
+                    nonExecution = BuildWithResourceUsageProvider.get(),
+                    total = BuildWithResourceUsageProvider.get(),
+                    totalMemory = 0L
+                ),
+                BuildWithResourceUsage(
                     builtTool = "A",
                     taskExecution = tasks,
                     goalExecution = emptyArray(),
                     avoidanceSavingsSummary = avoidanceSavingsSummary,
-                    buildDuration = 20
-                ), Build(
+                    buildDuration = 20,
+                    execution = BuildWithResourceUsageProvider.get(),
+                    nonExecution = BuildWithResourceUsageProvider.get(),
+                    total = BuildWithResourceUsageProvider.get(),
+                    totalMemory = 0L
+                ),
+                BuildWithResourceUsage(
                     builtTool = "A",
                     taskExecution = tasks,
                     goalExecution = emptyArray(),
                     avoidanceSavingsSummary = avoidanceSavingsSummary,
-                    buildDuration = 30
-                ), Build(
+                    buildDuration = 30,
+                    execution = BuildWithResourceUsageProvider.get(),
+                    nonExecution = BuildWithResourceUsageProvider.get(),
+                    total = BuildWithResourceUsageProvider.get(),
+                    totalMemory = 0L
+                ),
+                BuildWithResourceUsage(
                     builtTool = "A",
                     taskExecution = tasks,
                     goalExecution = emptyArray(),
                     avoidanceSavingsSummary = avoidanceSavingsSummary,
-                    buildDuration = 40
-                ), Build(
+                    buildDuration = 40,
+                    execution = BuildWithResourceUsageProvider.get(),
+                    nonExecution = BuildWithResourceUsageProvider.get(),
+                    total = BuildWithResourceUsageProvider.get(),
+                    totalMemory = 0L
+                ),
+                BuildWithResourceUsage(
                     builtTool = "A",
                     taskExecution = tasks,
                     goalExecution = emptyArray(),
                     avoidanceSavingsSummary = avoidanceSavingsSummary,
-                    buildDuration = 50
+                    buildDuration = 50,
+                    execution = BuildWithResourceUsageProvider.get(),
+                    nonExecution = BuildWithResourceUsageProvider.get(),
+                    total = BuildWithResourceUsageProvider.get(),
+                    totalMemory = 0L
                 )
             )
 
-            val buildsB = emptyList<Build>()
+            val buildsB = emptyList<BuildWithResourceUsage>()
 
             val measurements = BuildMeasurement(buildsA, buildsB).get()
 
