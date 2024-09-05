@@ -60,7 +60,6 @@ class KotlinReportsByTaskPath(private val kotlinBuildReportsParserCustomValues: 
     private fun aggregateBuilds2(builds: Map<String, Map<String, MutableList<MetricKotlin>>>): MutableMap<String, MutableMap<String, MutableList<String>>> {
         val valuesByTaskAggregated = mutableMapOf<String, MutableMap<String, MutableList<String>>>()
         builds.forEach {
-
             it.value.forEach {
                 if (!valuesByTaskAggregated.contains(it.key)) {
                     valuesByTaskAggregated[it.key] = mutableMapOf()

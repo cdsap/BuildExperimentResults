@@ -2,14 +2,14 @@ package io.github.cdsap.compare.report.measurements
 
 import io.github.cdsap.compare.model.MeasurementWithPercentiles
 import io.github.cdsap.compare.model.Metric
-import io.github.cdsap.geapi.client.model.Build
+import io.github.cdsap.geapi.client.model.BuildWithResourceUsage
 import io.github.cdsap.geapi.client.model.OS
 import org.nield.kotlinstatistics.percentile
 import kotlin.math.roundToLong
 
 class BuildMeasurement(
-    private val variantA: List<Build>,
-    private val variantB: List<Build>
+    private val variantA: List<BuildWithResourceUsage>,
+    private val variantB: List<BuildWithResourceUsage>
 ) {
 
     fun get(): List<MeasurementWithPercentiles> {
@@ -41,5 +41,3 @@ class BuildMeasurement(
         }
     }
 }
-
-

@@ -3,33 +3,34 @@ package io.github.cdsap.compare.report.measurements
 import io.github.cdsap.compare.model.MeasurementWithPercentiles
 import io.github.cdsap.compare.model.Metric
 import io.github.cdsap.compare.report.measurements.parser.ProcessesReportParser
-import io.github.cdsap.geapi.client.model.Build
+import io.github.cdsap.geapi.client.model.BuildWithResourceUsage
 import io.github.cdsap.geapi.client.model.OS
 import org.nield.kotlinstatistics.percentile
 import kotlin.math.roundToInt
 
 class ProcessMeasurement(
-    private val variantA: List<Build>,
-    private val variantB: List<Build>,
+    private val variantA: List<BuildWithResourceUsage>,
+    private val variantB: List<BuildWithResourceUsage>,
     private val profile: Boolean
 ) {
 
     fun get(): List<MeasurementWithPercentiles> {
         return processMeasurement(variantA, variantB, profile, "Gradle") +
             processMeasurement(
-                variantA, variantB, profile, "Kotlin"
+                variantA,
+                variantB,
+                profile,
+                "Kotlin"
             )
-
     }
 
     private fun processMeasurement(
-        variantA: List<Build>,
-        variantB: List<Build>,
+        variantA: List<BuildWithResourceUsage>,
+        variantB: List<BuildWithResourceUsage>,
         profile: Boolean,
         value: String
     ): List<MeasurementWithPercentiles> {
         if (profile) {
-
             val measurement = mutableListOf<MeasurementWithPercentiles>()
             val processesParser = ProcessesReportParser()
             val variantAValues = processesParser.parse(variantA.first().values, value)
@@ -65,7 +66,6 @@ class ProcessMeasurement(
             val listVariantBValues = processesParser.parseByVariant(variantB, value)
             val listVariantAValuesFormatted = formatListValues(listVariantAValues)
             val listVariantBValuesFormatted = formatListValues(listVariantBValues)
-
 
             listVariantAValuesFormatted.forEach {
                 val x = listVariantBValuesFormatted[it.key]!!
@@ -113,7 +113,4 @@ class ProcessMeasurement(
         }
         return listValuesFormatted
     }
-
 }
-
-

@@ -6,6 +6,7 @@ data class Report(
     val kotlinBuildReport: Boolean,
     val processesReport: Boolean,
     val buildReport: Boolean,
+    val resourceUsageReport: Boolean,
     val isProfile: Boolean,
     val warmupsToDiscard: Int,
     val variants: List<String>,
