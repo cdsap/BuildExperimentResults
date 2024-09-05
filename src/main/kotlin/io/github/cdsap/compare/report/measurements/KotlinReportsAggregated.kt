@@ -4,8 +4,6 @@ import io.github.cdsap.compare.model.CustomValuesPerVariant
 import io.github.cdsap.compare.model.MeasurementWithPercentiles
 import io.github.cdsap.compare.model.Metric
 import io.github.cdsap.compare.model.MetricKotlin
-import io.github.cdsap.geapi.client.model.OS
-import org.nield.kotlinstatistics.percentile
 import kotlin.math.roundToInt
 import kotlin.math.roundToLong
 
@@ -46,9 +44,7 @@ class KotlinReportsAggregated(private val kotlinBuildReportsParserCustomValues: 
                             Metric.KOTLIN_BUILD_REPORT
                         )
                     )
-
                 }
-
             }
         return measurements
     }

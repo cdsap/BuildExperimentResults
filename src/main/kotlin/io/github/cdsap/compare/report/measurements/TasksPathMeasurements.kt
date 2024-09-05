@@ -2,14 +2,14 @@ package io.github.cdsap.compare.report.measurements
 
 import io.github.cdsap.compare.model.MeasurementWithPercentiles
 import io.github.cdsap.compare.model.Metric
-import io.github.cdsap.geapi.client.model.Build
+import io.github.cdsap.geapi.client.model.BuildWithResourceUsage
 import io.github.cdsap.geapi.client.model.OS
 import org.nield.kotlinstatistics.percentile
 import kotlin.math.roundToLong
 
 class TasksPathMeasurements(
-    private val variantA: List<Build>,
-    private val variantB: List<Build>
+    private val variantA: List<BuildWithResourceUsage>,
+    private val variantB: List<BuildWithResourceUsage>
 ) {
     fun get(): List<MeasurementWithPercentiles> {
         return getTaskPathMeasurements()
@@ -41,17 +41,15 @@ class TasksPathMeasurements(
                         )
                     )
                 }
-
             }
         return measurementsP
     }
 
-    private fun getTasksByPath(builds: List<Build>): Map<String, MutableList<Long>> {
+    private fun getTasksByPath(builds: List<BuildWithResourceUsage>): Map<String, MutableList<Long>> {
         val variantAggregatedTaskPath = mutableMapOf<String, MutableList<Long>>()
         builds.forEach {
             it.taskExecution.filter { (it.avoidanceOutcome == "executed_cacheable") }
                 .forEach {
-
                     if (variantAggregatedTaskPath.contains(it.taskPath)) {
                         variantAggregatedTaskPath[it.taskPath]?.add(it.duration)
                     } else {

@@ -1,18 +1,20 @@
 package io.github.cdsap.compare
 
+import com.github.ajalt.clikt.core.CliktCommand
+import com.github.ajalt.clikt.parameters.options.check
+import com.github.ajalt.clikt.parameters.options.default
+import com.github.ajalt.clikt.parameters.options.flag
+import com.github.ajalt.clikt.parameters.options.multiple
+import com.github.ajalt.clikt.parameters.options.option
+import com.github.ajalt.clikt.parameters.options.required
+import com.github.ajalt.clikt.parameters.types.int
+import io.github.cdsap.compare.model.Report
+import io.github.cdsap.compare.report.ExperimentReport
+import io.github.cdsap.geapi.client.model.ClientType
 import io.github.cdsap.geapi.client.model.Filter
 import io.github.cdsap.geapi.client.network.GEClient
 import io.github.cdsap.geapi.client.repository.impl.GradleRepositoryImpl
-
-import com.github.ajalt.clikt.core.CliktCommand
-import com.github.ajalt.clikt.parameters.options.*
-import com.github.ajalt.clikt.parameters.types.int
-import io.github.cdsap.compare.model.Report
-
-
 import kotlinx.coroutines.runBlocking
-import io.github.cdsap.compare.report.ExperimentReport
-import io.github.cdsap.geapi.client.model.ClientType
 
 fun main(args: Array<String>) {
     Experiment().main(args)
@@ -30,7 +32,8 @@ class Experiment : CliktCommand() {
     private val taskPathReport by option("--task-path-report").flag("--no-task-path-report", default = true)
     private val taskTypeReport by option("--task-type-report").flag("--no-task-type-report", default = true)
     private val kotlinBuildReport by option("--kotlin-build-report").flag("--no-kotlin-build-report", default = true)
-    private val processesReport by option("--process-report").flag("--no-process-report", default = true)
+    private val resourceUsageReport by option("--resource-usage-report").flag("--no-resource-usage-report", default = true)
+    private val processesReport by option("--process-report").flag("--no-process-report", default = false)
     private val buildReport by option("--build-report").flag("--no-build-report", default = true)
     private val warmupsToDiscard by option().int().default(2)
 
@@ -47,7 +50,7 @@ class Experiment : CliktCommand() {
             clientType = ClientType.CLI
 
         )
-        val repository = GradleRepositoryImpl( GEClient(apiKey, url))
+        val repository = GradleRepositoryImpl(GEClient(apiKey, url))
 
         runBlocking {
             ExperimentReport(
@@ -59,6 +62,7 @@ class Experiment : CliktCommand() {
                     kotlinBuildReport = kotlinBuildReport,
                     processesReport = processesReport,
                     buildReport = buildReport,
+                    resourceUsageReport = resourceUsageReport,
                     experimentId = experimentId,
                     warmupsToDiscard = warmupsToDiscard,
                     variants = variants,

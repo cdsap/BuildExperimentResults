@@ -2,11 +2,11 @@ package io.github.cdsap.compare.report.measurements
 
 import io.github.cdsap.compare.model.BuildsPerVariant
 import io.github.cdsap.compare.model.Report
-import io.github.cdsap.geapi.client.model.Build
+import io.github.cdsap.geapi.client.model.BuildWithResourceUsage
 
 class FilterBuildsPerVariant(val report: Report) {
 
-    fun get(builds: List<Build>): BuildsPerVariant {
+    fun get(builds: List<BuildWithResourceUsage>): BuildsPerVariant {
         val variantA = "${report.experimentId}_variant_experiment_${report.variants[0].trim()}"
         val variantB = "${report.experimentId}_variant_experiment_${report.variants[1].trim()}"
 
@@ -17,14 +17,16 @@ class FilterBuildsPerVariant(val report: Report) {
     }
 
     private fun buildsByVariant(
-        outcome: List<Build>,
+        outcome: List<BuildWithResourceUsage>,
         variant: String
-    ): List<Build> {
+    ): List<BuildWithResourceUsage> {
         val variants = outcome.filter {
             it.tags.contains("experiment") && it.tags.contains(report.experimentId) && it.tags.contains(variant)
         }
-        return if (report.isProfile) variants.dropLast(report.warmupsToDiscard)
-        else variants
+        return if (report.isProfile) {
+            variants.dropLast(report.warmupsToDiscard)
+        } else {
+            variants
+        }
     }
-
 }

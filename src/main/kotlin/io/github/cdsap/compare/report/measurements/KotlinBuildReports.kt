@@ -47,5 +47,4 @@ abstract class KotlinBuildReports {
 
     fun getQualifier(value: String) =
         if (value.contains("ms")) "ms" else value.split(" ")[1]
-
 }
