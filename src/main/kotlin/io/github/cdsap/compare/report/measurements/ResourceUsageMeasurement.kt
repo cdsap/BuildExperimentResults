@@ -159,7 +159,6 @@ class ResourceUsageMeasurement(
                 variantBP50 = variantBMedian,
                 variantAP90 = variantAP90,
                 variantBP90 = variantBP90,
-                OS = OS.Linux,
                 qualifier = unit,
                 metric = Metric.RESOURCE_USAGE
             )

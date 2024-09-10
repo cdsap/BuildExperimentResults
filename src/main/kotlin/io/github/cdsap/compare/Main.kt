@@ -31,10 +31,11 @@ class Experiment : CliktCommand() {
     private val profile by option().flag(default = false)
     private val taskPathReport by option("--task-path-report").flag("--no-task-path-report", default = true)
     private val taskTypeReport by option("--task-type-report").flag("--no-task-type-report", default = true)
-    private val kotlinBuildReport by option("--kotlin-build-report").flag("--no-kotlin-build-report", default = true)
+    private val kotlinBuildReport by option("--kotlin-build-report").flag("--no-kotlin-build-report", default = false)
     private val resourceUsageReport by option("--resource-usage-report").flag("--no-resource-usage-report", default = true)
     private val processesReport by option("--process-report").flag("--no-process-report", default = false)
     private val buildReport by option("--build-report").flag("--no-build-report", default = true)
+    private val onlyCacheableOutcome by option("--only-cacheable-outcome").flag("--no-only-cacheable-outcome", default = false)
     private val warmupsToDiscard by option().int().default(2)
 
     override fun run() {
@@ -66,7 +67,8 @@ class Experiment : CliktCommand() {
                     experimentId = experimentId,
                     warmupsToDiscard = warmupsToDiscard,
                     variants = variants,
-                    isProfile = profile
+                    isProfile = profile,
+                    onlyCacheableOutcome = onlyCacheableOutcome
                 )
             ).process()
         }

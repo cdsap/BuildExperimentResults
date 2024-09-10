@@ -2,6 +2,7 @@ package io.github.cdsap.compare.report.measurements
 
 import io.github.cdsap.compare.model.MeasurementWithPercentiles
 import io.github.cdsap.compare.model.Metric
+import io.github.cdsap.compare.model.Report
 import io.github.cdsap.geapi.client.model.BuildWithResourceUsage
 import io.github.cdsap.geapi.client.model.OS
 import org.nield.kotlinstatistics.percentile
@@ -9,7 +10,8 @@ import kotlin.math.roundToLong
 
 class TasksTypeMeasurements(
     private val variantA: List<BuildWithResourceUsage>,
-    private val variantB: List<BuildWithResourceUsage>
+    private val variantB: List<BuildWithResourceUsage>,
+    private val report: Report
 ) {
     fun get(): List<MeasurementWithPercentiles> {
         return getTaskTypeMeasurements()
@@ -34,7 +36,6 @@ class TasksTypeMeasurements(
                         variantBP50 = "${x.percentile(50.0).roundToLong()}",
                         variantAP90 = "${it.value.percentile(90.0).roundToLong()}",
                         variantBP90 = "${x.percentile(90.0).roundToLong()}",
-                        OS = OS.Linux,
                         qualifier = "ms",
                         metric = Metric.TASK_TYPE
                     )
@@ -47,8 +48,12 @@ class TasksTypeMeasurements(
     private fun getTasksByType(builds: List<BuildWithResourceUsage>): Map<String, MutableList<Long>> {
         val variantAggregatedTaskType = mutableMapOf<String, MutableList<Long>>()
         builds.forEach {
-            it.taskExecution.filter { (it.avoidanceOutcome == "executed_cacheable") }
-                .forEach {
+            val tasksExecution = if(report.onlyCacheableOutcome) {
+                it.taskExecution.filter { (it.avoidanceOutcome == "executed_cacheable") }
+            } else {
+                it.taskExecution.toList()
+            }
+            tasksExecution.forEach {
                     if (variantAggregatedTaskType.contains(it.taskType)) {
                         variantAggregatedTaskType[it.taskType]?.add(it.duration)
                     } else {

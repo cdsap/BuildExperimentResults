@@ -10,5 +10,6 @@ data class Report(
     val isProfile: Boolean,
     val warmupsToDiscard: Int,
     val variants: List<String>,
-    val experimentId: String
+    val experimentId: String,
+    val onlyCacheableOutcome: Boolean
 )

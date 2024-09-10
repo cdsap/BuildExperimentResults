@@ -39,7 +39,6 @@ abstract class KotlinBuildReports {
             variantBP50 = "$variantbP50",
             variantAP90 = "$variantaP90",
             variantBP90 = "$variantbP90",
-            OS = OS.Linux,
             qualifier = qualifier,
             metric = metric
         )

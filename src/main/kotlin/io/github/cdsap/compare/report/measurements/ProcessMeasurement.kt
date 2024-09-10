@@ -48,7 +48,6 @@ class ProcessMeasurement(
                             variantBP50 = "",
                             variantAP90 = "",
                             variantBP90 = "",
-                            OS = OS.Linux,
                             qualifier = "",
                             metric = Metric.PROCESS
                         )
@@ -88,7 +87,6 @@ class ProcessMeasurement(
                         variantBP50 = "$variantbP50",
                         variantAP90 = "$variantaP90",
                         variantBP90 = "$variantbP90",
-                        OS = OS.Linux,
                         qualifier = "",
                         metric = Metric.PROCESS
                     )
