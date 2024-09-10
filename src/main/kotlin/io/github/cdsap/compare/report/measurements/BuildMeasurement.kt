@@ -31,7 +31,6 @@ class BuildMeasurement(
                     variantBP50 = variantBP50,
                     variantAP90 = variantAP90,
                     variantBP90 = variantBP90,
-                    OS = OS.Linux,
                     qualifier = "ms",
                     metric = Metric.BUILD
                 )
