@@ -17,10 +17,10 @@ class MeasurementsByReport(
             measurements += ProcessMeasurement(variants.variantA, variants.variantB, report.isProfile).get()
         }
         if (report.taskTypeReport) {
-            measurements += TasksTypeMeasurements(variants.variantA, variants.variantB).get()
+            measurements += TasksTypeMeasurements(variants.variantA, variants.variantB, report).get()
         }
         if (report.taskPathReport) {
-            measurements += TasksPathMeasurements(variants.variantA, variants.variantB).get()
+            measurements += TasksPathMeasurements(variants.variantA, variants.variantB, report).get()
         }
         if (report.kotlinBuildReport) {
             measurements += KotlinBuildReportsMeasurements(variants.variantA, variants.variantB).get()
