@@ -39,7 +39,6 @@ data class MeasurementWithPercentiles(
     val variantBP50: Any,
     val variantAP90: Any,
     val variantBP90: Any,
-    val OS: OS,
     val qualifier: String,
     val metric: Metric
 )

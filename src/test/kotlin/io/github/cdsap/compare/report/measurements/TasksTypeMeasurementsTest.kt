@@ -1,5 +1,6 @@
 package io.github.cdsap.compare.report.measurements
 
+import io.github.cdsap.compare.model.Report
 import io.github.cdsap.geapi.client.model.AvoidanceSavingsSummary
 import io.github.cdsap.geapi.client.model.BuildWithResourceUsage
 import io.github.cdsap.geapi.client.model.Task
@@ -44,8 +45,21 @@ class TasksTypeMeasurementsTest {
                 totalMemory = 0L
             )
         )
-
-        val tasksTypeMeasurements = TasksTypeMeasurements(variantA, variantB)
+        val report =
+            Report(
+                taskPathReport = true,
+                taskTypeReport = true,
+                kotlinBuildReport = true,
+                processesReport = false,
+                buildReport = true,
+                isProfile = false,
+                resourceUsageReport = false,
+                warmupsToDiscard = 2,
+                variants = listOf("lint-4-1-different-process", "lint-2-1-different-process"),
+                experimentId = "154",
+                onlyCacheableOutcome = false
+            )
+        val tasksTypeMeasurements = TasksTypeMeasurements(variantA, variantB, report)
         val measurements = tasksTypeMeasurements.get()
 
         assertEquals(1, measurements.size)

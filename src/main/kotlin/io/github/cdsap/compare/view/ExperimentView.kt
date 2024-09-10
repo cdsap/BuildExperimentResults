@@ -80,66 +80,62 @@ class ExperimentView(
                         columnSpan = 7
                     }
                 }
-                measurement
-                    .groupBy {
-                        it.OS
-                    }.forEach {
-                        row {
-                            cell("Category") {
-                                rowSpan = 2
-                                alignment = TextAlignment.MiddleCenter
-                            }
-                            cell("Metric") {
-                                rowSpan = 2
-                                alignment = TextAlignment.MiddleCenter
-                            }
-                            cell(" Mean") {
-                                columnSpan = 2
-                                alignment = TextAlignment.MiddleCenter
-                            }
 
-                            cell("P50") {
-                                columnSpan = 2
-                                alignment = TextAlignment.MiddleCenter
-                            }
-                            cell(" P90") {
-                                columnSpan = 2
-                                alignment = TextAlignment.MiddleCenter
-                            }
+                row {
+                    cell("Category") {
+                        rowSpan = 2
+                        alignment = TextAlignment.MiddleCenter
+                    }
+                    cell("Metric") {
+                        rowSpan = 2
+                        alignment = TextAlignment.MiddleCenter
+                    }
+                    cell(" Mean") {
+                        columnSpan = 2
+                        alignment = TextAlignment.MiddleCenter
+                    }
+
+                    cell("P50") {
+                        columnSpan = 2
+                        alignment = TextAlignment.MiddleCenter
+                    }
+                    cell(" P90") {
+                        columnSpan = 2
+                        alignment = TextAlignment.MiddleCenter
+                    }
+                }
+                row {
+                    cell("$varianta".splitString()) { alignment = TextAlignment.MiddleCenter }
+                    cell("$variantb".splitString()) { alignment = TextAlignment.MiddleCenter }
+                    cell("$varianta".splitString()) { alignment = TextAlignment.MiddleCenter }
+                    cell("$variantb".splitString()) { alignment = TextAlignment.MiddleCenter }
+                    cell("$varianta".splitString()) { alignment = TextAlignment.MiddleCenter }
+                    cell("$variantb".splitString()) { alignment = TextAlignment.MiddleCenter }
+                }
+                measurement.forEach {
+                    row {
+                        cell(it.category.splitString())
+                        cell(it.name.splitString())
+                        cell("${it.variantAMean} ${it.qualifier}".splitSmallString()) {
+                            alignment = TextAlignment.MiddleRight
                         }
-                        row {
-                            cell("$varianta".splitString()) { alignment = TextAlignment.MiddleCenter }
-                            cell("$variantb".splitString()) { alignment = TextAlignment.MiddleCenter }
-                            cell("$varianta".splitString()) { alignment = TextAlignment.MiddleCenter }
-                            cell("$variantb".splitString()) { alignment = TextAlignment.MiddleCenter }
-                            cell("$varianta".splitString()) { alignment = TextAlignment.MiddleCenter }
-                            cell("$variantb".splitString()) { alignment = TextAlignment.MiddleCenter }
+                        cell("${it.variantBMean} ${it.qualifier}".splitSmallString()) {
+                            alignment = TextAlignment.MiddleRight
                         }
-                        it.value.forEach {
-                            row {
-                                cell(it.category.splitString())
-                                cell(it.name.splitString())
-                                cell("${it.variantAMean} ${it.qualifier}".splitSmallString()) {
-                                    alignment = TextAlignment.MiddleRight
-                                }
-                                cell("${it.variantBMean} ${it.qualifier}".splitSmallString()) {
-                                    alignment = TextAlignment.MiddleRight
-                                }
-                                cell("${it.variantAP50} ${it.qualifier}".splitSmallString()) {
-                                    alignment = TextAlignment.MiddleRight
-                                }
-                                cell("${it.variantBP50} ${it.qualifier}".splitSmallString()) {
-                                    alignment = TextAlignment.MiddleRight
-                                }
-                                cell("${it.variantAP90} ${it.qualifier}".splitSmallString()) {
-                                    alignment = TextAlignment.MiddleRight
-                                }
-                                cell("${it.variantBP90} ${it.qualifier}".splitSmallString()) {
-                                    alignment = TextAlignment.MiddleRight
-                                }
-                            }
+                        cell("${it.variantAP50} ${it.qualifier}".splitSmallString()) {
+                            alignment = TextAlignment.MiddleRight
+                        }
+                        cell("${it.variantBP50} ${it.qualifier}".splitSmallString()) {
+                            alignment = TextAlignment.MiddleRight
+                        }
+                        cell("${it.variantAP90} ${it.qualifier}".splitSmallString()) {
+                            alignment = TextAlignment.MiddleRight
+                        }
+                        cell("${it.variantBP90} ${it.qualifier}".splitSmallString()) {
+                            alignment = TextAlignment.MiddleRight
                         }
                     }
+                }
             }
         }
 
