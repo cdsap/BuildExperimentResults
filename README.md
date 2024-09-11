@@ -126,23 +126,25 @@ The CLI generates the following metrics for the experiment
 
 ### Complete list of parameters
 
-| Name                  | Description                                                  | Default | Required | Example                                    |
-|-----------------------|--------------------------------------------------------------|---------|----------|--------------------------------------------|
-| api-key               | String token                                                 |         | Yes      | --api-key=$GE_KEY                          |
-| url                   | Gradle Enterprise instance                                   |         | Yes      | --url=https://ge.acme.dev                  |
-| requested-task        | Requested task in the build                                  |         | No       | --requested-task=assemble                  |
-| variants              | name of the branches/variants of the experiment              |         | Yes      | --variants=main --variants=gradle_8_4      |
-| experiment-id         | experiment-id (represented as tag)                           | empty   | Yes      | --experiment-id=experiment_gradle_8_4      |
-| max-builds            | Max builds to be processed                                   | 500     | No       | --max-builds=600                           |
-| profile               | Starting build to apply the reverse search                   | false   | No       | --profile                                  |
-| build-report          | Generates build report metrics                               | true    | No       | Exclude it with --no-build-report          |
-| task-path-report      | Generates task path report metrics                           | true    | No       | Exclude it with --no-task-path-report      |
-| task-type-report      | Generates task type report metrics                           | true    | No       | Exclude it with --no-task-type-report      |
-| process-report        | Generates process report metrics                             | false   | No       | Exclude it with --no-process-report        |
-| kotlin-build-report   | Generates Kotlin build report metrics                        | true    | No       | Exclude it with --no-kotlin-build-report   |
-| resource-usage-report | Generates Resource usage report metrics (requires DV 2024.2) | true    | No       | Exclude it with --no-resource-usage-report |
-| warmups-to-discard    | If is a Gradle Profiler experiment, the warmups to discard   |         | No       | --exclusive-tags                           |
-`
+| Name                   | Description                                                  | Default | Required | Example                                     |
+|------------------------|--------------------------------------------------------------|---------|----------|---------------------------------------------|
+| api-key                | String token                                                 |         | Yes      | --api-key=$GE_KEY                           |
+| url                    | Gradle Enterprise instance                                   |         | Yes      | --url=https://ge.acme.dev                   |
+| requested-task         | Requested task in the build                                  |         | No       | --requested-task=assemble                   |
+| variants               | name of the branches/variants of the experiment              |         | Yes      | --variants=main --variants=gradle_8_4       |
+| experiment-id          | experiment-id (represented as tag)                           | empty   | Yes      | --experiment-id=experiment_gradle_8_4       |
+| max-builds             | Max builds to be processed                                   | 500     | No       | --max-builds=600                            |
+| profile                | Starting build to apply the reverse search                   | false   | No       | --profile                                   |
+| build-report           | Generates build report metrics                               | true    | No       | Exclude it with --no-build-report           |
+| task-path-report       | Generates task path report metrics                           | true    | No       | Exclude it with --no-task-path-report       |
+| task-type-report       | Generates task type report metrics                           | true    | No       | Exclude it with --no-task-type-report       |
+| process-report         | Generates process report metrics                             | false   | No       | Exclude it with --no-process-report         |
+| kotlin-build-report    | Generates Kotlin build report metrics                        | true    | No       | Exclude it with --no-kotlin-build-report    |
+| resource-usage-report  | Generates Resource usage report metrics (requires DV 2024.2) | true    | No       | Exclude it with --no-resource-usage-report  |
+| only-cacheable-outcome | Process only cacheable tasks                                 | true    | No       | Exclude it with --no-only-cacheable-outcome |
+| warmups-to-discard     | If is a Gradle Profiler experiment, the warmups to discard   |         | No       | --exclusive-tags                            |
+| threshold-task-duration| Threshold of task duration(ms) for the task path report      | -1      | No       | --threshold-task-duration 1000              |
+
 ### Examples
 * https://github.com/cdsap/Pagan/actions/runs/5672476887
 * Using Gradle Profiler https://github.com/cdsap/Pagan/actions/runs/6382400113
