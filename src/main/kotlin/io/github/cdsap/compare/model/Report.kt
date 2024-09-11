@@ -11,5 +11,6 @@ data class Report(
     val warmupsToDiscard: Int,
     val variants: List<String>,
     val experimentId: String,
-    val onlyCacheableOutcome: Boolean
+    val onlyCacheableOutcome: Boolean,
+    val thresholdTaskDuration: Long
 )

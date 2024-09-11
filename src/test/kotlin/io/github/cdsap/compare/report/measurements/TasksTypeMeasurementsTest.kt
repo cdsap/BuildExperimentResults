@@ -57,7 +57,8 @@ class TasksTypeMeasurementsTest {
                 warmupsToDiscard = 2,
                 variants = listOf("lint-4-1-different-process", "lint-2-1-different-process"),
                 experimentId = "154",
-                onlyCacheableOutcome = false
+                onlyCacheableOutcome = false,
+                thresholdTaskDuration = -1
             )
         val tasksTypeMeasurements = TasksTypeMeasurements(variantA, variantB, report)
         val measurements = tasksTypeMeasurements.get()
