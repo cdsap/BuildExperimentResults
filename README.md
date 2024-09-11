@@ -3,11 +3,11 @@ It compares build scan information for a sequence of builds executed under two d
 
 ### Usage
 ```
- curl -L https://github.com/cdsap/BuildExperimentResults/releases/download/v0.3.0/build-experiment-results --output build-experiment-results
+ curl -L https://github.com/cdsap/BuildExperimentResults/releases/download/v0.4.0/build-experiment-results --output build-experiment-results
  chmod 0757 build-experiment-results
 
 ./build-experiment-results --experiment-id 154 --variants lint-4-1 --variants lint-2-1 \
-    --requested-task lintDemoRelease --api-key $GE_API \
+    --api-key $GE_API \
     --url $GE_URL
 ```
 
