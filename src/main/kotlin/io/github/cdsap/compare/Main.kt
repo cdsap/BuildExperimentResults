@@ -8,6 +8,7 @@ import com.github.ajalt.clikt.parameters.options.multiple
 import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.options.required
 import com.github.ajalt.clikt.parameters.types.int
+import com.github.ajalt.clikt.parameters.types.long
 import io.github.cdsap.compare.model.Report
 import io.github.cdsap.compare.report.ExperimentReport
 import io.github.cdsap.geapi.client.model.ClientType
@@ -37,6 +38,7 @@ class Experiment : CliktCommand() {
     private val buildReport by option("--build-report").flag("--no-build-report", default = true)
     private val onlyCacheableOutcome by option("--only-cacheable-outcome").flag("--no-only-cacheable-outcome", default = false)
     private val warmupsToDiscard by option().int().default(2)
+    private val thresholdTaskDuration by option().long().default(-1)
 
     override fun run() {
         if (!taskPathReport && !taskTypeReport && !kotlinBuildReport && !processesReport) {
@@ -68,7 +70,8 @@ class Experiment : CliktCommand() {
                     warmupsToDiscard = warmupsToDiscard,
                     variants = variants,
                     isProfile = profile,
-                    onlyCacheableOutcome = onlyCacheableOutcome
+                    onlyCacheableOutcome = onlyCacheableOutcome,
+                    thresholdTaskDuration = thresholdTaskDuration
                 )
             ).process()
         }

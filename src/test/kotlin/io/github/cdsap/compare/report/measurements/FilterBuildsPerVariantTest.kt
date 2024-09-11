@@ -24,7 +24,8 @@ class FilterBuildsPerVariantTest {
                 warmupsToDiscard = 2,
                 variants = listOf("lint-4-1-different-process", "lint-2-1-different-process"),
                 experimentId = "154",
-                onlyCacheableOutcome = false
+                onlyCacheableOutcome = false,
+                thresholdTaskDuration = -1
             )
         val variants = FilterBuildsPerVariant(report).get(builds())
         assertTrue(variants.variantA.size == 5)
@@ -45,7 +46,8 @@ class FilterBuildsPerVariantTest {
                 warmupsToDiscard = 2,
                 variants = listOf("lint-4-1-different-process", "lint-2-1-different-process"),
                 experimentId = "154",
-                onlyCacheableOutcome = false
+                onlyCacheableOutcome = false,
+                thresholdTaskDuration = -1
             )
         val variants = FilterBuildsPerVariant(report).get(builds())
         assertTrue(variants.variantA.size == 3)
@@ -66,7 +68,8 @@ class FilterBuildsPerVariantTest {
                 warmupsToDiscard = 2,
                 variants = listOf("lint-4-1-different-process", "lint-2-1-different-process"),
                 experimentId = "987",
-                onlyCacheableOutcome = false
+                onlyCacheableOutcome = false,
+                thresholdTaskDuration = -1
             )
         val variants = FilterBuildsPerVariant(report).get(builds())
         assertTrue(variants.variantA.isEmpty())
