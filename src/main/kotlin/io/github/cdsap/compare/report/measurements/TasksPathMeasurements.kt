@@ -23,7 +23,7 @@ class TasksPathMeasurements(
         val measurementsP = mutableListOf<MeasurementWithPercentiles>()
 
         variantAAggregatedTaskPath
-            .filter { it.value.sumOf { it } / it.value.size > 1000 }
+            .filter { it.value.sumOf { it } / it.value.size > report.thresholdTaskDuration }
             .forEach {
                 val x = variantBAggregatedTaskPath[it.key]
                 if (x != null) {
@@ -49,11 +49,14 @@ class TasksPathMeasurements(
     private fun getTasksByPath(builds: List<BuildWithResourceUsage>): Map<String, MutableList<Long>> {
         val variantAggregatedTaskPath = mutableMapOf<String, MutableList<Long>>()
         builds.forEach {
+            println(report.onlyCacheableOutcome)
+
             val tasksExecution = if(report.onlyCacheableOutcome) {
                 it.taskExecution.filter { (it.avoidanceOutcome == "executed_cacheable") }
             } else {
                 it.taskExecution.toList()
             }
+            println(tasksExecution.size)
             tasksExecution.forEach {
                     if (variantAggregatedTaskPath.contains(it.taskPath)) {
                         variantAggregatedTaskPath[it.taskPath]?.add(it.duration)
@@ -62,6 +65,10 @@ class TasksPathMeasurements(
                         variantAggregatedTaskPath[it.taskPath]?.add(it.duration)
                     }
                 }
+        }
+        println(variantAggregatedTaskPath.size)
+        variantAggregatedTaskPath.forEach {
+            println(it.key)
         }
         return variantAggregatedTaskPath
     }
