@@ -47,7 +47,7 @@ class Experiment : CliktCommand() {
         val filter = Filter(
             maxBuilds = maxBuilds,
             project = project,
-            tags = listOf(experimentId, "experiment"),
+            tags = listOf(experimentId, "experiment",if(profile) "profile" else "no_profile"),
             requestedTask = requestedTask,
             exclusiveTags = true,
             clientType = ClientType.CLI
