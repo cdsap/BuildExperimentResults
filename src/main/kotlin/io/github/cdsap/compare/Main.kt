@@ -24,11 +24,12 @@ fun main(args: Array<String>) {
 class Experiment : CliktCommand() {
     private val apiKey: String by option().required()
     private val url by option().required()
-    private val maxBuilds by option().int().default(500).check("max builds to process 1000") { it <= 1000 }
+    private val maxBuilds by option().int().default(200).check("max builds to process 1000") { it <= 1000 }
     private val project: String? by option()
     private val requestedTask: String? by option()
     private val variants: List<String> by option().multiple(default = emptyList())
-    private val experimentId by option().required()
+
+    // private val experimentId by option().required()
     private val profile by option().flag(default = false)
     private val taskPathReport by option("--task-path-report").flag("--no-task-path-report", default = true)
     private val taskTypeReport by option("--task-type-report").flag("--no-task-type-report", default = true)
@@ -47,9 +48,9 @@ class Experiment : CliktCommand() {
         val filter = Filter(
             maxBuilds = maxBuilds,
             project = project,
-            tags = listOf(experimentId, "experiment"),
+            tags = variants,
             requestedTask = requestedTask,
-            exclusiveTags = true,
+            exclusiveTags = false,
             clientType = ClientType.CLI
 
         )
@@ -66,7 +67,7 @@ class Experiment : CliktCommand() {
                     processesReport = processesReport,
                     buildReport = buildReport,
                     resourceUsageReport = resourceUsageReport,
-                    experimentId = experimentId,
+                    experimentId = "",
                     warmupsToDiscard = warmupsToDiscard,
                     variants = variants,
                     isProfile = profile,
