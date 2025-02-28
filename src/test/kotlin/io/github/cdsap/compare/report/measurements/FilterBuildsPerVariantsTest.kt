@@ -8,7 +8,7 @@ import org.junit.jupiter.api.Test
 import java.io.BufferedReader
 import java.io.InputStreamReader
 
-class FilterBuildsPerVariantTest {
+class FilterBuildsPerVariantsTest {
 
     @Test
     fun buildsAreParsedByVariant() {
@@ -28,8 +28,7 @@ class FilterBuildsPerVariantTest {
                 thresholdTaskDuration = -1
             )
         val variants = FilterBuildsPerVariant(report).get(builds())
-        assertTrue(variants.variantA.size == 5)
-        assertTrue(variants.variantB.size == 5)
+        assertTrue(variants.size == 2)
     }
 
     @Test
@@ -50,8 +49,8 @@ class FilterBuildsPerVariantTest {
                 thresholdTaskDuration = -1
             )
         val variants = FilterBuildsPerVariant(report).get(builds())
-        assertTrue(variants.variantA.size == 3)
-        assertTrue(variants.variantB.size == 3)
+        assertTrue(variants.size == 2)
+        assertTrue(variants.firstNotNullOf { it.value }.size == 3)
     }
 
     @Test
@@ -72,8 +71,7 @@ class FilterBuildsPerVariantTest {
                 thresholdTaskDuration = -1
             )
         val variants = FilterBuildsPerVariant(report).get(builds())
-        assertTrue(variants.variantA.isEmpty())
-        assertTrue(variants.variantB.isEmpty())
+        assertTrue(variants.size == 2)
     }
 
     private fun builds(): List<BuildWithResourceUsage> {

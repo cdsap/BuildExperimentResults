@@ -34,12 +34,12 @@ class MeasurementsByReportTest {
         val measurements = MeasurementsByReport(report).get(FilterBuildsPerVariant(report).get(builds))
 
         assertTrue(measurements.isNotEmpty())
-        assertTrue(measurements.any { it.metric == Metric.KOTLIN_BUILD_REPORT })
-        assertTrue(measurements.any { it.metric == Metric.BUILD })
-        assertTrue(measurements.any { it.metric == Metric.TASK_TYPE })
-        assertTrue(measurements.any { it.metric == Metric.TASK_PATH })
-        assertTrue(measurements.any { it.metric == Metric.PROCESS })
-        assertTrue(measurements.any { it.metric == Metric.TASK_KOTLIN_BUILD_REPORT })
+        assertTrue(measurements.values.any { it.any { it.metric == Metric.KOTLIN_BUILD_REPORT } })
+        assertTrue(measurements.values.any { it.any { it.metric == Metric.BUILD } })
+        assertTrue(measurements.values.any { it.any { it.metric == Metric.TASK_TYPE } })
+        assertTrue(measurements.values.any { it.any { it.metric == Metric.TASK_PATH } })
+        assertTrue(measurements.values.any { it.any { it.metric == Metric.PROCESS } })
+        assertTrue(measurements.values.any { it.any { it.metric == Metric.TASK_KOTLIN_BUILD_REPORT } })
     }
 
     @Test
@@ -62,13 +62,12 @@ class MeasurementsByReportTest {
             )
         val measurements = MeasurementsByReport(report).get(FilterBuildsPerVariant(report).get(builds))
 
-        assertTrue(measurements.isNotEmpty())
-        assertFalse(measurements.any { it.metric == Metric.KOTLIN_BUILD_REPORT })
-        assertTrue(measurements.any { it.metric == Metric.BUILD })
-        assertTrue(measurements.any { it.metric == Metric.TASK_TYPE })
-        assertTrue(measurements.any { it.metric == Metric.TASK_PATH })
-        assertTrue(measurements.any { it.metric == Metric.PROCESS })
-        assertFalse(measurements.any { it.metric == Metric.TASK_KOTLIN_BUILD_REPORT })
+        assertFalse(measurements.values.any { it.any { it.metric == Metric.KOTLIN_BUILD_REPORT } })
+        assertTrue(measurements.values.any { it.any { it.metric == Metric.BUILD } })
+        assertTrue(measurements.values.any { it.any { it.metric == Metric.TASK_TYPE } })
+        assertTrue(measurements.values.any { it.any { it.metric == Metric.TASK_PATH } })
+        assertTrue(measurements.values.any { it.any { it.metric == Metric.PROCESS } })
+        assertFalse(measurements.values.any { it.any { it.metric == Metric.TASK_KOTLIN_BUILD_REPORT } })
     }
 
     @Test
@@ -92,12 +91,12 @@ class MeasurementsByReportTest {
         val measurements = MeasurementsByReport(report).get(FilterBuildsPerVariant(report).get(builds))
 
         assertTrue(measurements.isNotEmpty())
-        assertTrue(measurements.any { it.metric == Metric.KOTLIN_BUILD_REPORT })
-        assertTrue(measurements.any { it.metric == Metric.BUILD })
-        assertTrue(measurements.any { it.metric == Metric.TASK_TYPE })
-        assertFalse(measurements.any { it.metric == Metric.TASK_PATH })
-        assertTrue(measurements.any { it.metric == Metric.PROCESS })
-        assertTrue(measurements.any { it.metric == Metric.TASK_KOTLIN_BUILD_REPORT })
+        assertTrue(measurements.values.any { it.any { it.metric == Metric.KOTLIN_BUILD_REPORT } })
+        assertTrue(measurements.values.any { it.any { it.metric == Metric.BUILD } })
+        assertTrue(measurements.values.any { it.any { it.metric == Metric.TASK_TYPE } })
+        assertFalse(measurements.values.any { it.any { it.metric == Metric.TASK_PATH } })
+        assertTrue(measurements.values.any { it.any { it.metric == Metric.PROCESS } })
+        assertTrue(measurements.values.any { it.any { it.metric == Metric.TASK_KOTLIN_BUILD_REPORT } })
     }
 
     @Test
@@ -121,12 +120,12 @@ class MeasurementsByReportTest {
         val measurements = MeasurementsByReport(report).get(FilterBuildsPerVariant(report).get(builds))
 
         assertTrue(measurements.isNotEmpty())
-        assertTrue(measurements.any { it.metric == Metric.KOTLIN_BUILD_REPORT })
-        assertFalse(measurements.any { it.metric == Metric.BUILD })
-        assertTrue(measurements.any { it.metric == Metric.TASK_TYPE })
-        assertTrue(measurements.any { it.metric == Metric.TASK_PATH })
-        assertTrue(measurements.any { it.metric == Metric.PROCESS })
-        assertTrue(measurements.any { it.metric == Metric.TASK_KOTLIN_BUILD_REPORT })
+        assertTrue(measurements.values.any { it.any { it.metric == Metric.KOTLIN_BUILD_REPORT } })
+        assertFalse(measurements.values.any { it.any { it.metric == Metric.BUILD } })
+        assertTrue(measurements.values.any { it.any { it.metric == Metric.TASK_TYPE } })
+        assertTrue(measurements.values.any { it.any { it.metric == Metric.TASK_PATH } })
+        assertTrue(measurements.values.any { it.any { it.metric == Metric.PROCESS } })
+        assertTrue(measurements.values.any { it.any { it.metric == Metric.TASK_KOTLIN_BUILD_REPORT } })
     }
 
     @Test
@@ -150,12 +149,12 @@ class MeasurementsByReportTest {
         val measurements = MeasurementsByReport(report).get(FilterBuildsPerVariant(report).get(builds))
 
         assertTrue(measurements.isNotEmpty())
-        assertTrue(measurements.any { it.metric == Metric.KOTLIN_BUILD_REPORT })
-        assertTrue(measurements.any { it.metric == Metric.BUILD })
-        assertFalse(measurements.any { it.metric == Metric.TASK_TYPE })
-        assertTrue(measurements.any { it.metric == Metric.TASK_PATH })
-        assertTrue(measurements.any { it.metric == Metric.PROCESS })
-        assertTrue(measurements.any { it.metric == Metric.TASK_KOTLIN_BUILD_REPORT })
+        assertTrue(measurements.values.any { it.any { it.metric == Metric.KOTLIN_BUILD_REPORT } })
+        assertTrue(measurements.values.any { it.any { it.metric == Metric.BUILD } })
+        assertFalse(measurements.values.any { it.any { it.metric == Metric.TASK_TYPE } })
+        assertTrue(measurements.values.any { it.any { it.metric == Metric.TASK_PATH } })
+        assertTrue(measurements.values.any { it.any { it.metric == Metric.PROCESS } })
+        assertTrue(measurements.values.any { it.any { it.metric == Metric.TASK_KOTLIN_BUILD_REPORT } })
     }
 
     @Test
@@ -179,12 +178,12 @@ class MeasurementsByReportTest {
         val measurements = MeasurementsByReport(report).get(FilterBuildsPerVariant(report).get(builds))
 
         assertTrue(measurements.isNotEmpty())
-        assertTrue(measurements.any { it.metric == Metric.KOTLIN_BUILD_REPORT })
-        assertTrue(measurements.any { it.metric == Metric.BUILD })
-        assertTrue(measurements.any { it.metric == Metric.TASK_TYPE })
-        assertTrue(measurements.any { it.metric == Metric.TASK_PATH })
-        assertFalse(measurements.any { it.metric == Metric.PROCESS })
-        assertTrue(measurements.any { it.metric == Metric.TASK_KOTLIN_BUILD_REPORT })
+        assertTrue(measurements.values.any { it.any { it.metric == Metric.KOTLIN_BUILD_REPORT } })
+        assertTrue(measurements.values.any { it.any { it.metric == Metric.BUILD } })
+        assertTrue(measurements.values.any { it.any { it.metric == Metric.TASK_TYPE } })
+        assertTrue(measurements.values.any { it.any { it.metric == Metric.TASK_PATH } })
+        assertFalse(measurements.values.any { it.any { it.metric == Metric.PROCESS } })
+        assertTrue(measurements.values.any { it.any { it.metric == Metric.TASK_KOTLIN_BUILD_REPORT } })
     }
 
     private fun builds(): List<BuildWithResourceUsage> {
