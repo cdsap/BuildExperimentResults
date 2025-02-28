@@ -28,9 +28,8 @@ class KotlinBuildReportsParserCustomValuesTest {
             totalMemory = 0L
         )
 
-        val kotlinBuildReports = KotlinBuildReportsParserCustomValues(listOf(build), listOf(build)).parse()
-        assertTrue(kotlinBuildReports.variantA.isEmpty())
-        assertTrue(kotlinBuildReports.variantB.isEmpty())
+        val kotlinBuildReports = KotlinBuildReportsParserCustomValues(listOf(build)).parse()
+        assertTrue(kotlinBuildReports.variant.isEmpty())
     }
 
     @Test
@@ -49,9 +48,8 @@ class KotlinBuildReportsParserCustomValuesTest {
             totalMemory = 0L
         )
 
-        val kotlinBuildReports = KotlinBuildReportsParserCustomValues(listOf(build), listOf(build)).parse()
-        assertTrue(kotlinBuildReports.variantA.isEmpty())
-        assertTrue(kotlinBuildReports.variantB.isEmpty())
+        val kotlinBuildReports = KotlinBuildReportsParserCustomValues(listOf(build)).parse()
+        assertTrue(kotlinBuildReports.variant.isEmpty())
     }
 
     @Test
@@ -77,12 +75,12 @@ class KotlinBuildReportsParserCustomValuesTest {
             totalMemory = 0L
         )
 
-        val kotlinBuildReports = KotlinBuildReportsParserCustomValues(listOf(build), listOf(build)).parse()
-        assertTrue(kotlinBuildReports.variantA.containsKey("skkaow"))
-        assertTrue(kotlinBuildReports.variantA["skkaow"]?.containsKey(":ui-test-hilt-manifest:kaptGenerateStubsDemoReleaseKotlin")!!)
-        assertTrue(kotlinBuildReports.variantA["skkaow"]!![":ui-test-hilt-manifest:kaptGenerateStubsDemoReleaseKotlin"]!!.size == 31)
+        val kotlinBuildReports = KotlinBuildReportsParserCustomValues(listOf(build)).parse()
+        assertTrue(kotlinBuildReports.variant.containsKey("skkaow"))
+        assertTrue(kotlinBuildReports.variant["skkaow"]?.containsKey(":ui-test-hilt-manifest:kaptGenerateStubsDemoReleaseKotlin")!!)
+        assertTrue(kotlinBuildReports.variant["skkaow"]!![":ui-test-hilt-manifest:kaptGenerateStubsDemoReleaseKotlin"]!!.size == 31)
         assertTrue(
-            kotlinBuildReports.variantA["skkaow"]!![":ui-test-hilt-manifest:kaptGenerateStubsDemoReleaseKotlin"]!!.filter { it.desc == "Connect to Kotlin daemon" }
+            kotlinBuildReports.variant["skkaow"]!![":ui-test-hilt-manifest:kaptGenerateStubsDemoReleaseKotlin"]!!.filter { it.desc == "Connect to Kotlin daemon" }
                 .isNotEmpty()
         )
     }
@@ -110,7 +108,7 @@ class KotlinBuildReportsParserCustomValuesTest {
             totalMemory = 0L
         )
 
-        val kotlinBuildReports = KotlinBuildReportsParserCustomValues(listOf(build), listOf(build)).parse()
-        assertTrue(kotlinBuildReports.variantA.isEmpty())
+        val kotlinBuildReports = KotlinBuildReportsParserCustomValues(listOf(build)).parse()
+        assertTrue(kotlinBuildReports.variant.isEmpty())
     }
 }
