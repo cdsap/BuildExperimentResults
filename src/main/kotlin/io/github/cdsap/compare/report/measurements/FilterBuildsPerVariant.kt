@@ -1,19 +1,18 @@
 package io.github.cdsap.compare.report.measurements
 
-import io.github.cdsap.compare.model.BuildsPerVariant
 import io.github.cdsap.compare.model.Report
 import io.github.cdsap.geapi.client.model.BuildWithResourceUsage
 
 class FilterBuildsPerVariant(val report: Report) {
 
-    fun get(builds: List<BuildWithResourceUsage>): BuildsPerVariant {
-        val variantA = report.variants[0].trim()
-        val variantB = report.variants[1].trim()
+    fun get(builds: List<BuildWithResourceUsage>): Map<String, List<BuildWithResourceUsage>> {
+        val buildsPerVariants = mutableMapOf<String, List<BuildWithResourceUsage>>()
+        report.variants.forEach { variant ->
+            val buildsVariant = buildsByVariant(builds, variant.trim())
+            buildsPerVariants[variant] = buildsVariant
+        }
 
-        val buildsVariantA = buildsByVariant(builds, variantA)
-        val buildsVariantB = buildsByVariant(builds, variantB)
-
-        return BuildsPerVariant(buildsVariantA, buildsVariantB)
+        return buildsPerVariants
     }
 
     private fun buildsByVariant(
@@ -21,7 +20,7 @@ class FilterBuildsPerVariant(val report: Report) {
         variant: String
     ): List<BuildWithResourceUsage> {
         val variants = outcome.filter {
-            it.tags.contains("experiment") && it.tags.contains(report.experimentId) && it.tags.contains(variant)
+            it.tags.contains(variant)
         }
         return if (report.isProfile) {
             variants.dropLast(report.warmupsToDiscard)

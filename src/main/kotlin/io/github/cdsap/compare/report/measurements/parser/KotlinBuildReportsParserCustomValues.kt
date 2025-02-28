@@ -5,11 +5,10 @@ import io.github.cdsap.compare.model.MetricKotlin
 import io.github.cdsap.geapi.client.model.BuildWithResourceUsage
 
 class KotlinBuildReportsParserCustomValues(
-    private val variantA: List<BuildWithResourceUsage>,
-    private val variantB: List<BuildWithResourceUsage>
+    private val variant: List<BuildWithResourceUsage>
 ) {
     fun parse(): CustomValuesPerVariant {
-        return CustomValuesPerVariant(extracted(variantA), extracted(variantB))
+        return CustomValuesPerVariant(extracted(variant))
     }
 
     private fun extracted(
