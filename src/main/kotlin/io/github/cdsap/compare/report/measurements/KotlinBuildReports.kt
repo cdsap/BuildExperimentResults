@@ -1,8 +1,7 @@
 package io.github.cdsap.compare.report.measurements
 
-import io.github.cdsap.compare.model.MeasurementWithPercentiles
 import io.github.cdsap.compare.model.Metric
-import io.github.cdsap.geapi.client.model.OS
+import io.github.cdsap.compare.model.SingleMeasurement
 import org.nield.kotlinstatistics.percentile
 import kotlin.math.roundToLong
 
@@ -19,26 +18,19 @@ abstract class KotlinBuildReports {
     fun insertMeasurement(
         category: String,
         valuesFormattedA: List<String>,
-        valuesFormattedB: List<String>,
         key: String,
         variantA: Number,
-        variantB: Number,
         qualifier: String,
         metric: Metric
-    ): MeasurementWithPercentiles {
-        val variantaP50 = valuesFormattedA.map { it.toDouble() }.percentile(50.0).roundToLong()
-        val variantbP50 = valuesFormattedB.map { it.toDouble() }.percentile(50.0).roundToLong()
-        val variantaP90 = valuesFormattedA.map { it.toDouble() }.percentile(90.0).roundToLong()
-        val variantbP90 = valuesFormattedB.map { it.toDouble() }.percentile(90.0).roundToLong()
-        return MeasurementWithPercentiles(
+    ): SingleMeasurement {
+        val variantP50 = valuesFormattedA.map { it.toDouble() }.percentile(50.0).roundToLong()
+        val variantP90 = valuesFormattedA.map { it.toDouble() }.percentile(90.0).roundToLong()
+        return SingleMeasurement(
             category = category,
             name = key,
-            variantAMean = "$variantA",
-            variantBMean = "$variantB",
-            variantAP50 = "$variantaP50",
-            variantBP50 = "$variantbP50",
-            variantAP90 = "$variantaP90",
-            variantBP90 = "$variantbP90",
+            variantMean = "$variantA",
+            variantP50 = "$variantP50",
+            variantP90 = "$variantP90",
             qualifier = qualifier,
             metric = metric
         )

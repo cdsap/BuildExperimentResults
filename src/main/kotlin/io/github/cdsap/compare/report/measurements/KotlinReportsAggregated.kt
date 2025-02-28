@@ -1,51 +1,42 @@
 package io.github.cdsap.compare.report.measurements
 
 import io.github.cdsap.compare.model.CustomValuesPerVariant
-import io.github.cdsap.compare.model.MeasurementWithPercentiles
 import io.github.cdsap.compare.model.Metric
 import io.github.cdsap.compare.model.MetricKotlin
+import io.github.cdsap.compare.model.SingleMeasurement
 import kotlin.math.roundToInt
 import kotlin.math.roundToLong
 
 class KotlinReportsAggregated(private val kotlinBuildReportsParserCustomValues: CustomValuesPerVariant) :
     KotlinBuildReports() {
 
-    fun get(excludedList: List<String>): List<MeasurementWithPercentiles> {
-        val measurements = mutableListOf<MeasurementWithPercentiles>()
-        val metricsAggregatedVariantA = aggregateBuilds(kotlinBuildReportsParserCustomValues.variantA)
-        val metricsAggregatedVariantB = aggregateBuilds(kotlinBuildReportsParserCustomValues.variantB)
+    fun get(excludedList: List<String>): List<SingleMeasurement> {
+        val measurements = mutableListOf<SingleMeasurement>()
+        val metricsAggregatedVariantA = aggregateBuilds(kotlinBuildReportsParserCustomValues.variant)
 
         metricsAggregatedVariantA.filter { !excludedList.contains(it.key) }
             .forEach {
-                val metricVariantB = metricsAggregatedVariantB[it.key]
-                if (metricVariantB != null) {
-                    val buildsA = it.value.map { format(it) }
-                    val buildsB = metricVariantB.map { format(it) }
-                    var qualifier = ""
-                    var medianA: Number
-                    var medianB: Number
-                    if (itHasQualifier(it)) {
-                        qualifier = getQualifier(it.value.first())
-                        medianA = ((buildsA.sumOf { it.toDouble() } / buildsA.size) * 100.0).roundToInt() / 100.0
-                        medianB = ((buildsB.sumOf { it.toDouble() } / buildsB.size) * 100.0).roundToInt() / 100.0
-                    } else {
-                        medianA = (buildsA.sumOf { it.toLong() } / buildsA.size).toDouble().roundToLong()
-                        medianB = buildsB.sumOf { it.toLong() } / buildsB.size
-                    }
-                    measurements.add(
-                        insertMeasurement(
-                            "Kotlin Build Reports",
-                            buildsA,
-                            buildsB,
-                            it.key,
-                            medianA,
-                            medianB,
-                            qualifier,
-                            Metric.KOTLIN_BUILD_REPORT
-                        )
-                    )
+                val buildsA = it.value.map { format(it) }
+                var qualifier = ""
+                var median: Number
+                if (itHasQualifier(it)) {
+                    qualifier = getQualifier(it.value.first())
+                    median = ((buildsA.sumOf { it.toDouble() } / buildsA.size) * 100.0).roundToInt() / 100.0
+                } else {
+                    median = (buildsA.sumOf { it.toLong() } / buildsA.size).toDouble().roundToLong()
                 }
+                measurements.add(
+                    insertMeasurement(
+                        "Kotlin Build Reports",
+                        buildsA,
+                        it.key,
+                        median,
+                        qualifier,
+                        Metric.KOTLIN_BUILD_REPORT
+                    )
+                )
             }
+
         return measurements
     }
 
