@@ -1,59 +1,46 @@
 package io.github.cdsap.compare.report.measurements
 
 import io.github.cdsap.compare.model.CustomValuesPerVariant
-import io.github.cdsap.compare.model.MeasurementWithPercentiles
 import io.github.cdsap.compare.model.Metric
 import io.github.cdsap.compare.model.MetricKotlin
+import io.github.cdsap.compare.model.SingleMeasurement
 import kotlin.math.roundToInt
 import kotlin.math.roundToLong
 
 class KotlinReportsByTaskPath(private val kotlinBuildReportsParserCustomValues: CustomValuesPerVariant) :
     KotlinBuildReports() {
 
-    fun get(excludedList: List<String>): List<MeasurementWithPercentiles> {
-        val measurements = mutableListOf<MeasurementWithPercentiles>()
-        val tasksWithPathA = aggregateBuilds2(kotlinBuildReportsParserCustomValues.variantA)
-        val tasksWithPathB = aggregateBuilds2(kotlinBuildReportsParserCustomValues.variantB)
+    fun get(excludedList: List<String>): List<SingleMeasurement> {
+        val measurements = mutableListOf<SingleMeasurement>()
+        val tasksWithPathA = aggregateBuilds2(kotlinBuildReportsParserCustomValues.variant)
         tasksWithPathA.forEach {
             val key = it.key
-            if (tasksWithPathB.contains(it.key)) {
-                val variantBBuilds = tasksWithPathB[it.key]
 
-                it.value.filter { !excludedList.contains(it.key) }
-                    .forEach {
-                        val buildsVariantB = variantBBuilds!![it.key]
-                        if (buildsVariantB != null && it.value.size == buildsVariantB.size) {
-                            val buildsA = it.value.map { format(it) }
-                            val buildsB = buildsVariantB.map { format(it) }
-                            var qualifier = ""
-                            var medianA: Number
-                            var medianB: Number
-                            if (itHasQualifier(it)) {
-                                qualifier = getQualifier(it.value.first())
-                                medianA =
-                                    ((buildsA.sumOf { it.toDouble() } / buildsA.size) * 100.0).roundToInt() / 100.0
-                                medianB =
-                                    ((buildsB.sumOf { it.toDouble() } / buildsB.size) * 100.0).roundToInt() / 100.0
-                            } else {
-                                medianA = (buildsA.sumOf { it.toLong() } / buildsA.size).toDouble().roundToLong()
-                                medianB = buildsB.sumOf { it.toLong() } / buildsB.size
-                            }
-                            measurements.add(
-                                insertMeasurement(
-                                    "$key",
-                                    buildsA,
-                                    buildsB,
-                                    it.key,
-                                    medianA,
-                                    medianB,
-                                    qualifier,
-                                    Metric.TASK_KOTLIN_BUILD_REPORT
-                                )
-                            )
-                        }
+            it.value.filter { !excludedList.contains(it.key) }
+                .forEach {
+                    val builds = it.value.map { format(it) }
+                    var qualifier = ""
+                    var median: Number
+                    if (itHasQualifier(it)) {
+                        qualifier = getQualifier(it.value.first())
+                        median =
+                            ((builds.sumOf { it.toDouble() } / builds.size) * 100.0).roundToInt() / 100.0
+                    } else {
+                        median = (builds.sumOf { it.toLong() } / builds.size).toDouble().roundToLong()
                     }
-            }
+                    measurements.add(
+                        insertMeasurement(
+                            "$key",
+                            builds,
+                            it.key,
+                            median,
+                            qualifier,
+                            Metric.TASK_KOTLIN_BUILD_REPORT
+                        )
+                    )
+                }
         }
+
         return measurements
     }
 

@@ -1,33 +1,38 @@
 package io.github.cdsap.compare.report.measurements
 
-import io.github.cdsap.compare.model.BuildsPerVariant
-import io.github.cdsap.compare.model.MeasurementWithPercentiles
 import io.github.cdsap.compare.model.Report
+import io.github.cdsap.compare.model.SingleMeasurement
+import io.github.cdsap.geapi.client.model.BuildWithResourceUsage
 
 class MeasurementsByReport(
     private val report: Report
 ) {
 
-    fun get(variants: BuildsPerVariant): List<MeasurementWithPercentiles> {
-        val measurements = mutableListOf<MeasurementWithPercentiles>()
-        if (report.buildReport) {
-            measurements += BuildMeasurement(variants.variantA, variants.variantB).get()
+    fun get(variants: Map<String, List<BuildWithResourceUsage>>): Map<String, List<SingleMeasurement>> {
+        val measurementsPerVariant = mutableMapOf<String, List<SingleMeasurement>>()
+        variants.forEach { t, u ->
+            val measurements = mutableListOf<SingleMeasurement>()
+            if (report.buildReport) {
+                measurements += BuildMeasurement(u).get()
+            }
+            if (report.processesReport) {
+                measurements += ProcessMeasurement(u, report.isProfile).get()
+            }
+            if (report.taskTypeReport) {
+                measurements += TasksTypeMeasurements(u, report).get()
+            }
+            if (report.taskPathReport) {
+                measurements += TasksPathMeasurements(u, report).get()
+            }
+            if (report.kotlinBuildReport) {
+                measurements += KotlinBuildReportsMeasurements(u).get()
+            }
+            if (report.resourceUsageReport) {
+                measurements += ResourceUsageMeasurement(u).get()
+            }
+            measurementsPerVariant[t] = measurements
         }
-        if (report.processesReport) {
-            measurements += ProcessMeasurement(variants.variantA, variants.variantB, report.isProfile).get()
-        }
-        if (report.taskTypeReport) {
-            measurements += TasksTypeMeasurements(variants.variantA, variants.variantB, report).get()
-        }
-        if (report.taskPathReport) {
-            measurements += TasksPathMeasurements(variants.variantA, variants.variantB, report).get()
-        }
-        if (report.kotlinBuildReport) {
-            measurements += KotlinBuildReportsMeasurements(variants.variantA, variants.variantB).get()
-        }
-        if (report.resourceUsageReport) {
-            measurements += ResourceUsageMeasurement(variants.variantA, variants.variantB).get()
-        }
-        return measurements
+
+        return measurementsPerVariant
     }
 }

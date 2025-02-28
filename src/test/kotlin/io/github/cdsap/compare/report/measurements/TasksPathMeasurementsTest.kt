@@ -29,21 +29,6 @@ class TasksPathMeasurementsTest {
             )
         )
 
-        val variantB = listOf(
-            BuildWithResourceUsage(
-                builtTool = "B",
-                taskExecution = arrayOf(
-                    Task("compile", ":app:compileDebugKotlin", "executed_cacheable", 3000, 15),
-                    Task("compile", ":core:compileDebugKotlin", "executed_cacheable", 4000, 25)
-                ),
-                goalExecution = emptyArray(),
-                avoidanceSavingsSummary = AvoidanceSavingsSummary("", "", ""),
-                execution = BuildWithResourceUsageProvider.get(),
-                nonExecution = BuildWithResourceUsageProvider.get(),
-                total = BuildWithResourceUsageProvider.get(),
-                totalMemory = 0L
-            )
-        )
         val report =
             Report(
                 taskPathReport = true,
@@ -60,18 +45,15 @@ class TasksPathMeasurementsTest {
                 thresholdTaskDuration = -1
             )
 
-        val tasksPathMeasurements = TasksPathMeasurements(variantA, variantB, report)
+        val tasksPathMeasurements = TasksPathMeasurements(variantA, report)
         val measurements = tasksPathMeasurements.get()
 
         assertEquals(2, measurements.size)
         assertEquals("Task Path", measurements[0].category)
         assertEquals(":app:compileDebugKotlin", measurements[0].name)
-        assertTrue(measurements[0].variantAMean.toString().startsWith("1500"))
-        assertTrue(measurements[0].variantBMean.toString().startsWith("3000"))
-        assertTrue(measurements[0].variantAP50.toString().startsWith("1500"))
-        assertTrue(measurements[0].variantBP50.toString().startsWith("3000"))
-        assertTrue(measurements[0].variantAP90.toString().startsWith("1500"))
-        assertTrue(measurements[0].variantBP90.toString().startsWith("3000"))
+        assertTrue(measurements[0].variantMean.toString().startsWith("1500"))
+        assertTrue(measurements[0].variantP50.toString().startsWith("1500"))
+        assertTrue(measurements[0].variantP90.toString().startsWith("1500"))
         assertEquals("ms", measurements[0].qualifier)
     }
 }

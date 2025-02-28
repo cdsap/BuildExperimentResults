@@ -1,12 +1,11 @@
 package io.github.cdsap.compare.report.measurements
 
-import io.github.cdsap.compare.model.MeasurementWithPercentiles
+import io.github.cdsap.compare.model.SingleMeasurement
 import io.github.cdsap.compare.report.measurements.parser.KotlinBuildReportsParserCustomValues
 import io.github.cdsap.geapi.client.model.BuildWithResourceUsage
 
 class KotlinBuildReportsMeasurements(
-    private val variantA: List<BuildWithResourceUsage>,
-    private val variantB: List<BuildWithResourceUsage>
+    private val variant: List<BuildWithResourceUsage>
 ) {
 
     private val excludedList = listOf(
@@ -18,11 +17,12 @@ class KotlinBuildReportsMeasurements(
         "Increase memory usage"
     )
 
-    fun get(): List<MeasurementWithPercentiles> {
+    fun get(): List<SingleMeasurement> {
         val kotlinReportsParserCustomValues =
-            KotlinBuildReportsParserCustomValues(variantA, variantB).parse()
+            KotlinBuildReportsParserCustomValues(variant).parse()
         val kotlinReportsAggregated = KotlinReportsByTaskPath(kotlinReportsParserCustomValues).get(excludedList)
         val kotlinReportsByTaskPath = KotlinReportsAggregated(kotlinReportsParserCustomValues).get(excludedList)
+
         return kotlinReportsAggregated + kotlinReportsByTaskPath
     }
 }
