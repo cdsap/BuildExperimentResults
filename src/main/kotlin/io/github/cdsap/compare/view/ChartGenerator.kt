@@ -3,6 +3,17 @@ package io.github.cdsap.compare.view
 import io.github.cdsap.geapi.client.model.BuildWithResourceUsage
 
 class ChartGenerator {
+    private val variantColors = mutableMapOf<String, String>()
+    private val predefinedColors = listOf(
+        "#36A2EB",  // Light blue
+        "#FF6384",  // Pink/Red
+        "#4BC0C0",  // Teal
+        "#FF9F40",  // Orange
+        "#9966FF",  // Purple
+        "#FFCD56",  // Yellow
+        "#C9CBCF"   // Grey
+    )
+
     fun generateCharts(variants: Map<String, List<BuildWithResourceUsage>>): String {
         val mostExpensiveTaskPath = findMostExpensiveTask(variants)
         return """
@@ -73,32 +84,32 @@ class ChartGenerator {
     }
 
     private fun generateBuildDurationChart(variants: Map<String, List<BuildWithResourceUsage>>): String {
-        return generateChart(
+        return generateChartData(
             "buildDurationChart",
             variants,
-            { it.buildDuration },
-            "Build Duration (ms)",
-            200000
+            "Build Duration (seconds)",
+            { it.buildDuration.toDouble() },
+            isDuration = true
         )
     }
 
     private fun generateProcessMemoryChart(variants: Map<String, List<BuildWithResourceUsage>>): String {
-        return generateChart(
+        return generateChartData(
             "buildProcessMemoryChart",
             variants,
-            { it.total.buildProcessMemory.max },
-            "Memory Usage (bytes)",
-            null
+            "Memory Usage (MB)",
+            { it.total.buildProcessMemory.max.toDouble() },
+            isMemory = true
         )
     }
 
     private fun generateChildProcessMemoryChart(variants: Map<String, List<BuildWithResourceUsage>>): String {
-        return generateChart(
+        return generateChartData(
             "buildChildProcessMemoryChart",
             variants,
-            { it.total.buildChildProcessesMemory.max },
-            "Memory Usage (bytes)",
-            null
+            "Memory Usage (MB)",
+            { it.total.buildChildProcessesMemory.max.toDouble() },
+            isMemory = true
         )
     }
 
@@ -106,16 +117,16 @@ class ChartGenerator {
         variants: Map<String, List<BuildWithResourceUsage>>,
         mostExpensiveTaskPath: String
     ): String {
-        return generateChart(
+        return generateChartData(
             "expensiveTaskChart",
             variants,
-            { build ->
+            "Task Duration (seconds)",
+            { build -> 
                 build.taskExecution
                     .find { it.taskPath == mostExpensiveTaskPath }
-                    ?.duration ?: 0.0
+                    ?.duration?.toDouble() ?: 0.0
             },
-            "Duration (ms)",
-            null
+            isDuration = true
         )
     }
 
@@ -163,8 +174,13 @@ class ChartGenerator {
                 y: {
                     ${if (minY != null) "min: $minY," else ""}
                     ticks: {
-                        callback: function(value) {
-                            return (value / 1000).toFixed(0) + 'k';
+                        callback: function(value, index, ticks) {
+                            if (this.chart.options.scales.y.title.text.includes('Memory')) {
+                                return (value / (1024 * 1024)).toFixed(2) + ' MB';
+                            } else if (this.chart.options.scales.y.title.text.includes('Duration')) {
+                                return (value / 1000).toFixed(2) + ' s';
+                            }
+                            return value;
                         }
                     },
                     title: {
@@ -183,17 +199,45 @@ class ChartGenerator {
         """.trimIndent()
     }
 
-    private fun getRandomColor(seed: String): String {
-        val colors = listOf(
-            "#FF6384",
-            "#36A2EB",
-            "#FFCE56",
-            "#4BC0C0",
-            "#9966FF",
-            "#FF9F40",
-            "#FF6384",
-            "#C9CBCF"
-        )
-        return colors[Math.abs(seed.hashCode()) % colors.size]
+    private fun generateChartData(
+        chartId: String,
+        variants: Map<String, List<BuildWithResourceUsage>>,
+        yAxisLabel: String,
+        valueSelector: (BuildWithResourceUsage) -> Double,
+        isDuration: Boolean = false,
+        isMemory: Boolean = false
+    ): String {
+        val datasets = variants.map { (variant, builds) ->
+            """
+            {
+                label: '${variant}',
+                data: [${builds.map { valueSelector(it) }.joinToString(",")}],
+                borderColor: '${getRandomColor(variant)}',
+                tension: 0.1
+            }
+            """.trimIndent()
+        }.joinToString(",")
+
+        return """
+        new Chart(document.getElementById('$chartId'), {
+            type: 'line',
+            data: {
+                labels: ${(1..variants.values.first().size).toList()},
+                datasets: [$datasets]
+            },
+            options: ${getChartOptions(yAxisLabel, null)}
+        });
+        """.trimIndent()
+    }
+
+    private fun getRandomColor(variant: String): String {
+        return variantColors.getOrPut(variant) {
+            if (variantColors.size < predefinedColors.size) {
+                predefinedColors[variantColors.size]
+            } else {
+                // Fallback to random color if we run out of predefined colors
+                "#" + (variant.hashCode() and 0xFFFFFF).toString(16).padStart(6, '0')
+            }
+        }
     }
 }

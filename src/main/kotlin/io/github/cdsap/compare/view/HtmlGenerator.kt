@@ -28,6 +28,15 @@ class HtmlGenerator(
         return generateHtmlContent(measurement, variants, header, variants1)
     }
 
+    fun generateTableSummary(
+        measurement: Map<String, List<SingleMeasurement>>,
+        variants: List<String>,
+        header: Header,
+        variants1: Map<String, List<BuildWithResourceUsage>>
+    ): String {
+        return generateHtmlContentSummary(measurement, variants, header, variants1)
+    }
+
     private fun generateHtmlDocument(content: String): String {
         return """
             <!DOCTYPE html>
@@ -53,9 +62,21 @@ class HtmlGenerator(
     ): String {
         val experimentInfo = generateExperimentInfo(variants, header, variants1)
         val charts = chartGenerator.generateCharts(variants1)
-        val metricsTable = generateMetricsTable(measurement, variants)
+        val metricsTable = generateMetricsTable(measurement, variants, false)
         return "$experimentInfo$charts$metricsTable"
     }
+
+    private fun generateHtmlContentSummary(
+        measurement: Map<String, List<SingleMeasurement>>,
+        variants: List<String>,
+        header: Header,
+        variants1: Map<String, List<BuildWithResourceUsage>>
+    ): String {
+        val experimentInfo = generateExperimentInfo(variants, header, variants1)
+        val metricsTable = generateMetricsTable(measurement, variants, true)
+        return "$experimentInfo$metricsTable"
+    }
+
 
     private fun getHtmlHead(): String {
         return """
@@ -156,10 +177,11 @@ class HtmlGenerator(
 
     private fun generateMetricsTable(
         measurement: Map<String, List<SingleMeasurement>>,
-        variants: List<String>
+        variants: List<String>,
+        filterMetrics: Boolean
     ): String {
         var output = "<table id='metricsTable' class='metric-table'>"
-        
+
         // Main headers
         output += "<tr>"
         output += "<th>Category</th>"
@@ -189,11 +211,18 @@ class HtmlGenerator(
 
         // Data rows
         measurementProcessor.processMeasurements(measurement)
+            .filter {
+                if (filterMetrics) {
+                    measurementProcessor.filterUnwantedMetrics(it)
+                } else {
+                    true
+                }
+            }
             .forEach { rowData ->
                 output += "<tr>"
                 output += "<td>${rowData["category"]}</td>"
                 output += "<td>${rowData["name"]}</td>"
-                
+
                 // Mean values
                 variants.forEach { variant ->
                     output += "<td class='metric-value'>${formatValue(rowData["$variant-mean"])}</td>"
@@ -209,7 +238,7 @@ class HtmlGenerator(
                 output += "<td class='unit-column'>${rowData["${variants[0]}-unit"] ?: ""}</td>"
                 output += "</tr>"
             }
-        
+
         output += "</table>"
         return output
     }
