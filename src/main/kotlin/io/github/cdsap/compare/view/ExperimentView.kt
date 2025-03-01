@@ -18,7 +18,6 @@ class ExperimentView(
         measurement: Map<String, List<SingleMeasurement>>,
         variants1: Map<String, List<BuildWithResourceUsage>>
     ) {
-        println("inaki " + variants1.values.first().first().requestedTask.joinToString { " " })
         val variants = measurement.keys.toList()
         val header = Header(
             numberOfBuilds = variants1.values.flatMap { listOf(it.size) },
@@ -29,7 +28,7 @@ class ExperimentView(
         File("experiment_results.html").writeText(htmlGenerator.generate(measurement, variants, header, variants1))
         File("experiment_results.csv").writeText(csvGenerator.generate(measurement, variants, header, variants1))
         File("experiment_results_summary_gha").writeText(
-            htmlGenerator.generateTable(
+            htmlGenerator.generateTableSummary(
                 measurement,
                 variants,
                 header,
