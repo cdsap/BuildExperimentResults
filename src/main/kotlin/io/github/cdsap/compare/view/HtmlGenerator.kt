@@ -19,15 +19,6 @@ class HtmlGenerator(
         )
     }
 
-    fun generateTable(
-        measurement: Map<String, List<SingleMeasurement>>,
-        variants: List<String>,
-        header: Header,
-        variants1: Map<String, List<BuildWithResourceUsage>>
-    ): String {
-        return generateHtmlContent(measurement, variants, header, variants1)
-    }
-
     fun generateTableSummary(
         measurement: Map<String, List<SingleMeasurement>>,
         variants: List<String>,
@@ -165,11 +156,26 @@ class HtmlGenerator(
         header: Header,
         variants1: Map<String, List<BuildWithResourceUsage>>
     ): String {
+
+        val timestamp = variants1.values.first().first().buildStartTime
+        val oneWeekMillis = 2 * 24 * 60 * 60 * 1000L
+        val oneWeekBefore = timestamp - oneWeekMillis
+        val oneWeekAfter = timestamp + oneWeekMillis
         var output = "<table><tr><td colspan=${6 + variants.size * 3}>Experiment</td></tr>"
+        if (header.repository != null) {
+            output += "<tr><td>Repository</td><td colspan=${header.repository}</td></tr>"
+        }
         output += "<tr><td>Task experiment</td><td colspan=${5 + variants.size * 3}>${header.task}</td></tr>"
 
         variants1.forEach { (variant, builds) ->
-            output += "<tr><td>$variant</td><td colspan=${5 + variants.size * 3}>${builds.size} builds processed</td></tr>"
+           val url =  "${header.url}scans?search.startTimeMax=$oneWeekAfter&search.startTimeMin=$oneWeekBefore&search.tags=${variant}"
+            output += "<tr><td>$variant</td><td>${builds.size} builds processed</td><td colspan=${4 + variants.size * 3}><a href=\"$url\">Build Scans</a></td></tr>"
+        }
+        if(header.linkCsv.isNotEmpty()) {
+            output += "<tr><td>Experiment raw data</td><td colspan=${5 + variants.size * 3}><a href=\"${header.linkCsv}\">Download csv</a></td></tr>"
+        }
+        if(header.experimentRunId != null) {
+            output += "<tr><td>Experiment run execution</td><td colspan=${5 + variants.size * 3}><a href=\"https://github.com/cdsap/Telltale/actions/runs/${header.experimentRunId}\">Workflow</a>https://github.com/cdsap/Telltale/actions/runs/13623288246 ${header.experimentRunId}</td></tr>"
         }
         output += "</table>"
         return output

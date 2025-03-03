@@ -40,6 +40,9 @@ class Experiment : CliktCommand() {
     private val onlyCacheableOutcome by option("--only-cacheable-outcome").flag("--no-only-cacheable-outcome", default = false)
     private val warmupsToDiscard by option().int().default(2)
     private val thresholdTaskDuration by option().long().default(-1)
+    private val experimentId: String? by option()
+    private val repository : String? by option()
+    private val experimentRunId: String? by option()
 
     override fun run() {
         if (!taskPathReport && !taskTypeReport && !kotlinBuildReport && !processesReport) {
@@ -54,12 +57,12 @@ class Experiment : CliktCommand() {
             clientType = ClientType.CLI
 
         )
-        val repository = GradleRepositoryImpl(GEClient(apiKey, url))
+        val dvRepository = GradleRepositoryImpl(GEClient(apiKey, url))
 
         runBlocking {
             ExperimentReport(
                 filter = filter,
-                repository = repository,
+                repository = dvRepository,
                 Report(
                     taskPathReport = taskPathReport,
                     taskTypeReport = taskTypeReport,
@@ -67,12 +70,15 @@ class Experiment : CliktCommand() {
                     processesReport = processesReport,
                     buildReport = buildReport,
                     resourceUsageReport = resourceUsageReport,
-                    experimentId = "",
+                    experimentId = experimentId,
                     warmupsToDiscard = warmupsToDiscard,
                     variants = variants,
                     isProfile = profile,
                     onlyCacheableOutcome = onlyCacheableOutcome,
-                    thresholdTaskDuration = thresholdTaskDuration
+                    thresholdTaskDuration = thresholdTaskDuration,
+                    repository = repository,
+                    url = url,
+                    experimentRunId = experimentRunId
                 )
             ).process()
         }
