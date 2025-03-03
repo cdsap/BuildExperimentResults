@@ -10,7 +10,10 @@ data class Report(
     val isProfile: Boolean,
     val warmupsToDiscard: Int,
     val variants: List<String>,
-    val experimentId: String,
+    val experimentId: String? = null,
     val onlyCacheableOutcome: Boolean,
-    val thresholdTaskDuration: Long
+    val thresholdTaskDuration: Long,
+    val repository: String? = null,
+    val url: String? = null,
+    val experimentRunId: String? = null
 )
