@@ -40,7 +40,7 @@ class ExperimentView(
             htmlGenerator.generate(
                 measurement,
                 variants,
-                header,
+                header.copy(htmlSummary = true),
                 variants1
             )
         )

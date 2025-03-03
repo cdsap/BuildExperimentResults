@@ -171,11 +171,11 @@ class HtmlGenerator(
            val url =  "${header.url}scans?search.startTimeMax=$oneWeekAfter&search.startTimeMin=$oneWeekBefore&search.tags=${variant}"
             output += "<tr><td>$variant</td><td>${builds.size} builds processed</td><td colspan=${4 + variants.size * 3}><a href=\"$url\">Build Scans</a></td></tr>"
         }
-        if(header.linkCsv.isNotEmpty()) {
+        if(header.linkCsv.isNotEmpty() && header.htmlSummary) {
             output += "<tr><td>Experiment raw data</td><td colspan=${5 + variants.size * 3}><a href=\"${header.linkCsv}\">Download csv</a></td></tr>"
         }
-        if(header.experimentRunId != null) {
-            output += "<tr><td>Experiment run execution</td><td colspan=${5 + variants.size * 3}><a href=\"https://github.com/cdsap/Telltale/actions/runs/${header.experimentRunId}\">Workflow</a>https://github.com/cdsap/Telltale/actions/runs/13623288246 ${header.experimentRunId}</td></tr>"
+        if(header.experimentRunId != null && header.htmlSummary) {
+            output += "<tr><td>Experiment run execution</td><td colspan=${5 + variants.size * 3}><a href=\"https://github.com/cdsap/Telltale/actions/runs/${header.experimentRunId}\">Workflow</a></td></tr>"
         }
         output += "</table>"
         return output
