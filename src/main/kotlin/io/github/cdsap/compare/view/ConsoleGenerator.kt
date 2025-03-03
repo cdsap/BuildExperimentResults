@@ -27,10 +27,10 @@ class ConsoleGenerator(
                     alignment = TextAlignment.MiddleCenter
                 }
             }
-            if (header.experiment.isNotEmpty()) {
+            if (header.experimentId != null) {
                 row {
                     cell("Experiment id")
-                    cell(header.experiment) {
+                    cell(header.experimentId) {
                         columnSpan = (variants.size * 3) + 1
                     }
                 }

@@ -26,7 +26,7 @@ class ExperimentReport(
             val measurements = MeasurementsByReport(report).get(variants)
 
             if (measurements.isNotEmpty()) {
-                ExperimentView(report).genereateOutputs(measurements, variants)
+                ExperimentView(report).generateOutputs(measurements, variants)
             }
         }
     }
