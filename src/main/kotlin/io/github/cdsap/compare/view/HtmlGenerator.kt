@@ -52,8 +52,8 @@ class HtmlGenerator(
         variants1: Map<String, List<BuildWithResourceUsage>>
     ): String {
         val experimentInfo = generateExperimentInfo(variants, header, variants1)
-        val charts = chartGenerator.generateCharts(variants1)
-        val metricsTable = generateMetricsTable(measurement, variants, false)
+        val charts = chartGenerator.generateCharts(variants1, header)
+        val metricsTable = generateMetricsTable(measurement, variants, false, header)
         return "$experimentInfo$charts$metricsTable"
     }
 
@@ -64,10 +64,9 @@ class HtmlGenerator(
         variants1: Map<String, List<BuildWithResourceUsage>>
     ): String {
         val experimentInfo = generateExperimentInfo(variants, header, variants1)
-        val metricsTable = generateMetricsTable(measurement, variants, true)
+        val metricsTable = generateMetricsTable(measurement, variants, true, header)
         return "$experimentInfo$metricsTable"
     }
-
 
     private fun getHtmlHead(): String {
         return """
@@ -156,25 +155,24 @@ class HtmlGenerator(
         header: Header,
         variants1: Map<String, List<BuildWithResourceUsage>>
     ): String {
-
         val timestamp = variants1.values.first().first().buildStartTime
         val oneWeekMillis = 2 * 24 * 60 * 60 * 1000L
         val oneWeekBefore = timestamp - oneWeekMillis
         val oneWeekAfter = timestamp + oneWeekMillis
         var output = "<table><tr><td colspan=${6 + variants.size * 3}>Experiment</td></tr>"
         if (header.repository != null) {
-            output += "<tr><td>Repository</td><td colspan=${header.repository}</td></tr>"
+            output += "<tr><td>Repository</td><td colspan=${5 + variants.size * 3}>${header.repository}</td></tr>"
         }
         output += "<tr><td>Task experiment</td><td colspan=${5 + variants.size * 3}>${header.task}</td></tr>"
 
         variants1.forEach { (variant, builds) ->
-           val url =  "${header.url}scans?search.startTimeMax=$oneWeekAfter&search.startTimeMin=$oneWeekBefore&search.tags=${variant}"
-            output += "<tr><td>$variant</td><td>${builds.size} builds processed</td><td colspan=${4 + variants.size * 3}><a href=\"$url\">Build Scans</a></td></tr>"
+            val url = "${header.url}scans?search.startTimeMax=$oneWeekAfter&search.startTimeMin=$oneWeekBefore&search.tags=$variant"
+            output += "<tr><td>${variant.removeExperimentId(header.experimentId)}</td><td>${builds.size} builds processed</td><td colspan=${4 + variants.size * 3}><a href=\"$url\">Build Scans</a></td></tr>"
         }
-        if(header.linkCsv.isNotEmpty() && header.htmlSummary) {
+        if (header.linkCsv.isNotEmpty() && header.htmlSummary) {
             output += "<tr><td>Experiment raw data</td><td colspan=${5 + variants.size * 3}><a href=\"${header.linkCsv}\">Download csv</a></td></tr>"
         }
-        if(header.experimentRunId != null && header.htmlSummary) {
+        if (header.experimentRunId != null && header.htmlSummary) {
             output += "<tr><td>Experiment run execution</td><td colspan=${5 + variants.size * 3}><a href=\"https://github.com/cdsap/Telltale/actions/runs/${header.experimentRunId}\">Workflow</a></td></tr>"
         }
         output += "</table>"
@@ -184,7 +182,8 @@ class HtmlGenerator(
     private fun generateMetricsTable(
         measurement: Map<String, List<SingleMeasurement>>,
         variants: List<String>,
-        filterMetrics: Boolean
+        filterMetrics: Boolean,
+        header: Header
     ): String {
         var output = "<table id='metricsTable' class='metric-table'>"
 
@@ -197,7 +196,7 @@ class HtmlGenerator(
 
         // Metric headers
         output += "<tr>"
-        output += "<th colspan='2'></th>"  // Empty cells for Category and Metric
+        output += "<th colspan='2'></th>" // Empty cells for Category and Metric
         output += "<th colspan=${variants.size}>Mean</th>"
         output += "<th colspan=${variants.size}>P50</th>"
         output += "<th colspan=${variants.size}>P90</th>"
@@ -206,13 +205,13 @@ class HtmlGenerator(
 
         // Variant headers
         output += "<tr class='variant-headers'>"
-        output += "<th colspan='2'></th>"  // Empty cells for Category and Metric
+        output += "<th colspan='2'></th>" // Empty cells for Category and Metric
         repeat(3) { // For Mean, P50, P90
             variants.forEach { variant ->
-                output += "<th>$variant</th>"
+                output += "<th>${variant.removeExperimentId(header.experimentId)}</th>"
             }
         }
-        output += "<th></th>"  // For Unit
+        output += "<th></th>" // For Unit
         output += "</tr>"
 
         // Data rows

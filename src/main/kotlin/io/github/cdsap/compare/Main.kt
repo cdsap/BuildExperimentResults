@@ -41,7 +41,7 @@ class Experiment : CliktCommand() {
     private val warmupsToDiscard by option().int().default(2)
     private val thresholdTaskDuration by option().long().default(-1)
     private val experimentId: String? by option()
-    private val repository : String? by option()
+    private val repository: String? by option()
     private val experimentRunId: String? by option()
 
     override fun run() {
