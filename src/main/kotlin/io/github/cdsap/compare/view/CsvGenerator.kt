@@ -18,13 +18,13 @@ class CsvGenerator(
         // Column headers
         output.append("Category,Metric")
         variants.forEach { variant ->
-            output.append(",$variant Mean")
+            output.append(",${variant.removeExperimentId(header.experimentId)} Mean")
         }
         variants.forEach { variant ->
-            output.append(",$variant P50")
+            output.append(",${variant.removeExperimentId(header.experimentId)} P50")
         }
         variants.forEach { variant ->
-            output.append(",$variant P90")
+            output.append(",${variant.removeExperimentId(header.experimentId)} P90")
         }
         output.append(",Unit\n")
 
