@@ -9,7 +9,6 @@ import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
 
-
 class ExperimentView(
     val report: Report
 ) {

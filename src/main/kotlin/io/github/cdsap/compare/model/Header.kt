@@ -7,6 +7,6 @@ data class Header(
     val repository: String? = null,
     val url: String? = null,
     val linkCsv: String = "",
-    val experimentRunId : String? = null,
+    val experimentRunId: String? = null,
     val htmlSummary: Boolean = false
 )

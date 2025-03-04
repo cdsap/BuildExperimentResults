@@ -3,6 +3,7 @@ import com.jakewharton.picnic.table
 import io.github.cdsap.compare.model.Header
 import io.github.cdsap.compare.model.SingleMeasurement
 import io.github.cdsap.compare.view.MeasurementProcessor
+import io.github.cdsap.compare.view.removeExperimentId
 import io.github.cdsap.geapi.client.model.BuildWithResourceUsage
 
 class ConsoleGenerator(
@@ -44,7 +45,7 @@ class ConsoleGenerator(
 
             variants1.forEach { (variant, builds) ->
                 row {
-                    cell(variant)
+                    cell(variant.removeExperimentId(header.experimentId))
                     cell("Builds processed: ${builds.size}") {
                         columnSpan = (variants.size * 3) + 1
                     }
@@ -76,13 +77,13 @@ class ConsoleGenerator(
 
             row {
                 variants.forEach { variant ->
-                    cell(variant) { alignment = TextAlignment.MiddleCenter }
+                    cell(variant.removeExperimentId(header.experimentId)) { alignment = TextAlignment.MiddleCenter }
                 }
                 variants.forEach { variant ->
-                    cell(variant) { alignment = TextAlignment.MiddleCenter }
+                    cell(variant.removeExperimentId(header.experimentId)) { alignment = TextAlignment.MiddleCenter }
                 }
                 variants.forEach { variant ->
-                    cell(variant) { alignment = TextAlignment.MiddleCenter }
+                    cell(variant.removeExperimentId(header.experimentId)) { alignment = TextAlignment.MiddleCenter }
                 }
             }
 
