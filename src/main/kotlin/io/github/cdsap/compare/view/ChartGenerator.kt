@@ -1,20 +1,21 @@
 package io.github.cdsap.compare.view
 
+import io.github.cdsap.compare.model.Header
 import io.github.cdsap.geapi.client.model.BuildWithResourceUsage
 
 class ChartGenerator {
     private val variantColors = mutableMapOf<String, String>()
     private val predefinedColors = listOf(
-        "#36A2EB",  // Light blue
-        "#FF6384",  // Pink/Red
-        "#4BC0C0",  // Teal
-        "#FF9F40",  // Orange
-        "#9966FF",  // Purple
-        "#FFCD56",  // Yellow
-        "#C9CBCF"   // Grey
+        "#36A2EB", // Light blue
+        "#FF6384", // Pink/Red
+        "#4BC0C0", // Teal
+        "#FF9F40", // Orange
+        "#9966FF", // Purple
+        "#FFCD56", // Yellow
+        "#C9CBCF" // Grey
     )
 
-    fun generateCharts(variants: Map<String, List<BuildWithResourceUsage>>): String {
+    fun generateCharts(variants: Map<String, List<BuildWithResourceUsage>>, header: Header): String {
         val mostExpensiveTaskPath = findMostExpensiveTask(variants)
         return """
             <div class="charts-grid">
@@ -31,12 +32,12 @@ class ChartGenerator {
                     <canvas id="buildChildProcessMemoryChart"></canvas>
                 </div>
                 <div class="chart-container">
-                    <h2>Most Expensive Task: ${mostExpensiveTaskPath}</h2>
+                    <h2>Most Expensive Task: $mostExpensiveTaskPath</h2>
                     <canvas id="expensiveTaskChart"></canvas>
                 </div>
             </div>
             <script>
-                ${generateChartScripts(variants, mostExpensiveTaskPath)}
+                ${generateChartScripts(variants, mostExpensiveTaskPath,header)}
             </script>
         """.trimIndent()
     }
@@ -73,60 +74,66 @@ class ChartGenerator {
 
     private fun generateChartScripts(
         variants: Map<String, List<BuildWithResourceUsage>>,
-        mostExpensiveTaskPath: String
+        mostExpensiveTaskPath: String,
+        header: Header
     ): String {
         return """
-            ${generateBuildDurationChart(variants)}
-            ${generateProcessMemoryChart(variants)}
-            ${generateChildProcessMemoryChart(variants)}
-            ${generateExpensiveTaskChart(variants, mostExpensiveTaskPath)}
+            ${generateBuildDurationChart(variants, header)}
+            ${generateProcessMemoryChart(variants,header)}
+            ${generateChildProcessMemoryChart(variants,header)}
+            ${generateExpensiveTaskChart(variants, mostExpensiveTaskPath,header)}
         """.trimIndent()
     }
 
-    private fun generateBuildDurationChart(variants: Map<String, List<BuildWithResourceUsage>>): String {
+    private fun generateBuildDurationChart(variants: Map<String, List<BuildWithResourceUsage>>, header: Header): String {
         return generateChartData(
             "buildDurationChart",
             variants,
             "Build Duration (seconds)",
             { it.buildDuration.toDouble() },
-            isDuration = true
+            isDuration = true,
+            header = header
         )
     }
 
-    private fun generateProcessMemoryChart(variants: Map<String, List<BuildWithResourceUsage>>): String {
+    private fun generateProcessMemoryChart(variants: Map<String, List<BuildWithResourceUsage>>, header: Header): String {
         return generateChartData(
             "buildProcessMemoryChart",
             variants,
             "Memory Usage (MB)",
             { it.total.buildProcessMemory.max.toDouble() },
-            isMemory = true
+            isMemory = true,
+            header = header
         )
     }
 
-    private fun generateChildProcessMemoryChart(variants: Map<String, List<BuildWithResourceUsage>>): String {
+    private fun generateChildProcessMemoryChart(variants: Map<String, List<BuildWithResourceUsage>>, header: Header): String {
         return generateChartData(
             "buildChildProcessMemoryChart",
             variants,
             "Memory Usage (MB)",
             { it.total.buildChildProcessesMemory.max.toDouble() },
-            isMemory = true
+            isMemory = true,
+            header = header
         )
     }
 
     private fun generateExpensiveTaskChart(
         variants: Map<String, List<BuildWithResourceUsage>>,
-        mostExpensiveTaskPath: String
+        mostExpensiveTaskPath: String,
+        header: Header
     ): String {
         return generateChartData(
             "expensiveTaskChart",
             variants,
             "Task Duration (seconds)",
-            { build -> 
+            { build ->
                 build.taskExecution
                     .find { it.taskPath == mostExpensiveTaskPath }
                     ?.duration?.toDouble() ?: 0.0
             },
-            isDuration = true
+            isDuration = true,
+            header = header
         )
     }
 
@@ -205,12 +212,13 @@ class ChartGenerator {
         yAxisLabel: String,
         valueSelector: (BuildWithResourceUsage) -> Double,
         isDuration: Boolean = false,
-        isMemory: Boolean = false
+        isMemory: Boolean = false,
+        header: Header
     ): String {
         val datasets = variants.map { (variant, builds) ->
             """
             {
-                label: '${variant}',
+                label: '${variant.removeExperimentId(header.experimentId)}',
                 data: [${builds.map { valueSelector(it) }.joinToString(",")}],
                 borderColor: '${getRandomColor(variant)}',
                 tension: 0.1
