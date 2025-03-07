@@ -47,6 +47,10 @@ class ExperimentReport(
             usage?.projectName = build.projectName
             usage?.taskExecution = build.taskExecution
         }
-        return buildWithResourceUsage
+        if (report.isProfile) {
+            return buildWithResourceUsage.filterNot { it.requestedTask.size == 1 && it.requestedTask.first() == "clean" }
+        } else {
+            return buildWithResourceUsage
+        }
     }
 }
