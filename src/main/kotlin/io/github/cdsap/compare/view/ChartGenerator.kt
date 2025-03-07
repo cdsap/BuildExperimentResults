@@ -37,7 +37,7 @@ class ChartGenerator {
                 </div>
             </div>
             <script>
-                ${generateChartScripts(variants, mostExpensiveTaskPath,header)}
+                ${generateChartScripts(variants, mostExpensiveTaskPath, header)}
             </script>
         """.trimIndent()
     }
@@ -79,13 +79,16 @@ class ChartGenerator {
     ): String {
         return """
             ${generateBuildDurationChart(variants, header)}
-            ${generateProcessMemoryChart(variants,header)}
-            ${generateChildProcessMemoryChart(variants,header)}
-            ${generateExpensiveTaskChart(variants, mostExpensiveTaskPath,header)}
+            ${generateProcessMemoryChart(variants, header)}
+            ${generateChildProcessMemoryChart(variants, header)}
+            ${generateExpensiveTaskChart(variants, mostExpensiveTaskPath, header)}
         """.trimIndent()
     }
 
-    private fun generateBuildDurationChart(variants: Map<String, List<BuildWithResourceUsage>>, header: Header): String {
+    private fun generateBuildDurationChart(
+        variants: Map<String, List<BuildWithResourceUsage>>,
+        header: Header
+    ): String {
         return generateChartData(
             "buildDurationChart",
             variants,
@@ -96,26 +99,40 @@ class ChartGenerator {
         )
     }
 
-    private fun generateProcessMemoryChart(variants: Map<String, List<BuildWithResourceUsage>>, header: Header): String {
-        return generateChartData(
-            "buildProcessMemoryChart",
-            variants,
-            "Memory Usage (MB)",
-            { it.total.buildProcessMemory.max.toDouble() },
-            isMemory = true,
-            header = header
-        )
+    private fun generateProcessMemoryChart(
+        variants: Map<String, List<BuildWithResourceUsage>>,
+        header: Header
+    ): String {
+        if (variants.any { it.value.any { it.total == null } }) {
+            return ""
+        } else {
+            return generateChartData(
+                "buildProcessMemoryChart",
+                variants,
+                "Memory Usage (MB)",
+                { it.total.buildProcessMemory.max.toDouble() },
+                isMemory = true,
+                header = header
+            )
+        }
     }
 
-    private fun generateChildProcessMemoryChart(variants: Map<String, List<BuildWithResourceUsage>>, header: Header): String {
-        return generateChartData(
-            "buildChildProcessMemoryChart",
-            variants,
-            "Memory Usage (MB)",
-            { it.total.buildChildProcessesMemory.max.toDouble() },
-            isMemory = true,
-            header = header
-        )
+    private fun generateChildProcessMemoryChart(
+        variants: Map<String, List<BuildWithResourceUsage>>,
+        header: Header
+    ): String {
+        if (variants.any { it.value.any { it.total == null } }) {
+            return ""
+        } else {
+            return generateChartData(
+                "buildChildProcessMemoryChart",
+                variants,
+                "Memory Usage (MB)",
+                { it.total.buildChildProcessesMemory.max.toDouble() },
+                isMemory = true,
+                header = header
+            )
+        }
     }
 
     private fun generateExpensiveTaskChart(
@@ -150,7 +167,8 @@ class ChartGenerator {
                 data: {
                     labels: [${(1..variants.values.first().size).joinToString(",")}],
                     datasets: [
-                        ${variants.map { (variant, builds) ->
+                        ${
+        variants.map { (variant, builds) ->
             """
                             {
                                 label: '$variant',
@@ -160,7 +178,8 @@ class ChartGenerator {
                                 tension: 0.1
                             }
             """.trimIndent()
-        }.joinToString(",")}
+        }.joinToString(",")
+        }
                     ]
                 },
                 options: ${getChartOptions(yAxisLabel, minY)}
