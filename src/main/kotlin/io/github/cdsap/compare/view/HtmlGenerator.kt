@@ -9,23 +9,23 @@ class HtmlGenerator(
     private val chartGenerator: ChartGenerator = ChartGenerator()
 ) {
     fun generate(
-        measurement: Map<String, List<SingleMeasurement>>,
+        measurements: Map<String, List<SingleMeasurement>>,
         variants: List<String>,
         header: Header,
-        variants1: Map<String, List<BuildWithResourceUsage>>
+        buildVariants: Map<String, List<BuildWithResourceUsage>>
     ): String {
         return generateHtmlDocument(
-            generateHtmlContent(measurement, variants, header, variants1)
+            generateHtmlContent(measurements, variants, header, buildVariants)
         )
     }
 
     fun generateTableSummary(
-        measurement: Map<String, List<SingleMeasurement>>,
+        measurements: Map<String, List<SingleMeasurement>>,
         variants: List<String>,
         header: Header,
-        variants1: Map<String, List<BuildWithResourceUsage>>
+        buildVariants: Map<String, List<BuildWithResourceUsage>>
     ): String {
-        return generateHtmlContentSummary(measurement, variants, header, variants1)
+        return generateHtmlContentSummary(measurements, variants, header, buildVariants)
     }
 
     private fun generateHtmlDocument(content: String): String {
@@ -46,25 +46,25 @@ class HtmlGenerator(
     }
 
     private fun generateHtmlContent(
-        measurement: Map<String, List<SingleMeasurement>>,
+        measurements: Map<String, List<SingleMeasurement>>,
         variants: List<String>,
         header: Header,
-        variants1: Map<String, List<BuildWithResourceUsage>>
+        buildVariants: Map<String, List<BuildWithResourceUsage>>
     ): String {
-        val experimentInfo = generateExperimentInfo(variants, header, variants1)
-        val charts = chartGenerator.generateCharts(variants1, header)
-        val metricsTable = generateMetricsTable(measurement, variants, false, header)
+        val experimentInfo = generateExperimentInfo(variants, header, buildVariants)
+        val charts = chartGenerator.generateCharts(buildVariants, header)
+        val metricsTable = generateMetricsTable(measurements, variants, false, header)
         return "$experimentInfo$charts$metricsTable"
     }
 
     private fun generateHtmlContentSummary(
-        measurement: Map<String, List<SingleMeasurement>>,
+        measurements: Map<String, List<SingleMeasurement>>,
         variants: List<String>,
         header: Header,
-        variants1: Map<String, List<BuildWithResourceUsage>>
+        buildVariants: Map<String, List<BuildWithResourceUsage>>
     ): String {
-        val experimentInfo = generateExperimentInfo(variants, header, variants1)
-        val metricsTable = generateMetricsTable(measurement, variants, true, header)
+        val experimentInfo = generateExperimentInfo(variants, header, buildVariants)
+        val metricsTable = generateMetricsTable(measurements, variants, true, header)
         return "$experimentInfo$metricsTable"
     }
 
@@ -153,9 +153,9 @@ class HtmlGenerator(
     private fun generateExperimentInfo(
         variants: List<String>,
         header: Header,
-        variants1: Map<String, List<BuildWithResourceUsage>>
+        buildVariants: Map<String, List<BuildWithResourceUsage>>
     ): String {
-        val timestamp = variants1.values.first().first().buildStartTime
+        val timestamp = buildVariants.values.first().first().buildStartTime
         val oneWeekMillis = 2 * 24 * 60 * 60 * 1000L
         val oneWeekBefore = timestamp - oneWeekMillis
         val oneWeekAfter = timestamp + oneWeekMillis
@@ -165,7 +165,7 @@ class HtmlGenerator(
         }
         output += "<tr><td>Task experiment</td><td colspan=${5 + variants.size * 3}>${header.task}</td></tr>"
 
-        variants1.forEach { (variant, builds) ->
+        buildVariants.forEach { (variant, builds) ->
             val url = "${header.url}scans?search.startTimeMax=$oneWeekAfter&search.startTimeMin=$oneWeekBefore&search.tags=$variant"
             output += "<tr><td>${variant.removeExperimentId(header.experimentId)}</td><td>${builds.size} builds processed</td><td colspan=${4 + variants.size * 3}><a href=\"$url\">Build Scans</a></td></tr>"
         }
@@ -180,7 +180,7 @@ class HtmlGenerator(
     }
 
     private fun generateMetricsTable(
-        measurement: Map<String, List<SingleMeasurement>>,
+        measurements: Map<String, List<SingleMeasurement>>,
         variants: List<String>,
         filterMetrics: Boolean,
         header: Header
@@ -215,7 +215,7 @@ class HtmlGenerator(
         output += "</tr>"
 
         // Data rows
-        measurementProcessor.processMeasurements(measurement)
+        measurementProcessor.processMeasurements(measurements)
             .filter {
                 if (filterMetrics) {
                     measurementProcessor.filterUnwantedMetrics(it)
