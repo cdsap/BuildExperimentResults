@@ -15,5 +15,7 @@ data class Report(
     val thresholdTaskDuration: Long,
     val repository: String? = null,
     val url: String? = null,
-    val experimentRunId: String? = null
+    val experimentRunId: String? = null,
+    val openAiRequest: Boolean = false,
+    val openAiKey: String? = null
 )

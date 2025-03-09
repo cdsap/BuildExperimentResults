@@ -24,6 +24,8 @@ class ExperimentView(
         val timestamp = SimpleDateFormat("yyyyMMddHHmmss").format(Date())
         val htmlFile = "experiment_results_$timestamp.html"
         val csvFile = "experiment_results_$timestamp.csv"
+        val csvFileFiltered = "experiment_results_${timestamp}_filtered.csv"
+
         val header = Header(
             numberOfBuilds = variants1.values.flatMap { listOf(it.size) },
             task = variants1.values.first().first().requestedTask.joinToString(","),
@@ -35,6 +37,7 @@ class ExperimentView(
 
         )
         println(consoleGenerator.generate(measurement, variants, header, variants1))
+        println("generating html charts $htmlFile")
         File(htmlFile).writeText(
             htmlGenerator.generate(
                 measurement,
@@ -43,7 +46,9 @@ class ExperimentView(
                 variants1
             )
         )
-        File(csvFile).writeText(csvGenerator.generate(measurement, variants, header, variants1))
+        println("generating csv $csvFile")
+        File(csvFile).writeText(csvGenerator.generate(measurement, variants, header, false))
+        println("generating gha summary")
         File("experiment_results_summary_gha").writeText(
             htmlGenerator.generateTableSummary(
                 measurement,
@@ -52,5 +57,16 @@ class ExperimentView(
                 variants1
             )
         )
+        if (File(csvFile).exists() && report.openAiRequest) {
+            println("generating open ai analysis")
+            File(csvFileFiltered).writeText(csvGenerator.generate(measurement, variants, header, true))
+            val analysis = OpenAiAnalysis(File(csvFileFiltered), report.openAiKey)
+            val result = analysis.request()
+            val content = result.split("---")
+            if (content.isNotEmpty()) {
+                File("experiment_results_openai_analysis_$timestamp").writeText(content[1])
+                File("experiment_results_openai_title_$timestamp").writeText(content[0])
+            }
+        }
     }
 }
