@@ -26,6 +26,10 @@ dependencies {
     implementation("com.jakewharton.picnic:picnic:0.6.0")
     implementation("com.github.ajalt.clikt:clikt:3.5.0")
     implementation("org.nield:kotlin-statistics:1.2.1")
+    implementation("io.ktor:ktor-client-core:2.3.13")
+    implementation("io.ktor:ktor-client-cio:2.3.9")
+    implementation("io.ktor:ktor-client-content-negotiation:2.3.9")
+    implementation("io.ktor:ktor-serialization-gson:2.3.9")
     testImplementation(kotlin("test"))
 }
 
