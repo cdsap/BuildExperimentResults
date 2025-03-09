@@ -2,7 +2,6 @@ package io.github.cdsap.compare.view
 
 import io.github.cdsap.compare.model.Header
 import io.github.cdsap.compare.model.SingleMeasurement
-import io.github.cdsap.geapi.client.model.BuildWithResourceUsage
 
 class CsvGenerator(
     private val measurementProcessor: MeasurementProcessor = MeasurementProcessor()
@@ -11,7 +10,7 @@ class CsvGenerator(
         measurement: Map<String, List<SingleMeasurement>>,
         variants: List<String>,
         header: Header,
-        variants1: Map<String, List<BuildWithResourceUsage>>
+        filteredByAiRequest: Boolean
     ): String {
         val output = StringBuilder()
 
@@ -30,6 +29,22 @@ class CsvGenerator(
 
         // Data rows
         measurementProcessor.processMeasurements(measurement)
+            .filter {
+                if (filteredByAiRequest) {
+                    if (it["metric"] == "Task Path" || it["metric"] == "Task Type") {
+                        val p90Value = when (val p90 = "${variants[0]}-p90") {
+                            is String -> p90.toDoubleOrNull() ?: 0.0
+                            else -> 0.0
+                        }
+                        p90Value >= 1000
+                    } else {
+                        true
+                    }
+                    measurementProcessor.filterUnwantedMetrics(it)
+                } else {
+                    true
+                }
+            }
             .forEach { rowData ->
                 output.append(generateCsvRow(rowData, variants))
             }

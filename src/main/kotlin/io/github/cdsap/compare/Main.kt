@@ -28,8 +28,6 @@ class Experiment : CliktCommand() {
     private val project: String? by option()
     private val requestedTask: String? by option()
     private val variants: List<String> by option().multiple(default = emptyList())
-
-    // private val experimentId by option().required()
     private val profile by option().flag(default = false)
     private val taskPathReport by option("--task-path-report").flag("--no-task-path-report", default = true)
     private val taskTypeReport by option("--task-type-report").flag("--no-task-type-report", default = true)
@@ -43,6 +41,8 @@ class Experiment : CliktCommand() {
     private val experimentId: String? by option()
     private val repository: String? by option()
     private val experimentRunId: String? by option()
+    private val openAiRequest by option("--open-ai-request").flag("--no-open-api-request", default = false)
+    private val openAiKey: String? by option()
 
     override fun run() {
         if (!taskPathReport && !taskTypeReport && !kotlinBuildReport && !processesReport) {
@@ -78,7 +78,9 @@ class Experiment : CliktCommand() {
                     thresholdTaskDuration = thresholdTaskDuration,
                     repository = repository,
                     url = url,
-                    experimentRunId = experimentRunId
+                    experimentRunId = experimentRunId,
+                    openAiRequest = openAiRequest,
+                    openAiKey = openAiKey
                 )
             ).process()
         }
