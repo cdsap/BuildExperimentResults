@@ -1,4 +1,4 @@
-package io.github.cdsap.compare.view
+package io.github.cdsap.compare.output
 
 import ConsoleGenerator
 import io.github.cdsap.compare.model.Header
