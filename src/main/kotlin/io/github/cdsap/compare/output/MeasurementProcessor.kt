@@ -1,4 +1,4 @@
-package io.github.cdsap.compare.view
+package io.github.cdsap.compare.output
 
 import io.github.cdsap.compare.model.Metric
 import io.github.cdsap.compare.model.SingleMeasurement
@@ -44,24 +44,5 @@ class MeasurementProcessor {
         return metric != Metric.TASK_PATH.name &&
             metric != Metric.KOTLIN_BUILD_REPORT.name &&
             metric != Metric.TASK_KOTLIN_BUILD_REPORT.name
-    }
-
-    fun filterByP90Threshold(measurements: Map<String, List<SingleMeasurement>>, thresholdMs: Long = 1000): Map<String, List<SingleMeasurement>> {
-        return measurements.mapValues { (_, variantMeasurements) ->
-            variantMeasurements.filter { measurement ->
-                when (measurement.category) {
-                    "Task Type", "Task Path" -> {
-                        // Convert P90 to Double since it's stored as Any
-                        val p90Value = when (val p90 = measurement.variantP90) {
-                            is String -> p90.toDoubleOrNull() ?: 0.0
-                            is Number -> p90.toDouble()
-                            else -> 0.0
-                        }
-                        p90Value >= thresholdMs
-                    }
-                    else -> true // Keep all other categories
-                }
-            }
-        }
     }
 }

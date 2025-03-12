@@ -8,6 +8,7 @@ data class Report(
     val buildReport: Boolean,
     val resourceUsageReport: Boolean,
     val isProfile: Boolean,
+    val gcReport: Boolean,
     val warmupsToDiscard: Int,
     val variants: List<String>,
     val experimentId: String? = null,

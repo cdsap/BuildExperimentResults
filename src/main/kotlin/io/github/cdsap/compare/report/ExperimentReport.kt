@@ -3,7 +3,7 @@ package io.github.cdsap.compare.report
 import io.github.cdsap.compare.model.Report
 import io.github.cdsap.compare.report.measurements.FilterBuildsPerVariant
 import io.github.cdsap.compare.report.measurements.MeasurementsByReport
-import io.github.cdsap.compare.view.ExperimentView
+import io.github.cdsap.compare.output.ExperimentView
 import io.github.cdsap.geapi.client.domain.impl.GetBuildsFromQueryWithAttributesRequest
 import io.github.cdsap.geapi.client.domain.impl.GetBuildsResourceUsageRequest
 import io.github.cdsap.geapi.client.domain.impl.GetBuildsWithCachePerformanceRequest

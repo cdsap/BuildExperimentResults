@@ -30,6 +30,9 @@ class MeasurementsByReport(
             if (report.resourceUsageReport) {
                 measurements += ResourceUsageMeasurement(u).get()
             }
+            if (report.gcReport) {
+                measurements += GCReportMeasurement(u, report.isProfile).get()
+            }
             measurementsPerVariant[t] = measurements
         }
 

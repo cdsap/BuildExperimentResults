@@ -40,7 +40,7 @@ class KotlinReportsAggregated(private val kotlinBuildReportsParserCustomValues: 
         return measurements
     }
 
-    private fun aggregateBuilds(builds: Map<String, Map<String, MutableList<MetricKotlin>>>):
+    fun aggregateBuilds(builds: Map<String, Map<String, MutableList<MetricKotlin>>>):
         MutableMap<String, MutableList<String>> {
         val valuesByTaskAggregated = mutableMapOf<String, MutableList<String>>()
         builds.forEach {

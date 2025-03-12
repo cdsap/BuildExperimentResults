@@ -1,4 +1,4 @@
-package io.github.cdsap.compare.view
+package io.github.cdsap.compare.output
 
 import ConsoleGenerator
 import io.github.cdsap.compare.model.Header
@@ -62,10 +62,11 @@ class ExperimentView(
             File(csvFileFiltered).writeText(csvGenerator.generate(measurement, variants, header, true))
             val analysis = OpenAiAnalysis(File(csvFileFiltered), report.openAiKey)
             val result = analysis.request()
-            val content = result.split("---")
-            if (content.isNotEmpty()) {
-                File("experiment_results_openai_analysis_$timestamp").writeText(content[1])
-                File("experiment_results_openai_title_$timestamp").writeText(content[0])
+            println(result)
+            val extractSummary = result.split("##")[1].replace("Summary", "")
+            if (result.isNotEmpty()) {
+                File("experiment_results_openai_analysis_$timestamp").writeText(result)
+                File("experiment_results_openai_title_$timestamp").writeText(extractSummary)
             }
         }
     }

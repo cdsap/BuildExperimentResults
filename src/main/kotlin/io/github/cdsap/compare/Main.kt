@@ -32,10 +32,17 @@ class Experiment : CliktCommand() {
     private val taskPathReport by option("--task-path-report").flag("--no-task-path-report", default = true)
     private val taskTypeReport by option("--task-type-report").flag("--no-task-type-report", default = true)
     private val kotlinBuildReport by option("--kotlin-build-report").flag("--no-kotlin-build-report", default = false)
-    private val resourceUsageReport by option("--resource-usage-report").flag("--no-resource-usage-report", default = true)
+    private val resourceUsageReport by option("--resource-usage-report").flag(
+        "--no-resource-usage-report",
+        default = true
+    )
     private val processesReport by option("--process-report").flag("--no-process-report", default = false)
     private val buildReport by option("--build-report").flag("--no-build-report", default = true)
-    private val onlyCacheableOutcome by option("--only-cacheable-outcome").flag("--no-only-cacheable-outcome", default = false)
+    private val gcReport by option("--gc-report").flag("--no-gc-report", default = false)
+    private val onlyCacheableOutcome by option("--only-cacheable-outcome").flag(
+        "--no-only-cacheable-outcome",
+        default = false
+    )
     private val warmupsToDiscard by option().int().default(2)
     private val thresholdTaskDuration by option().long().default(-1)
     private val experimentId: String? by option()
@@ -70,6 +77,7 @@ class Experiment : CliktCommand() {
                     processesReport = processesReport,
                     buildReport = buildReport,
                     resourceUsageReport = resourceUsageReport,
+                    gcReport = gcReport,
                     experimentId = experimentId,
                     warmupsToDiscard = warmupsToDiscard,
                     variants = variants,
