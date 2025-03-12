@@ -1,4 +1,4 @@
-package io.github.cdsap.compare.view
+package io.github.cdsap.compare.output
 
 import io.github.cdsap.compare.model.Header
 import io.github.cdsap.compare.model.SingleMeasurement
@@ -6,7 +6,7 @@ import io.github.cdsap.geapi.client.model.BuildWithResourceUsage
 
 class HtmlGenerator(
     private val measurementProcessor: MeasurementProcessor = MeasurementProcessor(),
-    private val chartGenerator: ChartGenerator = ChartGenerator()
+    private val chartGenerator: ChartGenerator
 ) {
     fun generate(
         measurements: Map<String, List<SingleMeasurement>>,
