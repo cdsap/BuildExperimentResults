@@ -1,4 +1,4 @@
-package io.github.cdsap.compare.view
+package io.github.cdsap.compare.output
 
 import io.github.cdsap.compare.model.Header
 import io.github.cdsap.compare.model.SingleMeasurement

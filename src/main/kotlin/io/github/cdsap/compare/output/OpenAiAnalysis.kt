@@ -1,4 +1,4 @@
-package io.github.cdsap.compare.view
+package io.github.cdsap.compare.output
 
 import io.github.cdsap.compare.model.OpenAiRequest
 import io.github.cdsap.compare.model.OpenAiResponse
