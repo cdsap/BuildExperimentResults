@@ -29,24 +29,15 @@ class CsvGenerator(
 
         // Data rows
         measurementProcessor.processMeasurements(measurement)
-            .filter {
-                if (filteredByAiRequest) {
-                    if (it["metric"] == "Task Path" || it["metric"] == "Task Type") {
-                        val p90Value = when (val p90 = "${variants[0]}-p90") {
-                            is String -> p90.toDoubleOrNull() ?: 0.0
-                            else -> 0.0
-                        }
-                        p90Value >= 1000
-                    } else {
-                        true
-                    }
-                    measurementProcessor.filterUnwantedMetrics(it)
-                } else {
-                    true
-                }
-            }
             .forEach { rowData ->
-                output.append(generateCsvRow(rowData, variants))
+                val content = if (filteredByAiRequest) {
+                    generateCsvRowFiltered(rowData, variants)
+                } else {
+                    generateCsvRow(rowData, variants)
+                }
+                if (content.isNotEmpty()) {
+                    output.append(content)
+                }
             }
 
         return output.toString()
@@ -72,5 +63,39 @@ class CsvGenerator(
         output.append(",${rowData["${variants[0]}-unit"] ?: ""}\n")
 
         return output.toString()
+    }
+
+    private fun generateCsvRowFiltered(rowData: Map<String, Any?>, variants: List<String>): String {
+        val output = StringBuilder()
+        val kotlinBuildReport = rowData["category"] == "Kotlin Build Reports"
+        val build = rowData["category"] == "Build"
+        val kotlinGCTime = rowData["category"] == "Kotlin process state" && rowData["name"] == "Kotlin-Process-gcTime"
+        val gradleGCTime = rowData["category"] == "Gradle process state" && rowData["name"] == "Gradle-Process-gcTime"
+        val totalCollections = rowData["name"] == "total-collections"
+        val totalProcesses = rowData["name"] == "Max"
+        val task = rowData["category"] == "Task Path" && rowData["${variants.first()}-median"].toString().toLong() > 1000
+        val taskPath = rowData["category"] == "Task Type" && rowData["${variants.first()}-median"].toString().toLong() > 1000
+
+        if (kotlinBuildReport || build || kotlinGCTime || gradleGCTime || totalCollections || totalProcesses || task || taskPath) {
+            output.append("${rowData["category"]},${rowData["name"]}")
+
+            // Mean values
+            variants.forEach { variant ->
+                output.append(",${rowData["$variant-mean"] ?: ""}")
+            }
+            // P50 values
+            variants.forEach { variant ->
+                output.append(",${rowData["$variant-median"] ?: ""}")
+            }
+            // P90 values
+            variants.forEach { variant ->
+                output.append(",${rowData["$variant-p90"] ?: ""}")
+            }
+            // Unit in the last column
+            output.append(",${rowData["${variants[0]}-unit"] ?: ""}\n")
+
+            return output.toString()
+        }
+        return ""
     }
 }

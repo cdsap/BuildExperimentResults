@@ -6,7 +6,7 @@ import io.github.cdsap.geapi.client.model.BuildWithResourceUsage
 
 class HtmlGenerator(
     private val measurementProcessor: MeasurementProcessor = MeasurementProcessor(),
-    private val chartGenerator: ChartGenerator = ChartGenerator()
+    private val chartGenerator: ChartGenerator
 ) {
     fun generate(
         measurements: Map<String, List<SingleMeasurement>>,
