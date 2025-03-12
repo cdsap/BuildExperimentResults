@@ -7,5 +7,6 @@ enum class Metric {
     KOTLIN_BUILD_REPORT,
     TASK_KOTLIN_BUILD_REPORT,
     BUILD,
-    RESOURCE_USAGE
+    RESOURCE_USAGE,
+    GC_REPORT
 }
