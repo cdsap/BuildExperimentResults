@@ -3,7 +3,6 @@ package io.github.cdsap.compare.report.measurements
 import io.github.cdsap.compare.model.Metric
 import io.github.cdsap.compare.model.SingleMeasurement
 import io.github.cdsap.compare.report.measurements.parser.GCReportParser
-import io.github.cdsap.compare.report.measurements.parser.ProcessesReportParser
 import io.github.cdsap.geapi.client.model.BuildWithResourceUsage
 import org.nield.kotlinstatistics.percentile
 import kotlin.math.roundToInt
@@ -14,14 +13,13 @@ class GCReportMeasurement(
 ) {
 
     fun get(): List<SingleMeasurement> {
-        // calcularte unique collections
         val uniqueCollections = mutableSetOf<String>()
         variant.forEach {
-            uniqueCollections.addAll(it.values.filter {it.name.contains("-total-collections")}.map { it.name.replace("-total-collections","") })
+            uniqueCollections.addAll(it.values.filter { it.name.contains("-total-collections") }.map { it.name.replace("-total-collections", "") })
         }
-        uniqueCollections.flatMap {  processMeasurement(profile, it) }
+        uniqueCollections.flatMap { processMeasurement(profile, it) }
 
-        return  uniqueCollections.flatMap {  processMeasurement(profile, it) }
+        return uniqueCollections.flatMap { processMeasurement(profile, it) }
     }
 
     private fun processMeasurement(

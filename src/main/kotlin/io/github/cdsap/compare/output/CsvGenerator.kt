@@ -30,12 +30,12 @@ class CsvGenerator(
         // Data rows
         measurementProcessor.processMeasurements(measurement)
             .forEach { rowData ->
-                val content = if(filteredByAiRequest) {
+                val content = if (filteredByAiRequest) {
                     generateCsvRowFiltered(rowData, variants)
                 } else {
                     generateCsvRow(rowData, variants)
                 }
-                if(content.isNotEmpty()) {
+                if (content.isNotEmpty()) {
                     output.append(content)
                 }
             }
@@ -76,7 +76,7 @@ class CsvGenerator(
         val task = rowData["category"] == "Task Path" && rowData["${variants.first()}-median"].toString().toLong() > 1000
         val taskPath = rowData["category"] == "Task Type" && rowData["${variants.first()}-median"].toString().toLong() > 1000
 
-        if(kotlinBuildReport || build || kotlinGCTime || gradleGCTime || totalCollections || totalProcesses || task || taskPath) {
+        if (kotlinBuildReport || build || kotlinGCTime || gradleGCTime || totalCollections || totalProcesses || task || taskPath) {
             output.append("${rowData["category"]},${rowData["name"]}")
 
             // Mean values

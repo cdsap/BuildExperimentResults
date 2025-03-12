@@ -1,8 +1,8 @@
 package io.github.cdsap.compare.output
 
 class PromptAnalysis {
-    companion object Object  {
-        val prompt =   """
+    companion object Object {
+        val prompt = """
     Analyze this Gradle build performance comparison data while dynamically adapting to available metrics and highlighting significant trends.
     If certain metrics are missing (e.g., Kotlin process state, Gradle process state, total GC collections, or Kotlin Build Reports),
     omit those sections without impacting readability. Prioritize key differences first. The analysis should be structured as follows:
@@ -56,10 +56,6 @@ class PromptAnalysis {
        - Compilation Performance Metrics:
          - Code generation lines per second.
          - Analysis lines per second.
-       - Other Considerations:
-         - ABI snapshot size.
-         - Cache directory size and behavior.
-         - Time spent on history file writes, clearing outputs, and storing build info.
        - Comparison Across Variants:
          - Highlight major improvements or regressions.
          - Focus on areas with ≥10% variation between variants.
@@ -73,6 +69,6 @@ class PromptAnalysis {
          - The Summary always will start with "## Summary"
          - The Detailed Report with "## Detailed Report"
        - Ensure observations are factual, numerical, and focus on differences.
-""".trimIndent()
+        """.trimIndent()
     }
 }

@@ -29,7 +29,8 @@ class MeasurementsByReportTest {
                 variants = listOf("lint-4-1-different-process", "lint-2-1-different-process"),
                 experimentId = "154",
                 onlyCacheableOutcome = false,
-                thresholdTaskDuration = -1
+                thresholdTaskDuration = -1,
+                gcReport = false
             )
         val measurements = MeasurementsByReport(report).get(FilterBuildsPerVariant(report).get(builds))
 
@@ -58,7 +59,8 @@ class MeasurementsByReportTest {
                 variants = listOf("lint-4-1-different-process", "lint-2-1-different-process"),
                 experimentId = "154",
                 onlyCacheableOutcome = false,
-                thresholdTaskDuration = -1
+                thresholdTaskDuration = -1,
+                gcReport = false
             )
         val measurements = MeasurementsByReport(report).get(FilterBuildsPerVariant(report).get(builds))
 
@@ -86,7 +88,8 @@ class MeasurementsByReportTest {
                 variants = listOf("lint-4-1-different-process", "lint-2-1-different-process"),
                 experimentId = "154",
                 onlyCacheableOutcome = false,
-                thresholdTaskDuration = -1
+                thresholdTaskDuration = -1,
+                gcReport = false
             )
         val measurements = MeasurementsByReport(report).get(FilterBuildsPerVariant(report).get(builds))
 
@@ -115,7 +118,8 @@ class MeasurementsByReportTest {
                 variants = listOf("lint-4-1-different-process", "lint-2-1-different-process"),
                 experimentId = "154",
                 onlyCacheableOutcome = false,
-                thresholdTaskDuration = -1
+                thresholdTaskDuration = -1,
+                gcReport = false
             )
         val measurements = MeasurementsByReport(report).get(FilterBuildsPerVariant(report).get(builds))
 
@@ -144,7 +148,8 @@ class MeasurementsByReportTest {
                 variants = listOf("lint-4-1-different-process", "lint-2-1-different-process"),
                 experimentId = "154",
                 onlyCacheableOutcome = false,
-                thresholdTaskDuration = -1
+                thresholdTaskDuration = -1,
+                gcReport = false
             )
         val measurements = MeasurementsByReport(report).get(FilterBuildsPerVariant(report).get(builds))
 
@@ -173,7 +178,8 @@ class MeasurementsByReportTest {
                 variants = listOf("lint-4-1-different-process", "lint-2-1-different-process"),
                 experimentId = "154",
                 onlyCacheableOutcome = false,
-                thresholdTaskDuration = -1
+                thresholdTaskDuration = -1,
+                gcReport = false
             )
         val measurements = MeasurementsByReport(report).get(FilterBuildsPerVariant(report).get(builds))
 
