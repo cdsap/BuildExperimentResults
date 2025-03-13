@@ -22,27 +22,36 @@ class ChartGenerator(val report: Report) {
         val containsKotlinProcess = report.processesReport && hasKotlinProcess(variants)
         val containsGradleProcess = report.processesReport && hasGradleProcess(variants)
         val containsBuildReports = report.kotlinBuildReport && hasBuildReports(variants)
+        val containsResourceUsageReports = hasResourceUsageReports(variants)
+
         val uniqueTotalCollections = getUniqueTotalCollections(variants)
 
         return """
             <div class="charts-grid">
-                ${generateBasicCharts(mostExpensiveTaskPath)}
+                ${generateBasicCharts(mostExpensiveTaskPath,containsResourceUsageReports)}
                 ${generateGCCollectionsCharts(uniqueTotalCollections)}
                 ${generateProcessCharts(containsKotlinProcess, containsGradleProcess)}
                 ${generateBuildReportsCharts(containsBuildReports)}
             </div>
             <script>
-                ${generateChartScripts(variants, mostExpensiveTaskPath, header, containsKotlinProcess, containsGradleProcess, containsBuildReports, uniqueTotalCollections)}
+                ${
+            generateChartScripts(
+                variants,
+                mostExpensiveTaskPath,
+                header,
+                containsKotlinProcess,
+                containsGradleProcess,
+                containsBuildReports,
+                uniqueTotalCollections
+            )
+        }
             </script>
         """.trimIndent()
     }
 
-    private fun generateBasicCharts(mostExpensiveTaskPath: String): String {
-        return """
-            <div class="chart-container">
-                <h2>Build Duration Time Series</h2>
-                <canvas id="buildDurationChart"></canvas>
-            </div>
+    private fun generateBasicCharts(mostExpensiveTaskPath: String, containsResourceUsageReports: Boolean): String {
+        val divResourceUsage = if(containsResourceUsageReports) {
+            """
             <div class="chart-container">
                 <h2>Build Process Memory</h2>
                 <canvas id="buildProcessMemoryChart"></canvas>
@@ -51,6 +60,15 @@ class ChartGenerator(val report: Report) {
                 <h2>Build Child Processes Memory</h2>
                 <canvas id="buildChildProcessMemoryChart"></canvas>
             </div>
+            """.trimIndent()
+
+        } else ""
+        return """
+            <div class="chart-container">
+                <h2>Build Duration Time Series</h2>
+                <canvas id="buildDurationChart"></canvas>
+            </div>
+            $divResourceUsage
             <div class="chart-container">
                 <h2>Most Expensive Task: $mostExpensiveTaskPath</h2>
                 <canvas id="expensiveTaskChart"></canvas>
@@ -147,9 +165,15 @@ class ChartGenerator(val report: Report) {
             builds.any { build ->
                 build.values.any { value ->
                     value.value.contains("Kotlin language version:") &&
-                        value.value.contains("Performance: [")
+                            value.value.contains("Performance: [")
                 }
             }
+        }
+    }
+
+    private fun hasResourceUsageReports(variants: Map<String, List<BuildWithResourceUsage>>): Boolean {
+        return !variants.any {
+            it.value.any { it.total == null }
         }
     }
 

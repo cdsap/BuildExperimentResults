@@ -159,18 +159,18 @@ class HtmlGenerator(
         val oneWeekMillis = 2 * 24 * 60 * 60 * 1000L
         val oneWeekBefore = timestamp - oneWeekMillis
         val oneWeekAfter = timestamp + oneWeekMillis
-        var output = "<table><tr><td colspan=${6 + variants.size * 3}>Experiment</td></tr>"
+        var output = "<table><tr><td colspan=${6 + variants.size * 3}>Results</td></tr>"
         if (header.repository != null) {
             output += "<tr><td>Repository</td><td colspan=${5 + variants.size * 3}>${header.repository}</td></tr>"
         }
-        output += "<tr><td>Task experiment</td><td colspan=${5 + variants.size * 3}>${header.task}</td></tr>"
+        output += "<tr><td>Task</td><td colspan=${5 + variants.size * 3}>${header.task}</td></tr>"
 
         buildVariants.forEach { (variant, builds) ->
             val url = "${header.url}scans?search.startTimeMax=$oneWeekAfter&search.startTimeMin=$oneWeekBefore&search.tags=$variant"
             output += "<tr><td>${variant.removeExperimentId(header.experimentId)}</td><td>${builds.size} builds processed</td><td colspan=${4 + variants.size * 3}><a href=\"$url\">Build Scans</a></td></tr>"
         }
         if (header.linkCsv.isNotEmpty() && header.htmlSummary) {
-            output += "<tr><td>Experiment raw data</td><td colspan=${5 + variants.size * 3}><a href=\"${header.linkCsv}\">Download csv</a></td></tr>"
+            output += "<tr><td>Execution raw data</td><td colspan=${5 + variants.size * 3}><a href=\"${header.linkCsv}\">Download csv</a></td></tr>"
         }
         if (header.experimentRunId != null && header.htmlSummary) {
             output += "<tr><td>Experiment run execution</td><td colspan=${5 + variants.size * 3}><a href=\"https://github.com/cdsap/Telltale/actions/runs/${header.experimentRunId}\">Workflow</a></td></tr>"

@@ -22,12 +22,6 @@ class ConsoleGenerator(
             paddingRight = 1
         }
         body {
-            row {
-                cell("Experiment") {
-                    columnSpan = (variants.size * 3) + 2
-                    alignment = TextAlignment.MiddleCenter
-                }
-            }
             if (header.experimentId != null) {
                 row {
                     cell("Experiment id")
@@ -37,7 +31,7 @@ class ConsoleGenerator(
                 }
             }
             row {
-                cell("Experiment task")
+                cell("Task")
                 cell(header.task) {
                     columnSpan = (variants.size * 3) + 1
                 }
@@ -77,13 +71,13 @@ class ConsoleGenerator(
 
             row {
                 variants.forEach { variant ->
-                    cell(variant.removeExperimentId(header.experimentId)) { alignment = TextAlignment.MiddleCenter }
+                    cell(variant.removeExperimentId(header.experimentId).formatString()) { alignment = TextAlignment.MiddleCenter }
                 }
                 variants.forEach { variant ->
-                    cell(variant.removeExperimentId(header.experimentId)) { alignment = TextAlignment.MiddleCenter }
+                    cell(variant.removeExperimentId(header.experimentId).formatString()) { alignment = TextAlignment.MiddleCenter }
                 }
                 variants.forEach { variant ->
-                    cell(variant.removeExperimentId(header.experimentId)) { alignment = TextAlignment.MiddleCenter }
+                    cell(variant.removeExperimentId(header.experimentId).formatString()) { alignment = TextAlignment.MiddleCenter }
                 }
             }
 
@@ -92,7 +86,7 @@ class ConsoleGenerator(
                 .forEach { rowData ->
                     row {
                         cell(rowData["category"].toString().splitString())
-                        cell(rowData["name"].toString().splitString())
+                        cell(rowData["name"].toString().formatString())
 
                         variants.forEach { variant ->
                             cell(rowData["$variant-mean"]?.toString() + " " + rowData["$variant-unit"]) {
@@ -118,4 +112,6 @@ class ConsoleGenerator(
         .lowercase()
         .split(" ")
         .joinToString(" ") { it }
+
+    private fun String.formatString() = this.chunked(22).joinToString("\n")
 }
