@@ -22,27 +22,36 @@ class ChartGenerator(val report: Report) {
         val containsKotlinProcess = report.processesReport && hasKotlinProcess(variants)
         val containsGradleProcess = report.processesReport && hasGradleProcess(variants)
         val containsBuildReports = report.kotlinBuildReport && hasBuildReports(variants)
+        val containsResourceUsageReports = hasResourceUsageReports(variants)
+
         val uniqueTotalCollections = getUniqueTotalCollections(variants)
 
         return """
             <div class="charts-grid">
-                ${generateBasicCharts(mostExpensiveTaskPath)}
+                ${generateBasicCharts(mostExpensiveTaskPath,containsResourceUsageReports)}
                 ${generateGCCollectionsCharts(uniqueTotalCollections)}
                 ${generateProcessCharts(containsKotlinProcess, containsGradleProcess)}
                 ${generateBuildReportsCharts(containsBuildReports)}
             </div>
             <script>
-                ${generateChartScripts(variants, mostExpensiveTaskPath, header, containsKotlinProcess, containsGradleProcess, containsBuildReports, uniqueTotalCollections)}
+                ${
+        generateChartScripts(
+            variants,
+            mostExpensiveTaskPath,
+            header,
+            containsKotlinProcess,
+            containsGradleProcess,
+            containsBuildReports,
+            uniqueTotalCollections
+        )
+        }
             </script>
         """.trimIndent()
     }
 
-    private fun generateBasicCharts(mostExpensiveTaskPath: String): String {
-        return """
-            <div class="chart-container">
-                <h2>Build Duration Time Series</h2>
-                <canvas id="buildDurationChart"></canvas>
-            </div>
+    private fun generateBasicCharts(mostExpensiveTaskPath: String, containsResourceUsageReports: Boolean): String {
+        val divResourceUsage = if (containsResourceUsageReports) {
+            """
             <div class="chart-container">
                 <h2>Build Process Memory</h2>
                 <canvas id="buildProcessMemoryChart"></canvas>
@@ -51,6 +60,16 @@ class ChartGenerator(val report: Report) {
                 <h2>Build Child Processes Memory</h2>
                 <canvas id="buildChildProcessMemoryChart"></canvas>
             </div>
+            """.trimIndent()
+        } else {
+            ""
+        }
+        return """
+            <div class="chart-container">
+                <h2>Build Duration Time Series</h2>
+                <canvas id="buildDurationChart"></canvas>
+            </div>
+            $divResourceUsage
             <div class="chart-container">
                 <h2>Most Expensive Task: $mostExpensiveTaskPath</h2>
                 <canvas id="expensiveTaskChart"></canvas>
@@ -150,6 +169,12 @@ class ChartGenerator(val report: Report) {
                         value.value.contains("Performance: [")
                 }
             }
+        }
+    }
+
+    private fun hasResourceUsageReports(variants: Map<String, List<BuildWithResourceUsage>>): Boolean {
+        return !variants.any {
+            it.value.any { it.total == null }
         }
     }
 
@@ -274,13 +299,36 @@ class ChartGenerator(val report: Report) {
         header: Header
     ): String {
         val regex = Regex("^Kotlin-Process-\\d+-gcTime$")
+        val uptimeRegex = Regex("Kotlin-Process-(\\d+)-uptime")
+
         return chartDataGenerator.generateChartData(
             "kotlinGCChart",
             variants,
             "Kotlin GC (minutes)",
             { build ->
-                build.values.find { it.name.matches(regex) }
-                    ?.value?.replace("minutes", "")?.toDouble() ?: 0.0
+                // A build could have multiple Kotlin processes running during execution, for instance when
+                // there is no alignment between the embedded Kotlin version in Gradle and the one used in the project.
+                // The approach here is to consider the last process because the assumption is that is the most relevant one.
+                val uptimeProcesses = build.values.filter { it.name.matches(uptimeRegex) }
+                if (uptimeProcesses.size == 1) {
+                    build.values.filter { it.name.matches(regex) }.last() ?.value?.replace("minutes", "")?.toDouble() ?: 0.0
+                } else {
+                    // Get distinct process IDs from uptime entries.
+                    val processIds = build.values
+                        .filter { it.name.matches(uptimeRegex) }
+                        .mapNotNull { uptimeRegex.find(it.name)?.groupValues?.get(1) }
+                        .distinct()
+
+                    // Find the process ID with the minimum uptime using similar logic.
+                    val processIdWithMinUptime = processIds.minByOrNull { id ->
+                        build.values.filter { it.name.matches(Regex("Kotlin-Process-$id-uptime")) }
+                            .last()?.value?.replace("minutes", "")?.toDouble() ?: Double.MAX_VALUE
+                    } ?: ""
+
+                    // Now get the gcTime for that process.
+                    build.values.filter { it.name.matches(Regex("Kotlin-Process-$processIdWithMinUptime-gcTime")) }
+                        .last()?.value?.replace("minutes", "")?.toDouble() ?: 0.0
+                }
             },
             header
         )

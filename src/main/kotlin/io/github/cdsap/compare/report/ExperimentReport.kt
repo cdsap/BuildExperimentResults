@@ -22,13 +22,24 @@ class ExperimentReport(
             throw IllegalArgumentException("At least one variant is required")
         } else {
             val buildWithResourceUsage = requestBuilds()
-            val variants = FilterBuildsPerVariant(report).get(buildWithResourceUsage)
+            val variants = checkVariantsData(FilterBuildsPerVariant(report).get(buildWithResourceUsage))
             val measurements = MeasurementsByReport(report).get(variants)
-
             if (measurements.isNotEmpty()) {
                 ExperimentView(report).generateOutputs(measurements, variants)
             }
         }
+    }
+
+    private fun checkVariantsData(
+        buildMap: Map<String, List<BuildWithResourceUsage>>
+    ): Map<String, List<BuildWithResourceUsage>> {
+        val keysWithEmptyLists = buildMap.filterValues { it.isEmpty() }.keys
+
+        if (keysWithEmptyLists.size == buildMap.size) {
+            throw IllegalArgumentException("All variants have empty lists. Please check your input data.")
+        }
+
+        return buildMap.filterValues { it.isNotEmpty() }
     }
 
     private suspend fun requestBuilds(): List<BuildWithResourceUsage> {
