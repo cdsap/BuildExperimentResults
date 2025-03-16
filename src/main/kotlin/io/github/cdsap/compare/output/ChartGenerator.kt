@@ -298,13 +298,36 @@ class ChartGenerator(val report: Report) {
         header: Header
     ): String {
         val regex = Regex("^Kotlin-Process-\\d+-gcTime$")
+        val uptimeRegex = Regex("Kotlin-Process-(\\d+)-uptime")
+
         return chartDataGenerator.generateChartData(
             "kotlinGCChart",
             variants,
             "Kotlin GC (minutes)",
             { build ->
-                build.values.find { it.name.matches(regex) }
-                    ?.value?.replace("minutes", "")?.toDouble() ?: 0.0
+                // A build could have multiple Kotlin processes running during execution, for instance when
+                // there is no alignment between the embedded Kotlin version in Gradle and the one used in the project.
+                // The approach here is to consider the last process because the assumption is that is the most relevant one.
+                val uptimeProcesses = build.values.filter { it.name.matches(uptimeRegex) }
+                if(uptimeProcesses.size == 1) {
+                    build.values.filter { it.name.matches(regex) }.last() ?.value?.replace("minutes", "")?.toDouble() ?: 0.0
+                } else {
+                    // Get distinct process IDs from uptime entries.
+                    val processIds = build.values
+                        .filter { it.name.matches(uptimeRegex) }
+                        .mapNotNull { uptimeRegex.find(it.name)?.groupValues?.get(1) }
+                        .distinct()
+
+                    // Find the process ID with the minimum uptime using similar logic.
+                    val processIdWithMinUptime = processIds.minByOrNull { id ->
+                        build.values.filter { it.name.matches(Regex("Kotlin-Process-$id-uptime")) }
+                            .last()?.value?.replace("minutes", "")?.toDouble() ?: Double.MAX_VALUE
+                    } ?: ""
+
+                    // Now get the gcTime for that process.
+                    build.values.filter { it.name.matches(Regex("Kotlin-Process-$processIdWithMinUptime-gcTime")) }
+                        .last()?.value?.replace("minutes", "")?.toDouble() ?: 0.0
+                }
             },
             header
         )
