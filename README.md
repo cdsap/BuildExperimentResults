@@ -102,7 +102,7 @@ at evaluating the performance of different experiment variants. For example:
 * Variant A: G1
 * Variant B: Parallel
 
-For a fair comparison, both variants should be executed under the same conditions—on the same machine, in the same
+For a fair comparison, both variants should be executed under the same conditions in the same
 environment, and with the same requested task. If your variants include builds with different tasks, you can specify the task
 explicitly using the --requested-task parameter. Example:
 ```kotlin
