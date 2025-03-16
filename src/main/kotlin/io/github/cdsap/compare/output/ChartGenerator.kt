@@ -35,22 +35,22 @@ class ChartGenerator(val report: Report) {
             </div>
             <script>
                 ${
-            generateChartScripts(
-                variants,
-                mostExpensiveTaskPath,
-                header,
-                containsKotlinProcess,
-                containsGradleProcess,
-                containsBuildReports,
-                uniqueTotalCollections
-            )
+        generateChartScripts(
+            variants,
+            mostExpensiveTaskPath,
+            header,
+            containsKotlinProcess,
+            containsGradleProcess,
+            containsBuildReports,
+            uniqueTotalCollections
+        )
         }
             </script>
         """.trimIndent()
     }
 
     private fun generateBasicCharts(mostExpensiveTaskPath: String, containsResourceUsageReports: Boolean): String {
-        val divResourceUsage = if(containsResourceUsageReports) {
+        val divResourceUsage = if (containsResourceUsageReports) {
             """
             <div class="chart-container">
                 <h2>Build Process Memory</h2>
@@ -61,8 +61,9 @@ class ChartGenerator(val report: Report) {
                 <canvas id="buildChildProcessMemoryChart"></canvas>
             </div>
             """.trimIndent()
-
-        } else ""
+        } else {
+            ""
+        }
         return """
             <div class="chart-container">
                 <h2>Build Duration Time Series</h2>
@@ -165,7 +166,7 @@ class ChartGenerator(val report: Report) {
             builds.any { build ->
                 build.values.any { value ->
                     value.value.contains("Kotlin language version:") &&
-                            value.value.contains("Performance: [")
+                        value.value.contains("Performance: [")
                 }
             }
         }
@@ -309,7 +310,7 @@ class ChartGenerator(val report: Report) {
                 // there is no alignment between the embedded Kotlin version in Gradle and the one used in the project.
                 // The approach here is to consider the last process because the assumption is that is the most relevant one.
                 val uptimeProcesses = build.values.filter { it.name.matches(uptimeRegex) }
-                if(uptimeProcesses.size == 1) {
+                if (uptimeProcesses.size == 1) {
                     build.values.filter { it.name.matches(regex) }.last() ?.value?.replace("minutes", "")?.toDouble() ?: 0.0
                 } else {
                     // Get distinct process IDs from uptime entries.
