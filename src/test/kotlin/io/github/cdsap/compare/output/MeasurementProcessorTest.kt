@@ -1,6 +1,7 @@
 package io.github.cdsap.compare.output
 
 import io.github.cdsap.compare.model.Metric
+import io.github.cdsap.compare.model.Report
 import io.github.cdsap.compare.model.SingleMeasurement
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
@@ -9,7 +10,23 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
 class MeasurementProcessorTest {
-    private val measurementProcessor = MeasurementProcessor()
+    val report =
+        Report(
+            taskPathReport = true,
+            taskTypeReport = false,
+            kotlinBuildReport = true,
+            processesReport = true,
+            buildReport = true,
+            isProfile = false,
+            resourceUsageReport = false,
+            warmupsToDiscard = 2,
+            variants = listOf("lint-4-1-different-process", "lint-2-1-different-process"),
+            experimentId = "154",
+            onlyCacheableOutcome = false,
+            thresholdTaskDuration = -1,
+            gcReport = false
+        )
+    private val measurementProcessor = MeasurementProcessor(report)
 
     @Test
     fun `test processing measurements with multiple variants`() {
