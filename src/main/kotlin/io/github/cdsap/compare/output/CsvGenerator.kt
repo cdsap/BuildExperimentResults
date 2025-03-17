@@ -1,10 +1,12 @@
 package io.github.cdsap.compare.output
 
 import io.github.cdsap.compare.model.Header
+import io.github.cdsap.compare.model.Report
 import io.github.cdsap.compare.model.SingleMeasurement
 
 class CsvGenerator(
-    private val measurementProcessor: MeasurementProcessor = MeasurementProcessor()
+    private val report: Report,
+    private val measurementProcessor: MeasurementProcessor = MeasurementProcessor(report)
 ) {
     fun generate(
         measurement: Map<String, List<SingleMeasurement>>,

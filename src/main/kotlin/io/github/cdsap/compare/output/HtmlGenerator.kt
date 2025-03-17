@@ -1,11 +1,13 @@
 package io.github.cdsap.compare.output
 
 import io.github.cdsap.compare.model.Header
+import io.github.cdsap.compare.model.Report
 import io.github.cdsap.compare.model.SingleMeasurement
 import io.github.cdsap.geapi.client.model.BuildWithResourceUsage
 
 class HtmlGenerator(
-    private val measurementProcessor: MeasurementProcessor = MeasurementProcessor(),
+    private val report: Report,
+    private val measurementProcessor: MeasurementProcessor = MeasurementProcessor(report),
     private val chartGenerator: ChartGenerator
 ) {
     fun generate(

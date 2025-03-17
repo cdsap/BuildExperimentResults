@@ -1,13 +1,15 @@
 import com.jakewharton.picnic.TextAlignment
 import com.jakewharton.picnic.table
 import io.github.cdsap.compare.model.Header
+import io.github.cdsap.compare.model.Report
 import io.github.cdsap.compare.model.SingleMeasurement
 import io.github.cdsap.compare.output.MeasurementProcessor
 import io.github.cdsap.compare.output.removeExperimentId
 import io.github.cdsap.geapi.client.model.BuildWithResourceUsage
 
 class ConsoleGenerator(
-    private val measurementProcessor: MeasurementProcessor = MeasurementProcessor()
+    private val report: Report,
+    private val measurementProcessor: MeasurementProcessor = MeasurementProcessor(report)
 ) {
     fun generate(
         measurement: Map<String, List<SingleMeasurement>>,
