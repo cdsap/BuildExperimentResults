@@ -48,7 +48,7 @@ class Experiment : CliktCommand() {
     private val experimentId: String? by option()
     private val repository: String? by option()
     private val experimentRunId: String? by option()
-    private val openAiRequest by option("--open-ai-request").flag("--no-open-api-request", default = false)
+    private val openAiRequest by option("--open-ai-request").flag("--no-open-ai-request", default = false)
     private val openAiKey: String? by option()
 
     override fun run() {
