@@ -22,7 +22,7 @@ class OpenAiAnalysis(
     private val csvFile: File,
     private val openAiKey: String?
 ) {
-    private val model = "gpt-4"
+    private val model = "gpt-4-turbo"
     private val temperature = 0.3
     private val client = HttpClient(CIO) {
         install(ContentNegotiation) {
@@ -60,6 +60,7 @@ class OpenAiAnalysis(
                     openAiResponse.choices.firstOrNull()?.message?.content
                         ?: throw IllegalStateException("No response content received from OpenAI")
                 } else {
+
                     throw IllegalStateException("API request failed with status: ${response.status}")
                 }
             } catch (e: Exception) {
