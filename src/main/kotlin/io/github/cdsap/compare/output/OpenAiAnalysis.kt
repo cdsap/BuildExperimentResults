@@ -60,7 +60,6 @@ class OpenAiAnalysis(
                     openAiResponse.choices.firstOrNull()?.message?.content
                         ?: throw IllegalStateException("No response content received from OpenAI")
                 } else {
-
                     throw IllegalStateException("API request failed with status: ${response.status}")
                 }
             } catch (e: Exception) {

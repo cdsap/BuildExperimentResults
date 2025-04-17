@@ -18,21 +18,21 @@ class MeasurementProcessor(val report: Report) {
             val (category, name) = key
             // the threshold for the task
             var filteredTaskPath = true
-            if(category == "Task Path"){
+            if (category == "Task Path") {
                 var numberOfVariants = 0
                 measurementsMap.forEach { (variant, variantMeasurements) ->
                     val measurement = variantMeasurements.find {
                         it.category == category && it.name == name
                     }
                     if (measurement != null) {
-                        if(measurement.variantMean.toString().toLong() > report.thresholdTaskDuration) {
+                        if (measurement.variantMean.toString().toLong() > report.thresholdTaskDuration) {
                             numberOfVariants++
                         }
                     }
                 }
                 filteredTaskPath = numberOfVariants == measurementsMap.size
             }
-            if(filteredTaskPath) {
+            if (filteredTaskPath) {
                 val rowData = mutableMapOf<String, Any?>()
 
                 rowData["category"] = category

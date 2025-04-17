@@ -27,6 +27,20 @@ class BuildMeasurement(
                     metric = Metric.BUILD
                 )
             )
+            val variantMeanConfiguration = "${variant.sumOf { it.configuration } / variant.size}"
+            val variantP50Configuration = "${variant.flatMap { listOf(it.configuration) }.percentile(50.0).roundToLong()}"
+            val variantP90Configuration = "${variant.flatMap { listOf(it.configuration) }.percentile(90.0).roundToLong()}"
+            measurements.add(
+                SingleMeasurement(
+                    name = "Configuration time",
+                    variantMean = variantMeanConfiguration,
+                    category = "Build",
+                    variantP50 = variantP50Configuration,
+                    variantP90 = variantP90Configuration,
+                    qualifier = "ms",
+                    metric = Metric.BUILD
+                )
+            )
         }
         return measurements
     }

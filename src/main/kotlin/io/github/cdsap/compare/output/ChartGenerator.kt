@@ -69,6 +69,10 @@ class ChartGenerator(val report: Report) {
                 <h2>Build Duration Time Series</h2>
                 <canvas id="buildDurationChart"></canvas>
             </div>
+             <div class="chart-container">
+                <h2>Configuration Time</h2>
+                <canvas id="configurationTimeChart"></canvas>
+            </div>
             $divResourceUsage
             <div class="chart-container">
                 <h2>Most Expensive Task: $mostExpensiveTaskPath</h2>
@@ -212,6 +216,7 @@ class ChartGenerator(val report: Report) {
         val scripts = mutableListOf<String>()
         // Basic charts
         scripts.add(generateBuildDurationChart(variants, header))
+        scripts.add(generateConfigurationTimeChart(variants, header))
         scripts.add(generateProcessMemoryChart(variants, header))
         scripts.add(generateChildProcessMemoryChart(variants, header))
         scripts.add(generateExpensiveTaskChart(variants, mostExpensiveTaskPath, header))
@@ -247,6 +252,17 @@ class ChartGenerator(val report: Report) {
         variants,
         "Build Duration (seconds)",
         { it.buildDuration.toDouble() },
+        header
+    )
+
+    private fun generateConfigurationTimeChart(
+        variants: Map<String, List<BuildWithResourceUsage>>,
+        header: Header
+    ): String = chartDataGenerator.generateChartData(
+        "configurationTimeChart",
+        variants,
+        "Configuration time Duration (seconds)",
+        { it.configuration.toDouble() },
         header
     )
 
