@@ -5,6 +5,7 @@ import io.github.cdsap.compare.output.ExperimentView
 import io.github.cdsap.compare.report.measurements.FilterBuildsPerVariant
 import io.github.cdsap.compare.report.measurements.MeasurementsByReport
 import io.github.cdsap.geapi.client.domain.impl.GetBuildsFromQueryWithAttributesRequest
+import io.github.cdsap.geapi.client.domain.impl.GetBuildsProfileRequest
 import io.github.cdsap.geapi.client.domain.impl.GetBuildsResourceUsageRequest
 import io.github.cdsap.geapi.client.domain.impl.GetBuildsWithCachePerformanceRequest
 import io.github.cdsap.geapi.client.model.BuildWithResourceUsage
@@ -47,6 +48,7 @@ class ExperimentReport(
         val getOutcome = GetBuildsWithCachePerformanceRequest(repository)
         val outcome = getOutcome.get(getBuildScans, filter)
         val buildWithResourceUsage = GetBuildsResourceUsageRequest(repository).get(getBuildScans, filter)
+        val buildProfile = GetBuildsProfileRequest(repository).get(getBuildScans, filter)
         outcome.forEach { build ->
             val usage = buildWithResourceUsage.find { build.id == it.id }
             usage?.requestedTask = build.requestedTask
@@ -57,6 +59,11 @@ class ExperimentReport(
             usage?.builtTool = build.builtTool
             usage?.projectName = build.projectName
             usage?.taskExecution = build.taskExecution
+            val profile = buildProfile.find { build.id == it.id }
+            if (profile != null && usage != null) {
+                usage.configuration = profile.breakdown.configuration
+                usage.totalGarbageCollectionTime = profile.memoryUsage.totalGarbageCollectionTime
+            }
         }
         if (report.isProfile) {
             return buildWithResourceUsage.filterNot { it.requestedTask.size == 1 && it.requestedTask.first() == "clean" }

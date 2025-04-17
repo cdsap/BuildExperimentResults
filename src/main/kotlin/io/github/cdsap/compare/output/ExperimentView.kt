@@ -12,7 +12,7 @@ import java.util.Date
 class ExperimentView(
     val report: Report
 ) {
-    private val htmlGenerator: HtmlGenerator = HtmlGenerator(report,chartGenerator = ChartGenerator(report))
+    private val htmlGenerator: HtmlGenerator = HtmlGenerator(report, chartGenerator = ChartGenerator(report))
     private val csvGenerator: CsvGenerator = CsvGenerator(report)
     private val consoleGenerator: ConsoleGenerator = ConsoleGenerator(report)
 

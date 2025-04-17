@@ -75,7 +75,8 @@ class BuildMeasurementTest {
         )
 
         val measurements = BuildMeasurement(buildsA).get()
-        assert(measurements.size == 1)
+        assert(measurements.filter { it.name == "Build time" }.size == 1)
+        assert(measurements.filter { it.name == "Configuration time" }.size == 1)
 
         assert(measurements[0].variantP50 == "30")
         assert(measurements[0].variantP90 == "50")
