@@ -21,7 +21,7 @@ Additionally, it incorporates extended metric information if the following plugi
 
 #### Installation
 ```
- curl -L https://github.com/cdsap/BuildExperimentResults/releases/download/v1.0.2/build-experiment-results --output build-experiment-results
+ curl -L https://github.com/cdsap/BuildExperimentResults/releases/download/v1.0.3/build-experiment-results --output build-experiment-results
  chmod 0757 build-experiment-results
 ```
 #### Simple Usage
