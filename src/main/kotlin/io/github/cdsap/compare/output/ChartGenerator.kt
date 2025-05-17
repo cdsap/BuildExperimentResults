@@ -143,8 +143,21 @@ class ChartGenerator(val report: Report) {
     }
 
     private fun findMostExpensiveTask(variants: Map<String, List<BuildWithResourceUsage>>): String {
+        // Get the set of task paths for each variant
+        val taskPathsPerVariant = variants.values.map { builds ->
+            builds.flatMap { it.taskExecution.map { task -> task.taskPath } }.toSet()
+        }
+        // Find the intersection: tasks present in all variants
+        val commonTaskPaths = if (taskPathsPerVariant.isNotEmpty()) {
+            taskPathsPerVariant.reduce { acc, set -> acc.intersect(set) }
+        } else {
+            emptySet()
+        }
+        if (commonTaskPaths.isEmpty()) return "Unknown"
+        // Compute average duration for only common tasks
         return variants.values.flatten()
             .flatMap { it.taskExecution.toList() }
+            .filter { it.taskPath in commonTaskPaths }
             .groupBy { it.taskPath }
             .mapValues { (_, executions) -> executions.map { it.duration }.average() }
             .maxByOrNull { it.value }

@@ -68,6 +68,17 @@ class CsvGenerator(
     }
 
     private fun generateCsvRowFiltered(rowData: Map<String, Any?>, variants: List<String>): String {
+
+        // if any of the variants are missing mean, median or p90 values, skip the row
+        var check = 0
+        variants.forEach { variant ->
+            if(rowData["$variant-mean"] != null){
+                check++
+            }
+        }
+        if(check != variants.count()){
+            return ""
+        }
         val output = StringBuilder()
         val kotlinBuildReport = rowData["category"] == "Kotlin Build Reports"
         val build = rowData["category"] == "Build"
@@ -79,6 +90,7 @@ class CsvGenerator(
         val taskPath = rowData["category"] == "Task Type" && rowData["${variants.first()}-median"].toString().toLong() > 1000
 
         if (kotlinBuildReport || build || kotlinGCTime || gradleGCTime || totalCollections || totalProcesses || task || taskPath) {
+
             output.append("${rowData["category"]},${rowData["name"]}")
 
             // Mean values
