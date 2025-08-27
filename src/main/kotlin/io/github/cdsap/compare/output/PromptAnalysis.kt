@@ -9,6 +9,7 @@ class PromptAnalysis {
 
     - **1. Build Time Comparison (if available)**
       - Compare overall build times between variants (mean, P50, P90).
+      - Compare configuration times between variants (mean, P50, P90).
       - Express times > 1000ms in seconds.
       - Calculate percentage differences between variants.
       - If only one variant is present, provide absolute values instead of comparisons.
