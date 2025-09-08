@@ -24,7 +24,7 @@ dependencies {
     implementation("io.github.cdsap:geapi-data:0.3.3")
     implementation("com.google.code.gson:gson:2.8.9")
     implementation("com.jakewharton.picnic:picnic:0.6.0")
-    implementation("com.github.ajalt.clikt:clikt:3.5.0")
+    implementation("com.github.ajalt.clikt:clikt:3.5.4")
     implementation("org.nield:kotlin-statistics:1.2.1")
     implementation("io.ktor:ktor-client-core:2.3.13")
     implementation("io.ktor:ktor-client-cio:2.3.9")
