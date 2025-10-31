@@ -23,7 +23,7 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4")
     implementation("io.github.cdsap:geapi-data:0.3.3")
     implementation("com.google.code.gson:gson:2.13.2")
-    implementation("com.jakewharton.picnic:picnic:0.6.0")
+    implementation("com.jakewharton.picnic:picnic:0.7.0")
     implementation("com.github.ajalt.clikt:clikt:3.5.4")
     implementation("org.nield:kotlin-statistics:1.2.1")
     implementation("io.ktor:ktor-client-core:2.3.13")
