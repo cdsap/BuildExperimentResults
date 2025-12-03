@@ -9,11 +9,9 @@ import kotlin.math.roundToLong
 
 class TasksTypeMeasurements(
     private val variant: List<BuildWithResourceUsage>,
-    private val report: Report
+    private val report: Report,
 ) {
-    fun get(): List<SingleMeasurement> {
-        return getTaskTypeMeasurements()
-    }
+    fun get(): List<SingleMeasurement> = getTaskTypeMeasurements()
 
     private fun getTaskTypeMeasurements(): List<SingleMeasurement> {
         val measurements = mutableListOf<SingleMeasurement>()
@@ -27,8 +25,8 @@ class TasksTypeMeasurements(
                     variantP50 = "${it.value.percentile(50.0).roundToLong()}",
                     variantP90 = "${it.value.percentile(90.0).roundToLong()}",
                     qualifier = "ms",
-                    metric = Metric.TASK_TYPE
-                )
+                    metric = Metric.TASK_TYPE,
+                ),
             )
         }
 
@@ -38,11 +36,12 @@ class TasksTypeMeasurements(
     private fun getTasksByType(builds: List<BuildWithResourceUsage>): Map<String, MutableList<Long>> {
         val variantAggregatedTaskType = mutableMapOf<String, MutableList<Long>>()
         builds.forEach {
-            val tasksExecution = if (report.onlyCacheableOutcome) {
-                it.taskExecution.filter { (it.avoidanceOutcome == "executed_cacheable") }
-            } else {
-                it.taskExecution.toList()
-            }
+            val tasksExecution =
+                if (report.onlyCacheableOutcome) {
+                    it.taskExecution.filter { (it.avoidanceOutcome == "executed_cacheable") }
+                } else {
+                    it.taskExecution.toList()
+                }
             tasksExecution.forEach {
                 if (variantAggregatedTaskType.contains(it.taskType)) {
                     variantAggregatedTaskType[it.taskType]?.add(it.duration)

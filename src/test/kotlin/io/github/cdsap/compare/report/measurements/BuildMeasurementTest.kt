@@ -11,68 +11,70 @@ class BuildMeasurementTest {
 
     @Test
     fun testPercentilesAreCalculatedCorrectly() {
-        val tasks = arrayOf(
-            Task("compile", ":app:compileDebugKotlin", "executed_cacheable", 1500, 10),
-            Task("compile", ":core:compileDebugKotlin", "executed_cacheable", 2000, 20)
-        )
-        val avoidanceSavingsSummary = AvoidanceSavingsSummary("", "", "")
-        val buildsA = listOf(
-            BuildWithResourceUsage(
-                builtTool = "A",
-                taskExecution = tasks,
-                goalExecution = emptyArray(),
-                avoidanceSavingsSummary = avoidanceSavingsSummary,
-                buildDuration = 10,
-                execution = buildWithResourceUsageProvider.get(),
-                nonExecution = buildWithResourceUsageProvider.get(),
-                total = buildWithResourceUsageProvider.get(),
-                totalMemory = 0L
-            ),
-            BuildWithResourceUsage(
-                builtTool = "A",
-                taskExecution = tasks,
-                goalExecution = emptyArray(),
-                avoidanceSavingsSummary = avoidanceSavingsSummary,
-                buildDuration = 20,
-                execution = buildWithResourceUsageProvider.get(),
-                nonExecution = buildWithResourceUsageProvider.get(),
-                total = buildWithResourceUsageProvider.get(),
-                totalMemory = 0L
-            ),
-            BuildWithResourceUsage(
-                builtTool = "A",
-                taskExecution = tasks,
-                goalExecution = emptyArray(),
-                avoidanceSavingsSummary = avoidanceSavingsSummary,
-                buildDuration = 30,
-                execution = buildWithResourceUsageProvider.get(),
-                nonExecution = buildWithResourceUsageProvider.get(),
-                total = buildWithResourceUsageProvider.get(),
-                totalMemory = 0L
-            ),
-            BuildWithResourceUsage(
-                builtTool = "A",
-                taskExecution = tasks,
-                goalExecution = emptyArray(),
-                avoidanceSavingsSummary = avoidanceSavingsSummary,
-                buildDuration = 40,
-                execution = buildWithResourceUsageProvider.get(),
-                nonExecution = buildWithResourceUsageProvider.get(),
-                total = buildWithResourceUsageProvider.get(),
-                totalMemory = 0L
-            ),
-            BuildWithResourceUsage(
-                builtTool = "A",
-                taskExecution = tasks,
-                goalExecution = emptyArray(),
-                avoidanceSavingsSummary = avoidanceSavingsSummary,
-                buildDuration = 50,
-                execution = buildWithResourceUsageProvider.get(),
-                nonExecution = buildWithResourceUsageProvider.get(),
-                total = buildWithResourceUsageProvider.get(),
-                totalMemory = 0L
+        val tasks =
+            arrayOf(
+                Task("compile", ":app:compileDebugKotlin", "executed_cacheable", 1500, 10),
+                Task("compile", ":core:compileDebugKotlin", "executed_cacheable", 2000, 20),
             )
-        )
+        val avoidanceSavingsSummary = AvoidanceSavingsSummary("", "", "")
+        val buildsA =
+            listOf(
+                BuildWithResourceUsage(
+                    builtTool = "A",
+                    taskExecution = tasks,
+                    goalExecution = emptyArray(),
+                    avoidanceSavingsSummary = avoidanceSavingsSummary,
+                    buildDuration = 10,
+                    execution = buildWithResourceUsageProvider.get(),
+                    nonExecution = buildWithResourceUsageProvider.get(),
+                    total = buildWithResourceUsageProvider.get(),
+                    totalMemory = 0L,
+                ),
+                BuildWithResourceUsage(
+                    builtTool = "A",
+                    taskExecution = tasks,
+                    goalExecution = emptyArray(),
+                    avoidanceSavingsSummary = avoidanceSavingsSummary,
+                    buildDuration = 20,
+                    execution = buildWithResourceUsageProvider.get(),
+                    nonExecution = buildWithResourceUsageProvider.get(),
+                    total = buildWithResourceUsageProvider.get(),
+                    totalMemory = 0L,
+                ),
+                BuildWithResourceUsage(
+                    builtTool = "A",
+                    taskExecution = tasks,
+                    goalExecution = emptyArray(),
+                    avoidanceSavingsSummary = avoidanceSavingsSummary,
+                    buildDuration = 30,
+                    execution = buildWithResourceUsageProvider.get(),
+                    nonExecution = buildWithResourceUsageProvider.get(),
+                    total = buildWithResourceUsageProvider.get(),
+                    totalMemory = 0L,
+                ),
+                BuildWithResourceUsage(
+                    builtTool = "A",
+                    taskExecution = tasks,
+                    goalExecution = emptyArray(),
+                    avoidanceSavingsSummary = avoidanceSavingsSummary,
+                    buildDuration = 40,
+                    execution = buildWithResourceUsageProvider.get(),
+                    nonExecution = buildWithResourceUsageProvider.get(),
+                    total = buildWithResourceUsageProvider.get(),
+                    totalMemory = 0L,
+                ),
+                BuildWithResourceUsage(
+                    builtTool = "A",
+                    taskExecution = tasks,
+                    goalExecution = emptyArray(),
+                    avoidanceSavingsSummary = avoidanceSavingsSummary,
+                    buildDuration = 50,
+                    execution = buildWithResourceUsageProvider.get(),
+                    nonExecution = buildWithResourceUsageProvider.get(),
+                    total = buildWithResourceUsageProvider.get(),
+                    totalMemory = 0L,
+                ),
+            )
 
         val measurements = BuildMeasurement(buildsA).get()
         assert(measurements.filter { it.name == "Build time" }.size == 1)

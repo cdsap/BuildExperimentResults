@@ -11,7 +11,7 @@ import java.io.BufferedReader
 import java.io.InputStreamReader
 
 class MeasurementsByReportTest {
-    private val BuildWithResourceUsageProvider = BuildWithResourceUsageProvider()
+    private val buildWithResourceUsageProvider = BuildWithResourceUsageProvider()
 
     @Test
     fun allMetricsAreReturned() {
@@ -30,7 +30,7 @@ class MeasurementsByReportTest {
                 experimentId = "154",
                 onlyCacheableOutcome = false,
                 thresholdTaskDuration = -1,
-                gcReport = false
+                gcReport = false,
             )
         val measurements = MeasurementsByReport(report).get(FilterBuildsPerVariant(report).get(builds))
 
@@ -60,7 +60,7 @@ class MeasurementsByReportTest {
                 experimentId = "154",
                 onlyCacheableOutcome = false,
                 thresholdTaskDuration = -1,
-                gcReport = false
+                gcReport = false,
             )
         val measurements = MeasurementsByReport(report).get(FilterBuildsPerVariant(report).get(builds))
 
@@ -89,7 +89,7 @@ class MeasurementsByReportTest {
                 experimentId = "154",
                 onlyCacheableOutcome = false,
                 thresholdTaskDuration = -1,
-                gcReport = false
+                gcReport = false,
             )
         val measurements = MeasurementsByReport(report).get(FilterBuildsPerVariant(report).get(builds))
 
@@ -119,7 +119,7 @@ class MeasurementsByReportTest {
                 experimentId = "154",
                 onlyCacheableOutcome = false,
                 thresholdTaskDuration = -1,
-                gcReport = false
+                gcReport = false,
             )
         val measurements = MeasurementsByReport(report).get(FilterBuildsPerVariant(report).get(builds))
 
@@ -149,7 +149,7 @@ class MeasurementsByReportTest {
                 experimentId = "154",
                 onlyCacheableOutcome = false,
                 thresholdTaskDuration = -1,
-                gcReport = false
+                gcReport = false,
             )
         val measurements = MeasurementsByReport(report).get(FilterBuildsPerVariant(report).get(builds))
 
@@ -179,7 +179,7 @@ class MeasurementsByReportTest {
                 experimentId = "154",
                 onlyCacheableOutcome = false,
                 thresholdTaskDuration = -1,
-                gcReport = false
+                gcReport = false,
             )
         val measurements = MeasurementsByReport(report).get(FilterBuildsPerVariant(report).get(builds))
 
@@ -194,10 +194,11 @@ class MeasurementsByReportTest {
 
     private fun builds(): List<BuildWithResourceUsage> {
         val builds: List<BuildWithResourceUsage> =
-            Gson().fromJson(
-                BufferedReader(InputStreamReader(javaClass.classLoader.getResourceAsStream("outcome.json"))).readText(),
-                Array<BuildWithResourceUsage>::class.java
-            ).toList()
+            Gson()
+                .fromJson(
+                    BufferedReader(InputStreamReader(javaClass.classLoader.getResourceAsStream("outcome.json"))).readText(),
+                    Array<BuildWithResourceUsage>::class.java,
+                ).toList()
         return builds
     }
 }

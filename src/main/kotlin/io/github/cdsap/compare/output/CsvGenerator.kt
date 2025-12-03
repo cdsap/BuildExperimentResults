@@ -6,13 +6,13 @@ import io.github.cdsap.compare.model.SingleMeasurement
 
 class CsvGenerator(
     private val report: Report,
-    private val measurementProcessor: MeasurementProcessor = MeasurementProcessor(report)
+    private val measurementProcessor: MeasurementProcessor = MeasurementProcessor(report),
 ) {
     fun generate(
         measurement: Map<String, List<SingleMeasurement>>,
         variants: List<String>,
         header: Header,
-        filteredByAiRequest: Boolean
+        filteredByAiRequest: Boolean,
     ): String {
         val output = StringBuilder()
 
@@ -30,13 +30,15 @@ class CsvGenerator(
         output.append(",Unit\n")
 
         // Data rows
-        measurementProcessor.processMeasurements(measurement)
+        measurementProcessor
+            .processMeasurements(measurement)
             .forEach { rowData ->
-                val content = if (filteredByAiRequest) {
-                    generateCsvRowFiltered(rowData, variants)
-                } else {
-                    generateCsvRow(rowData, variants)
-                }
+                val content =
+                    if (filteredByAiRequest) {
+                        generateCsvRowFiltered(rowData, variants)
+                    } else {
+                        generateCsvRow(rowData, variants)
+                    }
                 if (content.isNotEmpty()) {
                     output.append(content)
                 }
@@ -45,7 +47,10 @@ class CsvGenerator(
         return output.toString()
     }
 
-    private fun generateCsvRow(rowData: Map<String, Any?>, variants: List<String>): String {
+    private fun generateCsvRow(
+        rowData: Map<String, Any?>,
+        variants: List<String>,
+    ): String {
         val output = StringBuilder()
         output.append("${rowData["category"]},${rowData["name"]}")
 
@@ -67,16 +72,18 @@ class CsvGenerator(
         return output.toString()
     }
 
-    private fun generateCsvRowFiltered(rowData: Map<String, Any?>, variants: List<String>): String {
-
+    private fun generateCsvRowFiltered(
+        rowData: Map<String, Any?>,
+        variants: List<String>,
+    ): String {
         // if any of the variants are missing mean, median or p90 values, skip the row
         var check = 0
         variants.forEach { variant ->
-            if(rowData["$variant-mean"] != null){
+            if (rowData["$variant-mean"] != null) {
                 check++
             }
         }
-        if(check != variants.count()){
+        if (check != variants.count()) {
             return ""
         }
         val output = StringBuilder()
@@ -90,7 +97,6 @@ class CsvGenerator(
         val taskPath = rowData["category"] == "Task Type" && rowData["${variants.first()}-median"].toString().toLong() > 1000
 
         if (kotlinBuildReport || build || kotlinGCTime || gradleGCTime || totalCollections || totalProcesses || task || taskPath) {
-
             output.append("${rowData["category"]},${rowData["name"]}")
 
             // Mean values

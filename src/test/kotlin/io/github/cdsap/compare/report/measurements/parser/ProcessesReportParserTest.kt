@@ -41,7 +41,12 @@ class ProcessesReportParserTest {
 
     @Test
     fun testParseProcessesFromBuildsReturnsAList() {
-        val variantABuilds: List<BuildWithResourceUsage> = Gson().fromJson(BufferedReader(InputStreamReader(javaClass.classLoader.getResourceAsStream("varianta.json"))).readText(), Array<BuildWithResourceUsage>::class.java).toList()
+        val variantABuilds: List<BuildWithResourceUsage> =
+            Gson()
+                .fromJson(
+                    BufferedReader(InputStreamReader(javaClass.classLoader.getResourceAsStream("varianta.json"))).readText(),
+                    Array<BuildWithResourceUsage>::class.java,
+                ).toList()
 
         val parser = ProcessesReportParser()
         val result = parser.parseByVariant(variantABuilds, "Kotlin")

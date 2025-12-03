@@ -7,5 +7,5 @@ data class SingleMeasurement(
     val variantP50: Any,
     val variantP90: Any,
     val qualifier: String,
-    val metric: Metric
+    val metric: Metric,
 )

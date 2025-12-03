@@ -9,7 +9,6 @@ import java.io.BufferedReader
 import java.io.InputStreamReader
 
 class FilterBuildsPerVariantsTest {
-
     @Test
     fun buildsAreParsedByVariant() {
         val report =
@@ -26,7 +25,7 @@ class FilterBuildsPerVariantsTest {
                 experimentId = "154",
                 onlyCacheableOutcome = false,
                 thresholdTaskDuration = -1,
-                gcReport = false
+                gcReport = false,
             )
         val variants = FilterBuildsPerVariant(report).get(builds())
         assertTrue(variants.size == 2)
@@ -48,7 +47,7 @@ class FilterBuildsPerVariantsTest {
                 experimentId = "154",
                 onlyCacheableOutcome = false,
                 thresholdTaskDuration = -1,
-                gcReport = false
+                gcReport = false,
             )
         val variants = FilterBuildsPerVariant(report).get(builds())
         assertTrue(variants.size == 2)
@@ -71,7 +70,7 @@ class FilterBuildsPerVariantsTest {
                 experimentId = "987",
                 onlyCacheableOutcome = false,
                 thresholdTaskDuration = -1,
-                gcReport = false
+                gcReport = false,
             )
         val variants = FilterBuildsPerVariant(report).get(builds())
         assertTrue(variants.size == 2)
@@ -79,10 +78,11 @@ class FilterBuildsPerVariantsTest {
 
     private fun builds(): List<BuildWithResourceUsage> {
         val builds: List<BuildWithResourceUsage> =
-            Gson().fromJson(
-                BufferedReader(InputStreamReader(javaClass.classLoader.getResourceAsStream("outcome.json"))).readText(),
-                Array<BuildWithResourceUsage>::class.java
-            ).toList()
+            Gson()
+                .fromJson(
+                    BufferedReader(InputStreamReader(javaClass.classLoader.getResourceAsStream("outcome.json"))).readText(),
+                    Array<BuildWithResourceUsage>::class.java,
+                ).toList()
         return builds
     }
 }

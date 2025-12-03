@@ -9,14 +9,19 @@ import io.github.cdsap.compare.output.chart.KotlinBuildReportsConstants
 import io.github.cdsap.geapi.client.model.BuildWithResourceUsage
 import org.nield.kotlinstatistics.median
 
-class ChartGenerator(val report: Report) {
+class ChartGenerator(
+    val report: Report,
+) {
     private val chartColors = ChartColors()
     private val chartOptions = ChartOptions()
     private val chartDataGenerator = ChartDataGenerator(chartColors, chartOptions)
 
     fun format(value: String) = value.replace(",", "").replace("ms", "").split(" ")[0]
 
-    fun generateCharts(variants: Map<String, List<BuildWithResourceUsage>>, header: Header): String {
+    fun generateCharts(
+        variants: Map<String, List<BuildWithResourceUsage>>,
+        header: Header,
+    ): String {
         val mostExpensiveTaskPath = findMostExpensiveTask(variants)
 
         val containsKotlinProcess = report.processesReport && hasKotlinProcess(variants)
@@ -26,44 +31,79 @@ class ChartGenerator(val report: Report) {
 
         val uniqueTotalCollections = getUniqueTotalCollections(variants)
 
-        return """
-            <div class="charts-grid">
-                ${generateBasicCharts(mostExpensiveTaskPath,containsResourceUsageReports)}
-                ${generateGCCollectionsCharts(uniqueTotalCollections)}
-                ${generateProcessCharts(containsKotlinProcess, containsGradleProcess)}
-                ${generateBuildReportsCharts(containsBuildReports)}
-            </div>
-            <script>
-                ${
-        generateChartScripts(
-            variants,
+        return generateChart(
             mostExpensiveTaskPath,
-            header,
+            containsResourceUsageReports,
+            uniqueTotalCollections,
             containsKotlinProcess,
             containsGradleProcess,
             containsBuildReports,
-            uniqueTotalCollections
+            variants,
+            header,
         )
-        }
-            </script>
-        """.trimIndent()
     }
 
-    private fun generateBasicCharts(mostExpensiveTaskPath: String, containsResourceUsageReports: Boolean): String {
-        val divResourceUsage = if (containsResourceUsageReports) {
-            """
-            <div class="chart-container">
-                <h2>Build Process Memory</h2>
-                <canvas id="buildProcessMemoryChart"></canvas>
-            </div>
-            <div class="chart-container">
-                <h2>Build Child Processes Memory</h2>
-                <canvas id="buildChildProcessMemoryChart"></canvas>
-            </div>
-            """.trimIndent()
-        } else {
-            ""
+    private fun generateChart(
+        mostExpensiveTaskPath: String,
+        containsResourceUsageReports: Boolean,
+        uniqueTotalCollections: Set<String>,
+        containsKotlinProcess: Boolean,
+        containsGradleProcess: Boolean,
+        containsBuildReports: Boolean,
+        variants: Map<String, List<BuildWithResourceUsage>>,
+        header: Header,
+    ): String =
+        """
+        <div class="charts-grid">
+        ${
+            generateBasicCharts(
+                mostExpensiveTaskPath,
+                containsResourceUsageReports,
+            )
         }
+        ${generateGCCollectionsCharts(uniqueTotalCollections)}
+        ${
+            generateProcessCharts(
+                containsKotlinProcess,
+                containsGradleProcess,
+            )
+        }
+        ${generateBuildReportsCharts(containsBuildReports)}
+          </div>
+                                                                            <script>
+                                                                                ${
+            generateChartScripts(
+                variants,
+                mostExpensiveTaskPath,
+                header,
+                containsKotlinProcess,
+                containsGradleProcess,
+                containsBuildReports,
+                uniqueTotalCollections,
+            )
+        }
+                                                                            </script>
+        """.trimIndent()
+
+    private fun generateBasicCharts(
+        mostExpensiveTaskPath: String,
+        containsResourceUsageReports: Boolean,
+    ): String {
+        val divResourceUsage =
+            if (containsResourceUsageReports) {
+                """
+                <div class="chart-container">
+                    <h2>Build Process Memory</h2>
+                    <canvas id="buildProcessMemoryChart"></canvas>
+                </div>
+                <div class="chart-container">
+                    <h2>Build Child Processes Memory</h2>
+                    <canvas id="buildChildProcessMemoryChart"></canvas>
+                </div>
+                """.trimIndent()
+            } else {
+                ""
+            }
         return """
             <div class="chart-container">
                 <h2>Build Duration Time Series</h2>
@@ -78,41 +118,41 @@ class ChartGenerator(val report: Report) {
                 <h2>Most Expensive Task: $mostExpensiveTaskPath</h2>
                 <canvas id="expensiveTaskChart"></canvas>
             </div>
-        """.trimIndent()
+            """.trimIndent()
     }
 
     private fun generateProcessCharts(
         containsKotlinProcess: Boolean,
-        containsGradleProcess: Boolean
+        containsGradleProcess: Boolean,
     ): String {
-        val kotlinDiv = if (containsKotlinProcess && report.processesReport) {
-            """
+        val kotlinDiv =
+            if (containsKotlinProcess && report.processesReport) {
+                """
                 <div class="chart-container">
                     <h2>Time Kotlin Garbage Collection Process</h2>
                     <canvas id="kotlinGCChart"></canvas>
                 </div>
-            """.trimIndent()
-        } else {
-            ""
-        }
+                """.trimIndent()
+            } else {
+                ""
+            }
 
-        val gradleDiv = if (containsGradleProcess && report.processesReport) {
-            """
+        val gradleDiv =
+            if (containsGradleProcess && report.processesReport) {
+                """
                 <div class="chart-container">
                     <h2>Time Gradle Garbage Collection Process</h2>
                     <canvas id="gradleGCChart"></canvas>
                 </div>
-            """.trimIndent()
-        } else {
-            ""
-        }
+                """.trimIndent()
+            } else {
+                ""
+            }
 
         return kotlinDiv + gradleDiv
     }
 
-    private fun generateBuildReportsCharts(
-        containsBuildReports: Boolean
-    ): String {
+    private fun generateBuildReportsCharts(containsBuildReports: Boolean): String {
         if (!report.kotlinBuildReport || !containsBuildReports) return ""
 
         return KotlinBuildReportsConstants.ALLOWED_LIST.joinToString("") { report ->
@@ -125,16 +165,14 @@ class ChartGenerator(val report: Report) {
         }
     }
 
-    private fun generateGCCollectionsCharts(
-        uniqueTotalCollections: Set<String>
-    ): String {
+    private fun generateGCCollectionsCharts(uniqueTotalCollections: Set<String>): String {
         if (report.gcReport) {
             return uniqueTotalCollections.joinToString("") { collection ->
                 """
-            <div class="chart-container">
-                <h2>Total gc collections - ${collection.replace("-total-collections", "")}</h2>
-                <canvas id="${collection.replace("-total-collections", "")}"></canvas>
-            </div>
+                <div class="chart-container">
+                    <h2>Total gc collections - ${collection.replace("-total-collections", "")}</h2>
+                    <canvas id="${collection.replace("-total-collections", "")}"></canvas>
+                </div>
                 """.trimIndent()
             }
         } else {
@@ -144,18 +182,21 @@ class ChartGenerator(val report: Report) {
 
     private fun findMostExpensiveTask(variants: Map<String, List<BuildWithResourceUsage>>): String {
         // Get the set of task paths for each variant
-        val taskPathsPerVariant = variants.values.map { builds ->
-            builds.flatMap { it.taskExecution.map { task -> task.taskPath } }.toSet()
-        }
+        val taskPathsPerVariant =
+            variants.values.map { builds ->
+                builds.flatMap { it.taskExecution.map { task -> task.taskPath } }.toSet()
+            }
         // Find the intersection: tasks present in all variants
-        val commonTaskPaths = if (taskPathsPerVariant.isNotEmpty()) {
-            taskPathsPerVariant.reduce { acc, set -> acc.intersect(set) }
-        } else {
-            emptySet()
-        }
+        val commonTaskPaths =
+            if (taskPathsPerVariant.isNotEmpty()) {
+                taskPathsPerVariant.reduce { acc, set -> acc.intersect(set) }
+            } else {
+                emptySet()
+            }
         if (commonTaskPaths.isEmpty()) return "Unknown"
         // Compute average duration for only common tasks
-        return variants.values.flatten()
+        return variants.values
+            .flatten()
             .flatMap { it.taskExecution.toList() }
             .filter { it.taskPath in commonTaskPaths }
             .groupBy { it.taskPath }
@@ -178,8 +219,8 @@ class ChartGenerator(val report: Report) {
         }
     }
 
-    private fun hasBuildReports(variants: Map<String, List<BuildWithResourceUsage>>): Boolean {
-        return variants.all { (_, builds) ->
+    private fun hasBuildReports(variants: Map<String, List<BuildWithResourceUsage>>): Boolean =
+        variants.all { (_, builds) ->
             builds.any { build ->
                 build.values.any { value ->
                     value.value.contains("Kotlin language version:") &&
@@ -187,21 +228,20 @@ class ChartGenerator(val report: Report) {
                 }
             }
         }
-    }
 
-    private fun hasResourceUsageReports(variants: Map<String, List<BuildWithResourceUsage>>): Boolean {
-        return !variants.any {
+    private fun hasResourceUsageReports(variants: Map<String, List<BuildWithResourceUsage>>): Boolean =
+        !variants.any {
             it.value.any { it.total == null }
         }
-    }
 
     private fun getUniqueTotalCollections(variants: Map<String, List<BuildWithResourceUsage>>): Set<String> {
         val uniqueCollections = mutableSetOf<String>()
-        val containsGCCollections = variants.all { (_, builds) ->
-            builds.any { build ->
-                build.values.any { it.name.contains("-total-collections") }
+        val containsGCCollections =
+            variants.all { (_, builds) ->
+                builds.any { build ->
+                    build.values.any { it.name.contains("-total-collections") }
+                }
             }
-        }
 
         if (containsGCCollections) {
             variants.forEach { (_, builds) ->
@@ -209,7 +249,7 @@ class ChartGenerator(val report: Report) {
                     uniqueCollections.addAll(
                         build.values
                             .filter { it.name.contains("-total-collections") }
-                            .map { it.name }
+                            .map { it.name },
                     )
                 }
             }
@@ -224,7 +264,7 @@ class ChartGenerator(val report: Report) {
         containsKotlinProcess: Boolean,
         containsGradleProcess: Boolean,
         containsBuildReports: Boolean,
-        uniqueTotalCollections: Set<String>
+        uniqueTotalCollections: Set<String>,
     ): String {
         val scripts = mutableListOf<String>()
         // Basic charts
@@ -259,73 +299,85 @@ class ChartGenerator(val report: Report) {
 
     private fun generateBuildDurationChart(
         variants: Map<String, List<BuildWithResourceUsage>>,
-        header: Header
-    ): String = chartDataGenerator.generateChartData(
-        "buildDurationChart",
-        variants,
-        "Build Duration (seconds)",
-        { it.buildDuration.toDouble() },
-        header
-    )
+        header: Header,
+    ): String =
+        chartDataGenerator.generateChartData(
+            "buildDurationChart",
+            variants,
+            "Build Duration (seconds)",
+            { it.buildDuration.toDouble() },
+            header,
+        )
 
     private fun generateConfigurationTimeChart(
         variants: Map<String, List<BuildWithResourceUsage>>,
-        header: Header
-    ): String = chartDataGenerator.generateChartData(
-        "configurationTimeChart",
-        variants,
-        "Configuration time Duration (seconds)",
-        { it.configuration.toDouble() },
-        header
-    )
+        header: Header,
+    ): String =
+        chartDataGenerator.generateChartData(
+            "configurationTimeChart",
+            variants,
+            "Configuration time Duration (seconds)",
+            { it.configuration.toDouble() },
+            header,
+        )
 
     private fun generateProcessMemoryChart(
         variants: Map<String, List<BuildWithResourceUsage>>,
-        header: Header
+        header: Header,
     ): String {
         if (variants.any { it.value.any { it.total == null } }) return ""
         return chartDataGenerator.generateChartData(
             "buildProcessMemoryChart",
             variants,
             "Memory Usage (MB)",
-            { it.total!!.buildProcessMemory.max.toDouble() },
-            header
+            {
+                it.total!!
+                    .buildProcessMemory.max
+                    .toDouble()
+            },
+            header,
         )
     }
 
     private fun generateChildProcessMemoryChart(
         variants: Map<String, List<BuildWithResourceUsage>>,
-        header: Header
+        header: Header,
     ): String {
         if (variants.any { it.value.any { it.total == null } }) return ""
         return chartDataGenerator.generateChartData(
             "buildChildProcessMemoryChart",
             variants,
             "Memory Usage (MB)",
-            { it.total!!.buildChildProcessesMemory.max.toDouble() },
-            header
+            {
+                it.total!!
+                    .buildChildProcessesMemory.max
+                    .toDouble()
+            },
+            header,
         )
     }
 
     private fun generateExpensiveTaskChart(
         variants: Map<String, List<BuildWithResourceUsage>>,
         mostExpensiveTaskPath: String,
-        header: Header
-    ): String = chartDataGenerator.generateChartData(
-        "expensiveTaskChart",
-        variants,
-        "Task Duration (seconds)",
-        { build ->
-            build.taskExecution
-                .find { it.taskPath == mostExpensiveTaskPath }
-                ?.duration?.toDouble() ?: 0.0
-        },
-        header
-    )
+        header: Header,
+    ): String =
+        chartDataGenerator.generateChartData(
+            "expensiveTaskChart",
+            variants,
+            "Task Duration (seconds)",
+            { build ->
+                build.taskExecution
+                    .find { it.taskPath == mostExpensiveTaskPath }
+                    ?.duration
+                    ?.toDouble() ?: 0.0
+            },
+            header,
+        )
 
     private fun generateKotlinGCChart(
         variants: Map<String, List<BuildWithResourceUsage>>,
-        header: Header
+        header: Header,
     ): String {
         val regex = Regex("^Kotlin-Process-\\d+-gcTime$")
         val uptimeRegex = Regex("Kotlin-Process-(\\d+)-uptime")
@@ -340,32 +392,47 @@ class ChartGenerator(val report: Report) {
                 // The approach here is to consider the last process because the assumption is that is the most relevant one.
                 val uptimeProcesses = build.values.filter { it.name.matches(uptimeRegex) }
                 if (uptimeProcesses.size == 1) {
-                    build.values.filter { it.name.matches(regex) }.last() ?.value?.replace("minutes", "")?.toDouble() ?: 0.0
+                    build.values
+                        .filter { it.name.matches(regex) }
+                        .last()
+                        ?.value
+                        ?.replace("minutes", "")
+                        ?.toDouble() ?: 0.0
                 } else {
                     // Get distinct process IDs from uptime entries.
-                    val processIds = build.values
-                        .filter { it.name.matches(uptimeRegex) }
-                        .mapNotNull { uptimeRegex.find(it.name)?.groupValues?.get(1) }
-                        .distinct()
+                    val processIds =
+                        build.values
+                            .filter { it.name.matches(uptimeRegex) }
+                            .mapNotNull { uptimeRegex.find(it.name)?.groupValues?.get(1) }
+                            .distinct()
 
                     // Find the process ID with the minimum uptime using similar logic.
-                    val processIdWithMinUptime = processIds.minByOrNull { id ->
-                        build.values.filter { it.name.matches(Regex("Kotlin-Process-$id-uptime")) }
-                            .last()?.value?.replace("minutes", "")?.toDouble() ?: Double.MAX_VALUE
-                    } ?: ""
+                    val processIdWithMinUptime =
+                        processIds.minByOrNull { id ->
+                            build.values
+                                .filter { it.name.matches(Regex("Kotlin-Process-$id-uptime")) }
+                                .last()
+                                ?.value
+                                ?.replace("minutes", "")
+                                ?.toDouble() ?: Double.MAX_VALUE
+                        } ?: ""
 
                     // Now get the gcTime for that process.
-                    build.values.filter { it.name.matches(Regex("Kotlin-Process-$processIdWithMinUptime-gcTime")) }
-                        .last()?.value?.replace("minutes", "")?.toDouble() ?: 0.0
+                    build.values
+                        .filter { it.name.matches(Regex("Kotlin-Process-$processIdWithMinUptime-gcTime")) }
+                        .last()
+                        ?.value
+                        ?.replace("minutes", "")
+                        ?.toDouble() ?: 0.0
                 }
             },
-            header
+            header,
         )
     }
 
     private fun generateGradleGCChart(
         variants: Map<String, List<BuildWithResourceUsage>>,
-        header: Header
+        header: Header,
     ): String {
         val regex = Regex("^Gradle-Process-\\d+-gcTime$")
         return chartDataGenerator.generateChartData(
@@ -373,54 +440,62 @@ class ChartGenerator(val report: Report) {
             variants,
             "Gradle GC (minutes)",
             { build ->
-                build.values.find { it.name.matches(regex) }
-                    ?.value?.replace("minutes", "")?.toDouble() ?: 0.0
+                build.values
+                    .find { it.name.matches(regex) }
+                    ?.value
+                    ?.replace("minutes", "")
+                    ?.toDouble() ?: 0.0
             },
-            header
+            header,
         )
     }
 
     private fun generateKotlinBuildReportsChart(
         variants: Map<String, List<BuildWithResourceUsage>>,
         header: Header,
-        reportName: String
-    ): String = chartDataGenerator.generateChartData(
-        reportName.replace(" ", "").lowercase(),
-        variants,
-        "$reportName (ms)",
-        { build ->
-            val buildReportValues = build.values
-                .filter { it.value.contains(reportName) }
-                .mapNotNull { value ->
-                    value.value.split("Performance: [")[1]
-                        .split("]")[0]
-                        .split(",")
-                        .find { it.contains("$reportName:") }
-                        ?.split(":")?.get(1)
-                        ?.replace("}", "")
-                        ?.replace("ms", "")
-                        ?.trim()
-                        ?.toLongOrNull()
-                }
-            buildReportValues.median() ?: 0.0
-        },
-        header
-    )
+        reportName: String,
+    ): String =
+        chartDataGenerator.generateChartData(
+            reportName.replace(" ", "").lowercase(),
+            variants,
+            "$reportName (ms)",
+            { build ->
+                val buildReportValues =
+                    build.values
+                        .filter { it.value.contains(reportName) }
+                        .mapNotNull { value ->
+                            value.value
+                                .split("Performance: [")[1]
+                                .split("]")[0]
+                                .split(",")
+                                .find { it.contains("$reportName:") }
+                                ?.split(":")
+                                ?.get(1)
+                                ?.replace("}", "")
+                                ?.replace("ms", "")
+                                ?.trim()
+                                ?.toLongOrNull()
+                        }
+                buildReportValues.median() ?: 0.0
+            },
+            header,
+        )
 
     private fun generateGCCollectionsChart(
         variants: Map<String, List<BuildWithResourceUsage>>,
         header: Header,
-        collection: String
-    ): String {
-        return chartDataGenerator.generateChartData(
+        collection: String,
+    ): String =
+        chartDataGenerator.generateChartData(
             collection.replace("-total-collections", "").lowercase(),
             variants,
             collection,
             { build ->
-                build.values.find { it.name == collection }
-                    ?.value?.toDouble() ?: 0.0
+                build.values
+                    .find { it.name == collection }
+                    ?.value
+                    ?.toDouble() ?: 0.0
             },
-            header
+            header,
         )
-    }
 }

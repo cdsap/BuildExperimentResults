@@ -5,25 +5,29 @@ import io.github.cdsap.compare.model.MetricKotlin
 import io.github.cdsap.geapi.client.model.BuildWithResourceUsage
 
 class KotlinBuildReportsParserCustomValues(
-    private val variant: List<BuildWithResourceUsage>
+    private val variant: List<BuildWithResourceUsage>,
 ) {
-    fun parse(): CustomValuesPerVariant {
-        return CustomValuesPerVariant(extracted(variant))
-    }
+    fun parse(): CustomValuesPerVariant = CustomValuesPerVariant(extracted(variant))
 
-    private fun extracted(
-        buildsPerVariant: List<BuildWithResourceUsage>
-    ): MutableMap<String, Map<String, MutableList<MetricKotlin>>> {
+    private fun extracted(buildsPerVariant: List<BuildWithResourceUsage>): MutableMap<String, Map<String, MutableList<MetricKotlin>>> {
         val variantBuild = mutableMapOf<String, Map<String, MutableList<MetricKotlin>>>()
         buildsPerVariant.forEach {
             val buildId = it.id
             val buildsWithKotlinBuildReports =
-                it.values.filter { it.name.contains("Kotlin") && it.value.contains("Kotlin language version") && it.value.contains("; Performance: [") }
+                it.values.filter {
+                    it.name.contains("Kotlin") &&
+                        it.value.contains("Kotlin language version") &&
+                        it.value.contains("; Performance: [")
+                }
             val tasksWithMetrics = mutableMapOf<String, MutableList<MetricKotlin>>()
             if (buildsWithKotlinBuildReports.isNotEmpty()) {
                 buildsWithKotlinBuildReports.forEach {
                     val key = it.name
-                    val values = it.value.split("Performance: [")[1].split("]")[0].split(": ")
+                    val values =
+                        it.value
+                            .split("Performance: [")[1]
+                            .split("]")[0]
+                            .split(": ")
                     var auxCount = 0
                     while (auxCount < values.size - 1) {
                         var key2 = ""

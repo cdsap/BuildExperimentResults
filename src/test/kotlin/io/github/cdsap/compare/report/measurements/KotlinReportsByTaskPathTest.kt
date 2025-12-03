@@ -9,36 +9,39 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
 class KotlinReportsByTaskPathTest {
-    private val BuildWithResourceUsageProvider = BuildWithResourceUsageProvider()
+    private val buildWithResourceUsageProvider = BuildWithResourceUsageProvider()
 
     @Test
     fun buildsWithKotlinBuildReportsReturnAggregatedData() {
-        val buildA = listOf(
-            BuildWithResourceUsage(
-                id = "1",
-                builtTool = "A",
-                taskExecution = arrayOf(
-                    Task("compile", ":app:compileDebugKotlin", "executed_cacheable", 1500, 10),
-                    Task("compile", ":core:compileDebugKotlin", "executed_cacheable", 2000, 20)
+        val buildA =
+            listOf(
+                BuildWithResourceUsage(
+                    id = "1",
+                    builtTool = "A",
+                    taskExecution =
+                        arrayOf(
+                            Task("compile", ":app:compileDebugKotlin", "executed_cacheable", 1500, 10),
+                            Task("compile", ":core:compileDebugKotlin", "executed_cacheable", 2000, 20),
+                        ),
+                    goalExecution = emptyArray(),
+                    avoidanceSavingsSummary = AvoidanceSavingsSummary("", "", ""),
+                    values =
+                        arrayOf(
+                            CustomValue(
+                                ":task1:kaptGenerateStubsDemoReleaseKotlin",
+                                "Non incremental build because: [Unknown Gradle changes]; Kotlin language version: 1.9; Performance: [Shrink current classpath snapshot non-incrementally: 10ms,Connect to Kotlin daemon: 10ms]",
+                            ),
+                            CustomValue(
+                                ":task2:kaptGenerateStubsDemoReleaseKotlin",
+                                "Non incremental build because: [Unknown Gradle changes]; Kotlin language version: 1.9; Performance: [Shrink current classpath snapshot non-incrementally: 100ms,Connect to Kotlin daemon: 100ms]",
+                            ),
+                        ),
+                    execution = buildWithResourceUsageProvider.get(),
+                    nonExecution = buildWithResourceUsageProvider.get(),
+                    total = buildWithResourceUsageProvider.get(),
+                    totalMemory = 0L,
                 ),
-                goalExecution = emptyArray(),
-                avoidanceSavingsSummary = AvoidanceSavingsSummary("", "", ""),
-                values = arrayOf(
-                    CustomValue(
-                        ":task1:kaptGenerateStubsDemoReleaseKotlin",
-                        "Non incremental build because: [Unknown Gradle changes]; Kotlin language version: 1.9; Performance: [Shrink current classpath snapshot non-incrementally: 10ms,Connect to Kotlin daemon: 10ms]"
-                    ),
-                    CustomValue(
-                        ":task2:kaptGenerateStubsDemoReleaseKotlin",
-                        "Non incremental build because: [Unknown Gradle changes]; Kotlin language version: 1.9; Performance: [Shrink current classpath snapshot non-incrementally: 100ms,Connect to Kotlin daemon: 100ms]"
-                    )
-                ),
-                execution = BuildWithResourceUsageProvider.get(),
-                nonExecution = BuildWithResourceUsageProvider.get(),
-                total = BuildWithResourceUsageProvider.get(),
-                totalMemory = 0L
             )
-        )
 
         val kotlinReportsParserCustomValues =
             KotlinBuildReportsParserCustomValues(buildA).parse()
@@ -46,39 +49,52 @@ class KotlinReportsByTaskPathTest {
         val measurements = KotlinReportsByTaskPath(kotlinReportsParserCustomValues).get(emptyList())
 
         assertTrue(measurements.size == 4)
-        assertTrue(measurements.any { it.category == ":task2:kaptGenerateStubsDemoReleaseKotlin" && it.name == "Shrink current classpath snapshot non-incrementally" })
-        assertTrue(measurements.any { it.category == ":task1:kaptGenerateStubsDemoReleaseKotlin" && it.name == "Shrink current classpath snapshot non-incrementally" })
+        assertTrue(
+            measurements.any {
+                it.category == ":task2:kaptGenerateStubsDemoReleaseKotlin" &&
+                    it.name == "Shrink current classpath snapshot non-incrementally"
+            },
+        )
+        assertTrue(
+            measurements.any {
+                it.category == ":task1:kaptGenerateStubsDemoReleaseKotlin" &&
+                    it.name == "Shrink current classpath snapshot non-incrementally"
+            },
+        )
         assertTrue(measurements[0].variantP90 == "10")
     }
 
     @Test
     fun buildsWithKotlinBuildReportsWithOutQualifiersReturnAggregatedData() {
-        val buildA = listOf(
-            BuildWithResourceUsage(
-                id = "1",
-                builtTool = "A",
-                taskExecution = arrayOf(
-                    Task("compile", ":app:compileDebugKotlin", "executed_cacheable", 1500, 10),
-                    Task("compile", ":core:compileDebugKotlin", "executed_cacheable", 2000, 20)
+        val buildA =
+            listOf(
+                BuildWithResourceUsage(
+                    id = "1",
+                    builtTool = "A",
+                    taskExecution =
+                        arrayOf(
+                            Task("compile", ":app:compileDebugKotlin", "executed_cacheable", 1500, 10),
+                            Task("compile", ":core:compileDebugKotlin", "executed_cacheable", 2000, 20),
+                        ),
+                    goalExecution = emptyArray(),
+                    avoidanceSavingsSummary = AvoidanceSavingsSummary("", "", ""),
+                    values =
+                        arrayOf(
+                            CustomValue(
+                                ":task1:kaptGenerateStubsDemoReleaseKotlin",
+                                "Non incremental build because: [Unknown Gradle changes]; Kotlin language version: 1.9; Performance: [lines analyzed: 10]",
+                            ),
+                            CustomValue(
+                                ":task2:kaptGenerateStubsDemoReleaseKotlin",
+                                "Non incremental build because: [Unknown Gradle changes]; Kotlin language version: 1.9; Performance: [lines analyzed: 10]",
+                            ),
+                        ),
+                    execution = buildWithResourceUsageProvider.get(),
+                    nonExecution = buildWithResourceUsageProvider.get(),
+                    total = buildWithResourceUsageProvider.get(),
+                    totalMemory = 0L,
                 ),
-                goalExecution = emptyArray(),
-                avoidanceSavingsSummary = AvoidanceSavingsSummary("", "", ""),
-                values = arrayOf(
-                    CustomValue(
-                        ":task1:kaptGenerateStubsDemoReleaseKotlin",
-                        "Non incremental build because: [Unknown Gradle changes]; Kotlin language version: 1.9; Performance: [lines analyzed: 10]"
-                    ),
-                    CustomValue(
-                        ":task2:kaptGenerateStubsDemoReleaseKotlin",
-                        "Non incremental build because: [Unknown Gradle changes]; Kotlin language version: 1.9; Performance: [lines analyzed: 10]"
-                    )
-                ),
-                execution = BuildWithResourceUsageProvider.get(),
-                nonExecution = BuildWithResourceUsageProvider.get(),
-                total = BuildWithResourceUsageProvider.get(),
-                totalMemory = 0L
             )
-        )
 
         val kotlinReportsParserCustomValues =
             KotlinBuildReportsParserCustomValues(buildA).parse()
@@ -92,32 +108,35 @@ class KotlinReportsByTaskPathTest {
 
     @Test
     fun whenIncludingExclusionMetricReturnsEmpty() {
-        val buildA = listOf(
-            BuildWithResourceUsage(
-                id = "1",
-                builtTool = "A",
-                taskExecution = arrayOf(
-                    Task("compile", ":app:compileDebugKotlin", "executed_cacheable", 1500, 10),
-                    Task("compile", ":core:compileDebugKotlin", "executed_cacheable", 2000, 20)
+        val buildA =
+            listOf(
+                BuildWithResourceUsage(
+                    id = "1",
+                    builtTool = "A",
+                    taskExecution =
+                        arrayOf(
+                            Task("compile", ":app:compileDebugKotlin", "executed_cacheable", 1500, 10),
+                            Task("compile", ":core:compileDebugKotlin", "executed_cacheable", 2000, 20),
+                        ),
+                    goalExecution = emptyArray(),
+                    avoidanceSavingsSummary = AvoidanceSavingsSummary("", "", ""),
+                    values =
+                        arrayOf(
+                            CustomValue(
+                                ":task1:kaptGenerateStubsDemoReleaseKotlin",
+                                "Non incremental build because: [Unknown Gradle changes]; Kotlin language version: 1.9; Performance: [Worker submit time: 10]",
+                            ),
+                            CustomValue(
+                                ":task2:kaptGenerateStubsDemoReleaseKotlin",
+                                "Non incremental build because: [Unknown Gradle changes]; Kotlin language version: 1.9; Performance: [Worker submit time: 10]",
+                            ),
+                        ),
+                    execution = buildWithResourceUsageProvider.get(),
+                    nonExecution = buildWithResourceUsageProvider.get(),
+                    total = buildWithResourceUsageProvider.get(),
+                    totalMemory = 0L,
                 ),
-                goalExecution = emptyArray(),
-                avoidanceSavingsSummary = AvoidanceSavingsSummary("", "", ""),
-                values = arrayOf(
-                    CustomValue(
-                        ":task1:kaptGenerateStubsDemoReleaseKotlin",
-                        "Non incremental build because: [Unknown Gradle changes]; Kotlin language version: 1.9; Performance: [Worker submit time: 10]"
-                    ),
-                    CustomValue(
-                        ":task2:kaptGenerateStubsDemoReleaseKotlin",
-                        "Non incremental build because: [Unknown Gradle changes]; Kotlin language version: 1.9; Performance: [Worker submit time: 10]"
-                    )
-                ),
-                execution = BuildWithResourceUsageProvider.get(),
-                nonExecution = BuildWithResourceUsageProvider.get(),
-                total = BuildWithResourceUsageProvider.get(),
-                totalMemory = 0L
             )
-        )
 
         val kotlinReportsParserCustomValues =
             KotlinBuildReportsParserCustomValues(buildA).parse()

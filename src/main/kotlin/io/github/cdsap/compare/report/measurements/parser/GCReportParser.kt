@@ -4,9 +4,11 @@ import io.github.cdsap.geapi.client.model.BuildWithResourceUsage
 import io.github.cdsap.geapi.client.model.CustomValue
 
 class GCReportParser {
-
-    fun parse(values: Array<CustomValue>, value: String): Map<String, String> {
-        return if (values.filter { it.name.contains(value) }.isNotEmpty()) {
+    fun parse(
+        values: Array<CustomValue>,
+        value: String,
+    ): Map<String, String> =
+        if (values.filter { it.name.contains(value) }.isNotEmpty()) {
             val measurements = mutableMapOf<String, String>()
             values.filter { it.name.contains(value) }.forEach {
                 val name = it.name.split("$value-")[1]
@@ -16,9 +18,11 @@ class GCReportParser {
         } else {
             emptyMap()
         }
-    }
 
-    fun parseByVariant(builds: List<BuildWithResourceUsage>, value: String): Map<String, MutableList<String>> {
+    fun parseByVariant(
+        builds: List<BuildWithResourceUsage>,
+        value: String,
+    ): Map<String, MutableList<String>> {
         val listVariantValues = mutableMapOf<String, MutableList<String>>()
 
         builds.forEach {

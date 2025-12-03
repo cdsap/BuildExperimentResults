@@ -24,38 +24,41 @@ class MeasurementProcessorTest {
             experimentId = "154",
             onlyCacheableOutcome = false,
             thresholdTaskDuration = -1,
-            gcReport = false
+            gcReport = false,
         )
     private val measurementProcessor = MeasurementProcessor(report)
 
     @Test
     fun `test processing measurements with multiple variants`() {
-        val measurements = mapOf(
-            "main" to listOf(
-                SingleMeasurement("BUILD", "DURATION", 100.0, 100.0, 90.0, "ms", Metric.BUILD),
-                SingleMeasurement(
-                    "RESOURCE_USAGE",
-                    "PROCESS_MEMORY",
-                    900.0,
-                    1000.0,
-                    900.0,
-                    "Gb",
-                    Metric.RESOURCE_USAGE
-                )
-            ),
-            "feature" to listOf(
-                SingleMeasurement("BUILD", "DURATION", 100.0, 95.0, 85.0, "ms", Metric.BUILD),
-                SingleMeasurement(
-                    "RESOURCE_USAGE",
-                    "PROCESS_MEMORY",
-                    900.0,
-                    950.0,
-                    850.0,
-                    "Gb",
-                    Metric.RESOURCE_USAGE
-                )
+        val measurements =
+            mapOf(
+                "main" to
+                    listOf(
+                        SingleMeasurement("BUILD", "DURATION", 100.0, 100.0, 90.0, "ms", Metric.BUILD),
+                        SingleMeasurement(
+                            "RESOURCE_USAGE",
+                            "PROCESS_MEMORY",
+                            900.0,
+                            1000.0,
+                            900.0,
+                            "Gb",
+                            Metric.RESOURCE_USAGE,
+                        ),
+                    ),
+                "feature" to
+                    listOf(
+                        SingleMeasurement("BUILD", "DURATION", 100.0, 95.0, 85.0, "ms", Metric.BUILD),
+                        SingleMeasurement(
+                            "RESOURCE_USAGE",
+                            "PROCESS_MEMORY",
+                            900.0,
+                            950.0,
+                            850.0,
+                            "Gb",
+                            Metric.RESOURCE_USAGE,
+                        ),
+                    ),
             )
-        )
 
         val result = measurementProcessor.processMeasurements(measurements)
 
@@ -88,11 +91,13 @@ class MeasurementProcessorTest {
 
     @Test
     fun `test processing measurements with single variant`() {
-        val measurements = mapOf(
-            "main" to listOf(
-                SingleMeasurement("BUILD", "DURATION", 100.0, 100.0, 90.0, "ms", Metric.BUILD)
+        val measurements =
+            mapOf(
+                "main" to
+                    listOf(
+                        SingleMeasurement("BUILD", "DURATION", 100.0, 100.0, 90.0, "ms", Metric.BUILD),
+                    ),
             )
-        )
 
         val result = measurementProcessor.processMeasurements(measurements)
 
@@ -108,25 +113,29 @@ class MeasurementProcessorTest {
 
     @Test
     fun `test filtering unwanted metrics`() {
-        val measurements = mapOf(
-            "main" to listOf(
-                SingleMeasurement("BUILD", "DURATION", "ms", 100.0, 90.0, "ms", Metric.BUILD),
-                SingleMeasurement("BUILD", "TASK_PATH", "path", 0.0, 0.0, "ms", Metric.TASK_PATH),
-                SingleMeasurement("BUILD", "KOTLIN_BUILD_REPORT", "report", 0.0, 0.0, "ms", Metric.KOTLIN_BUILD_REPORT),
-                SingleMeasurement(
-                    "BUILD",
-                    "TASK_KOTLIN_BUILD_REPORT",
-                    "report",
-                    0.0,
-                    0.0,
-                    "ms",
-                    Metric.TASK_KOTLIN_BUILD_REPORT
-                )
+        val measurements =
+            mapOf(
+                "main" to
+                    listOf(
+                        SingleMeasurement("BUILD", "DURATION", "ms", 100.0, 90.0, "ms", Metric.BUILD),
+                        SingleMeasurement("BUILD", "TASK_PATH", "path", 0.0, 0.0, "ms", Metric.TASK_PATH),
+                        SingleMeasurement("BUILD", "KOTLIN_BUILD_REPORT", "report", 0.0, 0.0, "ms", Metric.KOTLIN_BUILD_REPORT),
+                        SingleMeasurement(
+                            "BUILD",
+                            "TASK_KOTLIN_BUILD_REPORT",
+                            "report",
+                            0.0,
+                            0.0,
+                            "ms",
+                            Metric.TASK_KOTLIN_BUILD_REPORT,
+                        ),
+                    ),
             )
-        )
 
-        val result = measurementProcessor.processMeasurements(measurements)
-            .filter { measurementProcessor.filterUnwantedMetrics(it) }
+        val result =
+            measurementProcessor
+                .processMeasurements(measurements)
+                .filter { measurementProcessor.filterUnwantedMetrics(it) }
 
         assertEquals(1, result.size)
         assertEquals("DURATION", result.first()["name"])
@@ -141,14 +150,17 @@ class MeasurementProcessorTest {
 
     @Test
     fun `test processing measurements with missing values`() {
-        val measurements = mapOf(
-            "main" to listOf(
-                SingleMeasurement("BUILD", "DURATION", "ms", 100.0, 90.0, "ms", Metric.BUILD)
-            ),
-            "feature" to listOf(
-                SingleMeasurement("BUILD", "PROCESS_MEMORY", "bytes", 1000.0, 900.0, "ms", Metric.BUILD)
+        val measurements =
+            mapOf(
+                "main" to
+                    listOf(
+                        SingleMeasurement("BUILD", "DURATION", "ms", 100.0, 90.0, "ms", Metric.BUILD),
+                    ),
+                "feature" to
+                    listOf(
+                        SingleMeasurement("BUILD", "PROCESS_MEMORY", "bytes", 1000.0, 900.0, "ms", Metric.BUILD),
+                    ),
             )
-        )
 
         val result = measurementProcessor.processMeasurements(measurements)
 

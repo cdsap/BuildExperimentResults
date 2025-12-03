@@ -8,5 +8,5 @@ data class Header(
     val url: String? = null,
     val linkCsv: String = "",
     val experimentRunId: String? = null,
-    val htmlSummary: Boolean = false
+    val htmlSummary: Boolean = false,
 )

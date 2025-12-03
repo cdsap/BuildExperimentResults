@@ -4,23 +4,30 @@ import io.github.cdsap.geapi.client.model.BuildWithResourceUsage
 import io.github.cdsap.geapi.client.model.CustomValue
 
 class ProcessesReportParser {
-
-    fun parse(values: Array<CustomValue>, value: String): Map<String, String> {
-        return if (values.filter { it.name.contains("$value-Process") }.isNotEmpty()) {
+    fun parse(
+        values: Array<CustomValue>,
+        value: String,
+    ): Map<String, String> =
+        if (values.filter { it.name.contains("$value-Process") }.isNotEmpty()) {
             val measurements = mutableMapOf<String, String>()
             values.filter { it.name.contains("$value-Process") }.forEach {
-                val name = it.name.split("-").filterIndexed { index, _ ->
-                    index != 2 // you can also specify more interesting filters here...
-                }.joinToString("-")
+                val name =
+                    it.name
+                        .split("-")
+                        .filterIndexed { index, _ ->
+                            index != 2 // you can also specify more interesting filters here...
+                        }.joinToString("-")
                 measurements[name] = it.value
             }
             measurements
         } else {
             emptyMap()
         }
-    }
 
-    fun parseByVariant(builds: List<BuildWithResourceUsage>, value: String): Map<String, MutableList<String>> {
+    fun parseByVariant(
+        builds: List<BuildWithResourceUsage>,
+        value: String,
+    ): Map<String, MutableList<String>> {
         val listVariantValues = mutableMapOf<String, MutableList<String>>()
 
         builds.forEach {

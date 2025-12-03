@@ -9,11 +9,9 @@ import kotlin.math.roundToLong
 
 class TasksPathMeasurements(
     private val variant: List<BuildWithResourceUsage>,
-    private val report: Report
+    private val report: Report,
 ) {
-    fun get(): List<SingleMeasurement> {
-        return getTaskPathMeasurements()
-    }
+    fun get(): List<SingleMeasurement> = getTaskPathMeasurements()
 
     private fun getTaskPathMeasurements(): List<SingleMeasurement> {
         val variantAAggregatedTaskPath = getTasksByPath(variant)
@@ -29,8 +27,8 @@ class TasksPathMeasurements(
                         variantP50 = "${it.value.percentile(50.0).roundToLong()}",
                         variantP90 = "${it.value.percentile(90.0).roundToLong()}",
                         qualifier = "ms",
-                        metric = Metric.TASK_PATH
-                    )
+                        metric = Metric.TASK_PATH,
+                    ),
                 )
             }
 
@@ -40,11 +38,12 @@ class TasksPathMeasurements(
     private fun getTasksByPath(builds: List<BuildWithResourceUsage>): Map<String, MutableList<Long>> {
         val variantAggregatedTaskPath = mutableMapOf<String, MutableList<Long>>()
         builds.forEach {
-            val tasksExecution = if (report.onlyCacheableOutcome) {
-                it.taskExecution.filter { (it.avoidanceOutcome == "executed_cacheable") }
-            } else {
-                it.taskExecution.toList()
-            }
+            val tasksExecution =
+                if (report.onlyCacheableOutcome) {
+                    it.taskExecution.filter { (it.avoidanceOutcome == "executed_cacheable") }
+                } else {
+                    it.taskExecution.toList()
+                }
 
             tasksExecution.forEach {
                 if (variantAggregatedTaskPath.contains(it.taskPath)) {

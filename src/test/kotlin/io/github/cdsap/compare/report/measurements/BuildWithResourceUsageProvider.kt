@@ -12,7 +12,7 @@ class BuildWithResourceUsageProvider {
                 max = 100L,
                 p25 = 25L,
                 p75 = 75L,
-                p95 = 95L
+                p95 = 95L,
             )
 
         return PerformanceMetrics(
@@ -25,7 +25,7 @@ class BuildWithResourceUsageProvider {
             diskReadThroughput = metric,
             diskWriteThroughput = metric,
             networkUploadThroughput = metric,
-            networkDownloadThroughput = metric
+            networkDownloadThroughput = metric,
         )
     }
 }

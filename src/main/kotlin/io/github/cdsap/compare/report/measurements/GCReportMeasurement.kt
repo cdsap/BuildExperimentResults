@@ -9,13 +9,14 @@ import kotlin.math.roundToInt
 
 class GCReportMeasurement(
     private val variant: List<BuildWithResourceUsage>,
-    private val profile: Boolean
+    private val profile: Boolean,
 ) {
-
     fun get(): List<SingleMeasurement> {
         val uniqueCollections = mutableSetOf<String>()
         variant.forEach {
-            uniqueCollections.addAll(it.values.filter { it.name.contains("-total-collections") }.map { it.name.replace("-total-collections", "") })
+            uniqueCollections.addAll(
+                it.values.filter { it.name.contains("-total-collections") }.map { it.name.replace("-total-collections", "") },
+            )
         }
         uniqueCollections.flatMap { processMeasurement(profile, it) }
 
@@ -24,7 +25,7 @@ class GCReportMeasurement(
 
     private fun processMeasurement(
         profile: Boolean,
-        value: String
+        value: String,
     ): List<SingleMeasurement> {
         val measurement = mutableListOf<SingleMeasurement>()
         if (profile) {
@@ -39,8 +40,8 @@ class GCReportMeasurement(
                         variantP50 = "",
                         variantP90 = "",
                         qualifier = "",
-                        metric = Metric.GC_REPORT
-                    )
+                        metric = Metric.GC_REPORT,
+                    ),
                 )
             }
         } else {
@@ -60,8 +61,8 @@ class GCReportMeasurement(
                         variantP50 = "$variantaP50",
                         variantP90 = "$variantaP90",
                         qualifier = "",
-                        metric = Metric.GC_REPORT
-                    )
+                        metric = Metric.GC_REPORT,
+                    ),
                 )
             }
         }
