@@ -1,7 +1,7 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    kotlin("jvm") version "2.2.20"
+    kotlin("jvm") version "2.2.21"
     application
     id("io.github.cdsap.fatbinary") version "1.0"
     id("org.jlleitschuh.gradle.ktlint") version "13.1.0"
