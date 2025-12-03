@@ -7,14 +7,15 @@ import io.github.cdsap.compare.model.SingleMeasurement
 import kotlin.math.roundToInt
 import kotlin.math.roundToLong
 
-class KotlinReportsAggregated(private val kotlinBuildReportsParserCustomValues: CustomValuesPerVariant) :
-    KotlinBuildReports() {
-
+class KotlinReportsAggregated(
+    private val kotlinBuildReportsParserCustomValues: CustomValuesPerVariant,
+) : KotlinBuildReports() {
     fun get(excludedList: List<String>): List<SingleMeasurement> {
         val measurements = mutableListOf<SingleMeasurement>()
         val metricsAggregatedVariantA = aggregateBuilds(kotlinBuildReportsParserCustomValues.variant)
 
-        metricsAggregatedVariantA.filter { !excludedList.contains(it.key) }
+        metricsAggregatedVariantA
+            .filter { !excludedList.contains(it.key) }
             .forEach {
                 val buildsA = it.value.map { format(it) }
                 var qualifier = ""
@@ -32,16 +33,15 @@ class KotlinReportsAggregated(private val kotlinBuildReportsParserCustomValues: 
                         it.key,
                         median,
                         qualifier,
-                        Metric.KOTLIN_BUILD_REPORT
-                    )
+                        Metric.KOTLIN_BUILD_REPORT,
+                    ),
                 )
             }
 
         return measurements
     }
 
-    fun aggregateBuilds(builds: Map<String, Map<String, MutableList<MetricKotlin>>>):
-        MutableMap<String, MutableList<String>> {
+    fun aggregateBuilds(builds: Map<String, Map<String, MutableList<MetricKotlin>>>): MutableMap<String, MutableList<String>> {
         val valuesByTaskAggregated = mutableMapOf<String, MutableList<String>>()
         builds.forEach {
             it.value.forEach {

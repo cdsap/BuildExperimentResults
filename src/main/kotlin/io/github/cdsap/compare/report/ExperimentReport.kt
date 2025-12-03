@@ -15,9 +15,8 @@ import io.github.cdsap.geapi.client.repository.impl.GradleRepositoryImpl
 class ExperimentReport(
     private val filter: Filter,
     private val repository: GradleRepositoryImpl,
-    private val report: Report
+    private val report: Report,
 ) {
-
     suspend fun process() {
         if (report.variants.isEmpty()) {
             throw IllegalArgumentException("At least one variant is required")
@@ -31,9 +30,7 @@ class ExperimentReport(
         }
     }
 
-    private fun checkVariantsData(
-        buildMap: Map<String, List<BuildWithResourceUsage>>
-    ): Map<String, List<BuildWithResourceUsage>> {
+    private fun checkVariantsData(buildMap: Map<String, List<BuildWithResourceUsage>>): Map<String, List<BuildWithResourceUsage>> {
         val keysWithEmptyLists = buildMap.filterValues { it.isEmpty() }.keys
 
         if (keysWithEmptyLists.size == buildMap.size) {

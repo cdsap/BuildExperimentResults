@@ -9,20 +9,18 @@ import kotlin.math.roundToInt
 
 class ProcessMeasurement(
     private val variant: List<BuildWithResourceUsage>,
-    private val profile: Boolean
+    private val profile: Boolean,
 ) {
-
-    fun get(): List<SingleMeasurement> {
-        return processMeasurement(profile, "Gradle") +
+    fun get(): List<SingleMeasurement> =
+        processMeasurement(profile, "Gradle") +
             processMeasurement(
                 profile,
-                "Kotlin"
+                "Kotlin",
             )
-    }
 
     private fun processMeasurement(
         profile: Boolean,
-        value: String
+        value: String,
     ): List<SingleMeasurement> {
         val measurement = mutableListOf<SingleMeasurement>()
         if (profile) {
@@ -37,8 +35,8 @@ class ProcessMeasurement(
                         variantP50 = "",
                         variantP90 = "",
                         qualifier = "",
-                        metric = Metric.PROCESS
-                    )
+                        metric = Metric.PROCESS,
+                    ),
                 )
             }
         } else {
@@ -59,13 +57,14 @@ class ProcessMeasurement(
                         variantP50 = "$variantaP50",
                         variantP90 = "$variantaP90",
                         qualifier = "",
-                        metric = Metric.PROCESS
-                    )
+                        metric = Metric.PROCESS,
+                    ),
                 )
             }
         }
         return measurement
     }
+
     private fun formatListValues(values: Map<String, MutableList<String>>): Map<String, MutableList<Double>> {
         val listValuesFormatted = mutableMapOf<String, MutableList<Double>>()
 

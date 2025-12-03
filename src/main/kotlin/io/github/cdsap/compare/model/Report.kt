@@ -18,5 +18,5 @@ data class Report(
     val url: String? = null,
     val experimentRunId: String? = null,
     val openAiRequest: Boolean = false,
-    val openAiKey: String? = null
+    val openAiKey: String? = null,
 )

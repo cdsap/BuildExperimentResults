@@ -8,12 +8,9 @@ import org.nield.kotlinstatistics.percentile
 import kotlin.math.roundToLong
 
 class ResourceUsageMeasurement(
-    private val variant: List<BuildWithResourceUsage>
+    private val variant: List<BuildWithResourceUsage>,
 ) {
-
-    fun get(): List<SingleMeasurement> {
-        return processMeasurement()
-    }
+    fun get(): List<SingleMeasurement> = processMeasurement()
 
     private fun processMeasurement(): List<SingleMeasurement> {
         val measurement = mutableListOf<SingleMeasurement>()
@@ -23,7 +20,7 @@ class ResourceUsageMeasurement(
                 "Max",
                 "All processes cpu",
                 measurement,
-                "percentage"
+                "percentage",
             )
 
             extracted(
@@ -31,7 +28,7 @@ class ResourceUsageMeasurement(
                 "Max",
                 "All processes memory",
                 measurement,
-                "bytes"
+                "bytes",
             )
 
             extracted(
@@ -39,7 +36,7 @@ class ResourceUsageMeasurement(
                 "Max",
                 "Build process cpu",
                 measurement,
-                "percentage"
+                "percentage",
             )
 
             extracted(
@@ -47,7 +44,7 @@ class ResourceUsageMeasurement(
                 "Max",
                 "Build processes memory",
                 measurement,
-                "bytes"
+                "bytes",
             )
 
             extracted(
@@ -55,7 +52,7 @@ class ResourceUsageMeasurement(
                 "Max",
                 "Build child processes cpu",
                 measurement,
-                "percentage"
+                "percentage",
             )
 
             extracted(
@@ -63,7 +60,7 @@ class ResourceUsageMeasurement(
                 "Max",
                 "Build child processes memory",
                 measurement,
-                "bytes"
+                "bytes",
             )
         }
         return measurement
@@ -74,36 +71,39 @@ class ResourceUsageMeasurement(
         name: String,
         category: String,
         measurements: MutableList<SingleMeasurement>,
-        type: String
+        type: String,
     ) {
-        val variantMedian = if (type == "bytes") {
-            "${
-            bytesToGigabytes(
-                variantValues.median()
-            )
-            }"
-        } else {
-            "${variantValues.median()}"
-        }
-        val variantAMean = if (type == "bytes") {
-            "${
-            bytesToGigabytes(
-                variantValues.average()
-            )
-            }"
-        } else {
-            "${variantValues.average()}"
-        }
+        val variantMedian =
+            if (type == "bytes") {
+                "${
+                    bytesToGigabytes(
+                        variantValues.median(),
+                    )
+                }"
+            } else {
+                "${variantValues.median()}"
+            }
+        val variantAMean =
+            if (type == "bytes") {
+                "${
+                    bytesToGigabytes(
+                        variantValues.average(),
+                    )
+                }"
+            } else {
+                "${variantValues.average()}"
+            }
 
-        val variantP90 = if (type == "bytes") {
-            "${
-            bytesToGigabytes(
-                variantValues.percentile(90.0)
-            )
-            }"
-        } else {
-            "${variantValues.percentile(90.0).roundToLong()}"
-        }
+        val variantP90 =
+            if (type == "bytes") {
+                "${
+                    bytesToGigabytes(
+                        variantValues.percentile(90.0),
+                    )
+                }"
+            } else {
+                "${variantValues.percentile(90.0).roundToLong()}"
+            }
 
         val unit = if (type == "bytes") "Gb" else "%"
 
@@ -115,12 +115,10 @@ class ResourceUsageMeasurement(
                 variantP50 = variantMedian,
                 variantP90 = variantP90,
                 qualifier = unit,
-                metric = Metric.RESOURCE_USAGE
-            )
+                metric = Metric.RESOURCE_USAGE,
+            ),
         )
     }
 
-    private fun bytesToGigabytes(bytes: Double): Double {
-        return String.format("%.2f", bytes / (1024.0 * 1024.0 * 1024.0)).toDouble()
-    }
+    private fun bytesToGigabytes(bytes: Double): Double = String.format("%.2f", bytes / (1024.0 * 1024.0 * 1024.0)).toDouble()
 }

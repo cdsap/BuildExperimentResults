@@ -9,26 +9,27 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
 class TasksTypeMeasurementsTest {
-
-    private val BuildWithResourceUsageProvider = BuildWithResourceUsageProvider()
+    private val buildWithResourceUsageProvider = BuildWithResourceUsageProvider()
 
     @Test
     fun `test getTaskTypeMeasurements`() {
-        val variantA = listOf(
-            BuildWithResourceUsage(
-                builtTool = "A",
-                taskExecution = arrayOf(
-                    Task("compile", ":app:compileDebugKotlin", "executed_cacheable", 1500, 10),
-                    Task("compile", ":core:compileDebugKotlin", "executed_cacheable", 2000, 20)
+        val variantA =
+            listOf(
+                BuildWithResourceUsage(
+                    builtTool = "A",
+                    taskExecution =
+                        arrayOf(
+                            Task("compile", ":app:compileDebugKotlin", "executed_cacheable", 1500, 10),
+                            Task("compile", ":core:compileDebugKotlin", "executed_cacheable", 2000, 20),
+                        ),
+                    goalExecution = emptyArray(),
+                    avoidanceSavingsSummary = AvoidanceSavingsSummary("", "", ""),
+                    execution = buildWithResourceUsageProvider.get(),
+                    nonExecution = buildWithResourceUsageProvider.get(),
+                    total = buildWithResourceUsageProvider.get(),
+                    totalMemory = 0L,
                 ),
-                goalExecution = emptyArray(),
-                avoidanceSavingsSummary = AvoidanceSavingsSummary("", "", ""),
-                execution = BuildWithResourceUsageProvider.get(),
-                nonExecution = BuildWithResourceUsageProvider.get(),
-                total = BuildWithResourceUsageProvider.get(),
-                totalMemory = 0L
             )
-        )
 
         val report =
             Report(
@@ -44,7 +45,7 @@ class TasksTypeMeasurementsTest {
                 experimentId = "154",
                 onlyCacheableOutcome = false,
                 thresholdTaskDuration = -1,
-                gcReport = false
+                gcReport = false,
             )
         val tasksTypeMeasurements = TasksTypeMeasurements(variantA, report)
         val measurements = tasksTypeMeasurements.get()

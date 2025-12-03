@@ -4,14 +4,17 @@ import io.github.cdsap.compare.model.Metric
 import io.github.cdsap.compare.model.Report
 import io.github.cdsap.compare.model.SingleMeasurement
 
-class MeasurementProcessor(val report: Report) {
+class MeasurementProcessor(
+    val report: Report,
+) {
     fun processMeasurements(measurementsMap: Map<String, List<SingleMeasurement>>): List<Map<String, Any?>> {
         val result = mutableListOf<Map<String, Any?>>()
 
         // Group measurements by category and name
-        val groupedMeasurements = measurementsMap.values
-            .flatten()
-            .groupBy { Pair(it.category, it.name) }
+        val groupedMeasurements =
+            measurementsMap.values
+                .flatten()
+                .groupBy { Pair(it.category, it.name) }
 
         // Process each group
         groupedMeasurements.forEach { (key, measurements) ->
@@ -21,9 +24,10 @@ class MeasurementProcessor(val report: Report) {
             if (category == "Task Path") {
                 var numberOfVariants = 0
                 measurementsMap.forEach { (variant, variantMeasurements) ->
-                    val measurement = variantMeasurements.find {
-                        it.category == category && it.name == name
-                    }
+                    val measurement =
+                        variantMeasurements.find {
+                            it.category == category && it.name == name
+                        }
                     if (measurement != null) {
                         if (measurement.variantMean.toString().toLong() > report.thresholdTaskDuration) {
                             numberOfVariants++
@@ -41,9 +45,10 @@ class MeasurementProcessor(val report: Report) {
 
                 // Process measurements for each variant
                 measurementsMap.forEach { (variant, variantMeasurements) ->
-                    val measurement = variantMeasurements.find {
-                        it.category == category && it.name == name
-                    }
+                    val measurement =
+                        variantMeasurements.find {
+                            it.category == category && it.name == name
+                        }
 
                     if (measurement != null) {
                         rowData["$variant-mean"] = measurement.variantMean

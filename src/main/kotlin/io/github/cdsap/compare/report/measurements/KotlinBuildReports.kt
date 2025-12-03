@@ -8,9 +8,13 @@ import kotlin.math.roundToLong
 abstract class KotlinBuildReports {
     fun itHasQualifier(it: Map.Entry<String, MutableList<String>>) =
         it.value.any {
-            it.contains("ms") || it.contains("GB") || it.contains("MB") || it.contains("KB") || it.contains(
-                "B"
-            )
+            it.contains("ms") ||
+                it.contains("GB") ||
+                it.contains("MB") ||
+                it.contains("KB") ||
+                it.contains(
+                    "B",
+                )
         }
 
     fun format(value: String) = value.replace(",", "").replace("ms", "").split(" ")[0]
@@ -21,7 +25,7 @@ abstract class KotlinBuildReports {
         key: String,
         variantA: Number,
         qualifier: String,
-        metric: Metric
+        metric: Metric,
     ): SingleMeasurement {
         val variantP50 = valuesFormattedA.map { it.toDouble() }.percentile(50.0).roundToLong()
         val variantP90 = valuesFormattedA.map { it.toDouble() }.percentile(90.0).roundToLong()
@@ -32,10 +36,9 @@ abstract class KotlinBuildReports {
             variantP50 = "$variantP50",
             variantP90 = "$variantP90",
             qualifier = qualifier,
-            metric = metric
+            metric = metric,
         )
     }
 
-    fun getQualifier(value: String) =
-        if (value.contains("ms")) "ms" else value.split(" ")[1]
+    fun getQualifier(value: String) = if (value.contains("ms")) "ms" else value.split(" ")[1]
 }

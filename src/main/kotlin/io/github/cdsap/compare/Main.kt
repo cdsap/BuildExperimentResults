@@ -34,14 +34,14 @@ class Experiment : CliktCommand() {
     private val kotlinBuildReport by option("--kotlin-build-report").flag("--no-kotlin-build-report", default = false)
     private val resourceUsageReport by option("--resource-usage-report").flag(
         "--no-resource-usage-report",
-        default = true
+        default = true,
     )
     private val processesReport by option("--process-report").flag("--no-process-report", default = false)
     private val buildReport by option("--build-report").flag("--no-build-report", default = true)
     private val gcReport by option("--gc-report").flag("--no-gc-report", default = false)
     private val onlyCacheableOutcome by option("--only-cacheable-outcome").flag(
         "--no-only-cacheable-outcome",
-        default = false
+        default = false,
     )
     private val warmupsToDiscard by option().int().default(2)
     private val thresholdTaskDuration by option().long().default(-1)
@@ -55,15 +55,15 @@ class Experiment : CliktCommand() {
         if (!taskPathReport && !taskTypeReport && !kotlinBuildReport && !processesReport) {
             throw IllegalArgumentException("You need to specify at least one type of report")
         }
-        val filter = Filter(
-            maxBuilds = maxBuilds,
-            project = project,
-            tags = variants,
-            requestedTask = requestedTask,
-            exclusiveTags = false,
-            clientType = ClientType.CLI
-
-        )
+        val filter =
+            Filter(
+                maxBuilds = maxBuilds,
+                project = project,
+                tags = variants,
+                requestedTask = requestedTask,
+                exclusiveTags = false,
+                clientType = ClientType.CLI,
+            )
         val dvRepository = GradleRepositoryImpl(GEClient(apiKey, url))
 
         runBlocking {
@@ -88,8 +88,8 @@ class Experiment : CliktCommand() {
                     url = url,
                     experimentRunId = experimentRunId,
                     openAiRequest = openAiRequest,
-                    openAiKey = openAiKey
-                )
+                    openAiKey = openAiKey,
+                ),
             ).process()
         }
     }

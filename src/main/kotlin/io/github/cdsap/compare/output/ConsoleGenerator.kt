@@ -9,13 +9,13 @@ import io.github.cdsap.geapi.client.model.BuildWithResourceUsage
 
 class ConsoleGenerator(
     private val report: Report,
-    private val measurementProcessor: MeasurementProcessor = MeasurementProcessor(report)
+    private val measurementProcessor: MeasurementProcessor = MeasurementProcessor(report),
 ) {
     fun generate(
         measurement: Map<String, List<SingleMeasurement>>,
         variants: List<String>,
         header: Header,
-        variants1: Map<String, List<BuildWithResourceUsage>>
+        variants1: Map<String, List<BuildWithResourceUsage>>,
     ) = table {
         cellStyle {
             border = true
@@ -83,7 +83,8 @@ class ConsoleGenerator(
                 }
             }
 
-            measurementProcessor.processMeasurements(measurement)
+            measurementProcessor
+                .processMeasurements(measurement)
                 .filter { measurementProcessor.filterUnwantedMetrics(it) }
                 .forEach { rowData ->
                     row {
@@ -110,10 +111,12 @@ class ConsoleGenerator(
         }
     }.toString()
 
-    private fun String.splitString() = this.replace("_", " ")
-        .lowercase()
-        .split(" ")
-        .joinToString(" ") { it }
+    private fun String.splitString() =
+        this
+            .replace("_", " ")
+            .lowercase()
+            .split(" ")
+            .joinToString(" ") { it }
 
     private fun String.formatString() = this.chunked(22).joinToString("\n")
 }

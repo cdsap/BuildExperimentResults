@@ -1,8 +1,11 @@
 package io.github.cdsap.compare.output.chart
 
 class ChartOptions {
-    fun getChartOptions(yAxisLabel: String, minY: Int? = null): String {
-        return """
+    fun getChartOptions(
+        yAxisLabel: String,
+        minY: Int? = null,
+    ): String =
+        """
         {
             responsive: true,
             plugins: {
@@ -37,5 +40,4 @@ class ChartOptions {
             }
         }
         """.trimIndent()
-    }
 }

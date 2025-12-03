@@ -7,16 +7,17 @@ import io.github.cdsap.compare.model.SingleMeasurement
 import kotlin.math.roundToInt
 import kotlin.math.roundToLong
 
-class KotlinReportsByTaskPath(private val kotlinBuildReportsParserCustomValues: CustomValuesPerVariant) :
-    KotlinBuildReports() {
-
+class KotlinReportsByTaskPath(
+    private val kotlinBuildReportsParserCustomValues: CustomValuesPerVariant,
+) : KotlinBuildReports() {
     fun get(excludedList: List<String>): List<SingleMeasurement> {
         val measurements = mutableListOf<SingleMeasurement>()
         val tasksWithPathA = aggregateBuilds2(kotlinBuildReportsParserCustomValues.variant)
         tasksWithPathA.forEach {
             val key = it.key
 
-            it.value.filter { !excludedList.contains(it.key) }
+            it.value
+                .filter { !excludedList.contains(it.key) }
                 .forEach {
                     val builds = it.value.map { format(it) }
                     var qualifier = ""
@@ -35,8 +36,8 @@ class KotlinReportsByTaskPath(private val kotlinBuildReportsParserCustomValues: 
                             it.key,
                             median,
                             qualifier,
-                            Metric.TASK_KOTLIN_BUILD_REPORT
-                        )
+                            Metric.TASK_KOTLIN_BUILD_REPORT,
+                        ),
                     )
                 }
         }
@@ -44,7 +45,9 @@ class KotlinReportsByTaskPath(private val kotlinBuildReportsParserCustomValues: 
         return measurements
     }
 
-    private fun aggregateBuilds2(builds: Map<String, Map<String, MutableList<MetricKotlin>>>): MutableMap<String, MutableMap<String, MutableList<String>>> {
+    private fun aggregateBuilds2(
+        builds: Map<String, Map<String, MutableList<MetricKotlin>>>,
+    ): MutableMap<String, MutableMap<String, MutableList<String>>> {
         val valuesByTaskAggregated = mutableMapOf<String, MutableMap<String, MutableList<String>>>()
         builds.forEach {
             it.value.forEach {

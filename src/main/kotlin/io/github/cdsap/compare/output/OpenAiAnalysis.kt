@@ -20,44 +20,51 @@ import java.io.File
 
 class OpenAiAnalysis(
     private val csvFile: File,
-    private val openAiKey: String?
+    private val openAiKey: String?,
 ) {
     private val model = "gpt-4-turbo"
     private val temperature = 0.3
-    private val client = HttpClient(CIO) {
-        install(ContentNegotiation) {
-            gson()
+    private val client =
+        HttpClient(CIO) {
+            install(ContentNegotiation) {
+                gson()
+            }
+            install(HttpTimeout) {
+                requestTimeoutMillis = 120_000
+            }
         }
-        install(HttpTimeout) {
-            requestTimeoutMillis = 120_000
-        }
-    }
 
     fun request(): String {
         if (openAiKey.isNullOrEmpty()) {
             throw IllegalStateException("openAiKey is not set")
         }
 
-        val openAiRequest = OpenAiRequest(
-            model = model,
-            messages = arrayOf(
-                Role("system", PromptAnalysis.prompt),
-                Role("user", csvFile.readText())
-            ),
-            temperature = temperature
-        )
+        val openAiRequest =
+            OpenAiRequest(
+                model = model,
+                messages =
+                    arrayOf(
+                        Role("system", PromptAnalysis.prompt),
+                        Role("user", csvFile.readText()),
+                    ),
+                temperature = temperature,
+            )
 
         return runBlocking {
             try {
-                val response = client.post("https://api.openai.com/v1/chat/completions") {
-                    contentType(ContentType.Application.Json)
-                    header("Authorization", "Bearer $openAiKey")
-                    setBody(openAiRequest)
-                }
+                val response =
+                    client.post("https://api.openai.com/v1/chat/completions") {
+                        contentType(ContentType.Application.Json)
+                        header("Authorization", "Bearer $openAiKey")
+                        setBody(openAiRequest)
+                    }
 
                 if (response.status.isSuccess()) {
                     val openAiResponse: OpenAiResponse = response.body()
-                    openAiResponse.choices.firstOrNull()?.message?.content
+                    openAiResponse.choices
+                        .firstOrNull()
+                        ?.message
+                        ?.content
                         ?: throw IllegalStateException("No response content received from OpenAI")
                 } else {
                     throw IllegalStateException("API request failed with status: ${response.status}")

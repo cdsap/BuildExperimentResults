@@ -5,9 +5,8 @@ import io.github.cdsap.compare.model.SingleMeasurement
 import io.github.cdsap.geapi.client.model.BuildWithResourceUsage
 
 class MeasurementsByReport(
-    private val report: Report
+    private val report: Report,
 ) {
-
     fun get(variants: Map<String, List<BuildWithResourceUsage>>): Map<String, List<SingleMeasurement>> {
         val measurementsPerVariant = mutableMapOf<String, List<SingleMeasurement>>()
         variants.forEach { t, u ->

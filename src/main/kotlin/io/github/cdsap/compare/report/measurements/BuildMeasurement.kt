@@ -7,9 +7,8 @@ import org.nield.kotlinstatistics.percentile
 import kotlin.math.roundToLong
 
 class BuildMeasurement(
-    val variant: List<BuildWithResourceUsage>
+    val variant: List<BuildWithResourceUsage>,
 ) {
-
     fun get(): List<SingleMeasurement> {
         val measurements = mutableListOf<SingleMeasurement>()
         if (variant.isNotEmpty()) {
@@ -24,8 +23,8 @@ class BuildMeasurement(
                     variantP50 = variantP50,
                     variantP90 = variantP90,
                     qualifier = "ms",
-                    metric = Metric.BUILD
-                )
+                    metric = Metric.BUILD,
+                ),
             )
             val variantMeanConfiguration = "${variant.sumOf { it.configuration } / variant.size}"
             val variantP50Configuration = "${variant.flatMap { listOf(it.configuration) }.percentile(50.0).roundToLong()}"
@@ -38,8 +37,8 @@ class BuildMeasurement(
                     variantP50 = variantP50Configuration,
                     variantP90 = variantP90Configuration,
                     qualifier = "ms",
-                    metric = Metric.BUILD
-                )
+                    metric = Metric.BUILD,
+                ),
             )
         }
         return measurements
