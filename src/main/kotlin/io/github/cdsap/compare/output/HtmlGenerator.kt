@@ -77,32 +77,107 @@ class HtmlGenerator(
             body {
                 font-family: 'Roboto', sans-serif;
                 margin: 0;
-                padding: 20px;
+                padding: 12px;
                 background-color: #f5f5f5;
             }
             .container {
                 max-width: 1400px;
                 margin: 0 auto;
                 background-color: white;
-                padding: 20px;
+                padding: 16px;
                 border-radius: 8px;
                 box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             }
             .charts-grid {
                 display: grid;
-                grid-template-columns: repeat(2, 1fr);
-                gap: 20px;
-                margin-bottom: 30px;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 16px;
+                margin-bottom: 24px;
             }
             .chart-container {
                 background-color: white;
-                padding: 15px;
+                padding: 12px;
                 border-radius: 8px;
                 box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+                min-height: 260px;
+            }
+            .chart-container canvas {
+                width: 100% !important;
+                height: 240px !important;
+            }
+            .controls {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 8px;
+                align-items: center;
+                margin: 8px 0 16px;
+            }
+            .controls select,
+            .task-picker input[type="search"] {
+                max-width: 100%;
+                min-width: 220px;
+                padding: 6px;
+                font: inherit;
+                box-sizing: border-box;
+            }
+            .task-picker {
+                position: relative;
+                flex: 1;
+                min-width: 220px;
+                max-width: min(100%, 720px);
+            }
+            .task-dropdown {
+                display: none;
+                position: absolute;
+                left: 0;
+                right: 0;
+                top: 100%;
+                margin-top: 2px;
+                max-height: 280px;
+                overflow-y: auto;
+                background: #fff;
+                border: 1px solid #ccc;
+                border-radius: 4px;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+                z-index: 100;
+            }
+            .task-dropdown.open {
+                display: block;
+            }
+            .task-dropdown-hint {
+                padding: 6px 10px;
+                font-size: 11px;
+                color: #666;
+                border-bottom: 1px solid #eee;
+                line-height: 1.35;
+            }
+            .task-dropdown-item {
+                display: block;
+                width: 100%;
+                text-align: left;
+                padding: 6px 10px;
+                border: none;
+                background: none;
+                font: 12px 'Roboto Mono', monospace;
+                cursor: pointer;
+                color: #222;
+            }
+            .task-dropdown-item:hover,
+            .task-dropdown-item:focus {
+                background: #f0f0f0;
+                outline: none;
+            }
+            .task-dropdown-item-active {
+                background: #e8f0fe !important;
+            }
+            .table-wrapper {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
             }
             table {
                 border-collapse: collapse;
                 width: 100%;
+                min-width: 760px;
                 margin: 20px 0;
                 font-size: 14px;
                 background-color: white;
@@ -111,6 +186,7 @@ class HtmlGenerator(
                 border: 1px solid #e0e0e0;
                 padding: 8px;
                 text-align: left;
+                white-space: nowrap;
             }
             th {
                 background-color: #f5f5f5;
@@ -137,12 +213,33 @@ class HtmlGenerator(
             }
             h1 {
                 text-align: center;
-                margin-bottom: 30px;
+                margin-bottom: 20px;
                 font-size: 24px;
             }
             h2 {
-                margin-bottom: 15px;
+                margin-bottom: 10px;
                 font-size: 18px;
+            }
+            @media (max-width: 768px) {
+                body {
+                    padding: 8px;
+                }
+                .container {
+                    padding: 10px;
+                }
+                .charts-grid {
+                    grid-template-columns: 1fr;
+                }
+                h1 {
+                    font-size: 20px;
+                }
+                h2 {
+                    font-size: 16px;
+                }
+                table {
+                    font-size: 12px;
+                    min-width: 640px;
+                }
             }
         </style>
         """.trimIndent()
@@ -160,7 +257,7 @@ class HtmlGenerator(
         val oneWeekMillis = 2 * 24 * 60 * 60 * 1000L
         val oneWeekBefore = timestamp - oneWeekMillis
         val oneWeekAfter = timestamp + oneWeekMillis
-        var output = "<table><tr><td colspan=${6 + variants.size * 3}>Results</td></tr>"
+        var output = "<div class='table-wrapper'><table><tr><td colspan=${6 + variants.size * 3}>Results</td></tr>"
         if (header.repository != null) {
             output += "<tr><td>Repository</td><td colspan=${5 + variants.size * 3}>${header.repository}</td></tr>"
         }
@@ -181,7 +278,7 @@ class HtmlGenerator(
             output +=
                 "<tr><td>Experiment run execution</td><td colspan=${5 + variants.size * 3}><a href=\"https://github.com/cdsap/Telltale/actions/runs/${header.experimentRunId}\">Workflow</a></td></tr>"
         }
-        output += "</table>"
+        output += "</table></div>"
         return output
     }
 
@@ -191,7 +288,7 @@ class HtmlGenerator(
         filterMetrics: Boolean,
         header: Header,
     ): String {
-        var output = "<table id='metricsTable' class='metric-table'>"
+        var output = "<div class='table-wrapper'><table id='metricsTable' class='metric-table'>"
 
         // Main headers
         output += "<tr>"
@@ -251,7 +348,7 @@ class HtmlGenerator(
                 output += "</tr>"
             }
 
-        output += "</table>"
+        output += "</table></div>"
         return output
     }
 

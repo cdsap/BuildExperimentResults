@@ -26,10 +26,13 @@ dependencies {
     implementation("com.jakewharton.picnic:picnic:0.7.0")
     implementation("com.github.ajalt.clikt:clikt:3.5.4")
     implementation("org.nield:kotlin-statistics:1.2.1")
-    implementation("io.ktor:ktor-client-core:3.3.3")
-    implementation("io.ktor:ktor-client-cio:3.3.3")
-    implementation("io.ktor:ktor-client-content-negotiation:3.3.3")
-    implementation("io.ktor:ktor-serialization-gson:3.3.3")
+    // Must stay on Ktor 2.x: io.github.cdsap:geapi-data is compiled against Ktor 2.3.x. Ktor 3 removed
+    // io.ktor.client.plugins.contentnegotiation.ContentNegotiation as a class (replaced by Kotlin DSL),
+    // which breaks GEClient at runtime (NoClassDefFoundError) even if Gradle resolves some artifacts to 3.x.
+    implementation("io.ktor:ktor-client-core:2.3.12")
+    implementation("io.ktor:ktor-client-cio:2.3.12")
+    implementation("io.ktor:ktor-client-content-negotiation:2.3.12")
+    implementation("io.ktor:ktor-serialization-gson:2.3.12")
     testImplementation(kotlin("test-junit5"))
     testImplementation(platform("org.junit:junit-bom:5.10.2"))
     testImplementation("org.junit.jupiter:junit-jupiter") // pulls api + params, etc.
