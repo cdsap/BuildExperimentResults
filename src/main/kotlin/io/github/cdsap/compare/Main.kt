@@ -50,6 +50,8 @@ class Experiment : CliktCommand() {
     private val experimentRunId: String? by option()
     private val openAiRequest by option("--open-ai-request").flag("--no-open-ai-request", default = false)
     private val openAiKey: String? by option()
+    private val claudeRequest by option("--claude-request").flag("--no-claude-request", default = false)
+    private val claudeKey: String? by option()
 
     override fun run() {
         if (!taskPathReport && !taskTypeReport && !kotlinBuildReport && !processesReport) {
@@ -89,6 +91,8 @@ class Experiment : CliktCommand() {
                     experimentRunId = experimentRunId,
                     openAiRequest = openAiRequest,
                     openAiKey = openAiKey,
+                    claudeRequest = claudeRequest,
+                    claudeKey = claudeKey,
                 ),
             ).process()
         }
