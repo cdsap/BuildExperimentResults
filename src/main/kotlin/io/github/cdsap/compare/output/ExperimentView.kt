@@ -74,5 +74,23 @@ class ExperimentView(
                 File("experiment_results_openai_title_$timestamp").writeText(extractSummary)
             }
         }
+        if (File(csvFile).exists() && report.claudeRequest) {
+            if (!File(csvFileFiltered).exists()) {
+                File(csvFileFiltered).writeText(csvGenerator.generate(measurement, variants, header, true))
+            }
+            if (!report.claudeKey.isNullOrEmpty()) {
+                println("generating claude analysis via API")
+                val analysis = ClaudeAnalysis(File(csvFileFiltered), report.claudeKey)
+                val result = analysis.request()
+                println(result)
+                val extractSummary = result.split("##")[1].replace("Summary", "")
+                if (result.isNotEmpty()) {
+                    File("experiment_results_claude_analysis_$timestamp").writeText(result)
+                    File("experiment_results_claude_title_$timestamp").writeText(extractSummary)
+                }
+            } else {
+                println("generating filtered csv for claude code analysis: $csvFileFiltered")
+            }
+        }
     }
 }

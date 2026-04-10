@@ -19,4 +19,6 @@ data class Report(
     val experimentRunId: String? = null,
     val openAiRequest: Boolean = false,
     val openAiKey: String? = null,
+    val claudeRequest: Boolean = false,
+    val claudeKey: String? = null,
 )
