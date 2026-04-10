@@ -8,6 +8,7 @@ class ChartOptions {
         """
         {
             responsive: true,
+            maintainAspectRatio: false,
             plugins: {
                 title: {
                     display: true

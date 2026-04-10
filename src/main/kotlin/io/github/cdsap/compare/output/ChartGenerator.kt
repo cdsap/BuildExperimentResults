@@ -16,13 +16,18 @@ class ChartGenerator(
     private val chartOptions = ChartOptions()
     private val chartDataGenerator = ChartDataGenerator(chartColors, chartOptions)
 
+    /** Task durations are in milliseconds; exclude tasks whose global average is below this. */
+    private val minTaskAverageDurationMs = 1000.0
+
     fun format(value: String) = value.replace(",", "").replace("ms", "").split(" ")[0]
 
     fun generateCharts(
         variants: Map<String, List<BuildWithResourceUsage>>,
         header: Header,
     ): String {
-        val mostExpensiveTaskPath = findMostExpensiveTask(variants)
+        val commonTaskPathsRaw = getCommonTaskPaths(variants)
+        val commonTaskPaths = filterTasksByMinAverageDuration(variants, commonTaskPathsRaw)
+        val mostExpensiveTaskPath = findMostExpensiveTask(variants, commonTaskPaths)
 
         val containsKotlinProcess = report.processesReport && hasKotlinProcess(variants)
         val containsGradleProcess = report.processesReport && hasGradleProcess(variants)
@@ -33,6 +38,8 @@ class ChartGenerator(
 
         return generateChart(
             mostExpensiveTaskPath,
+            commonTaskPathsRaw,
+            commonTaskPaths,
             containsResourceUsageReports,
             uniqueTotalCollections,
             containsKotlinProcess,
@@ -43,8 +50,30 @@ class ChartGenerator(
         )
     }
 
+    private fun filterTasksByMinAverageDuration(
+        variants: Map<String, List<BuildWithResourceUsage>>,
+        commonTaskPaths: List<String>,
+    ): List<String> =
+        commonTaskPaths.filter { taskPath ->
+            averageTaskDurationMs(variants, taskPath) >= minTaskAverageDurationMs
+        }
+
+    private fun averageTaskDurationMs(
+        variants: Map<String, List<BuildWithResourceUsage>>,
+        taskPath: String,
+    ): Double =
+        variants.values
+            .flatten()
+            .flatMap { it.taskExecution.toList() }
+            .filter { it.taskPath == taskPath }
+            .map { it.duration.toDouble() }
+            .average()
+            .takeUnless { it.isNaN() } ?: 0.0
+
     private fun generateChart(
         mostExpensiveTaskPath: String,
+        commonTaskPathsUnfiltered: List<String>,
+        commonTaskPaths: List<String>,
         containsResourceUsageReports: Boolean,
         uniqueTotalCollections: Set<String>,
         containsKotlinProcess: Boolean,
@@ -58,6 +87,8 @@ class ChartGenerator(
         ${
             generateBasicCharts(
                 mostExpensiveTaskPath,
+                commonTaskPathsUnfiltered,
+                commonTaskPaths,
                 containsResourceUsageReports,
             )
         }
@@ -75,6 +106,7 @@ class ChartGenerator(
             generateChartScripts(
                 variants,
                 mostExpensiveTaskPath,
+                commonTaskPaths,
                 header,
                 containsKotlinProcess,
                 containsGradleProcess,
@@ -87,6 +119,8 @@ class ChartGenerator(
 
     private fun generateBasicCharts(
         mostExpensiveTaskPath: String,
+        commonTaskPathsUnfiltered: List<String>,
+        commonTaskPaths: List<String>,
         containsResourceUsageReports: Boolean,
     ): String {
         val divResourceUsage =
@@ -104,6 +138,36 @@ class ChartGenerator(
             } else {
                 ""
             }
+        val taskChartBlock =
+            if (commonTaskPaths.isNotEmpty()) {
+                """
+            <div class="chart-container">
+                <h2 id="taskChartTitle">Task Duration: $mostExpensiveTaskPath</h2>
+                <div class="controls">
+                    <label for="taskSearchInput">Task:</label>
+                    <div class="task-picker">
+                        <input type="search" id="taskSearchInput" autocomplete="off" spellcheck="false" placeholder="Search tasks — type to filter" />
+                        <div id="taskDropdown" class="task-dropdown"></div>
+                    </div>
+                </div>
+                <canvas id="expensiveTaskChart"></canvas>
+            </div>
+                """.trimIndent()
+            } else if (commonTaskPathsUnfiltered.isNotEmpty()) {
+                """
+            <div class="chart-container">
+                <h2>Task Duration</h2>
+                <p>No tasks with average duration ≥ 1s (common across variants).</p>
+            </div>
+                """.trimIndent()
+            } else {
+                """
+            <div class="chart-container">
+                <h2>Task Duration</h2>
+                <p>No common task paths across variants.</p>
+            </div>
+                """.trimIndent()
+            }
         return """
             <div class="chart-container">
                 <h2>Build Duration Time Series</h2>
@@ -114,10 +178,7 @@ class ChartGenerator(
                 <canvas id="configurationTimeChart"></canvas>
             </div>
             $divResourceUsage
-            <div class="chart-container">
-                <h2>Most Expensive Task: $mostExpensiveTaskPath</h2>
-                <canvas id="expensiveTaskChart"></canvas>
-            </div>
+            $taskChartBlock
             """.trimIndent()
     }
 
@@ -180,21 +241,27 @@ class ChartGenerator(
         }
     }
 
-    private fun findMostExpensiveTask(variants: Map<String, List<BuildWithResourceUsage>>): String {
-        // Get the set of task paths for each variant
+    private fun getCommonTaskPaths(variants: Map<String, List<BuildWithResourceUsage>>): List<String> {
         val taskPathsPerVariant =
             variants.values.map { builds ->
                 builds.flatMap { it.taskExecution.map { task -> task.taskPath } }.toSet()
             }
-        // Find the intersection: tasks present in all variants
+
         val commonTaskPaths =
             if (taskPathsPerVariant.isNotEmpty()) {
                 taskPathsPerVariant.reduce { acc, set -> acc.intersect(set) }
             } else {
                 emptySet()
             }
+
+        return commonTaskPaths.sorted()
+    }
+
+    private fun findMostExpensiveTask(
+        variants: Map<String, List<BuildWithResourceUsage>>,
+        commonTaskPaths: List<String>,
+    ): String {
         if (commonTaskPaths.isEmpty()) return "Unknown"
-        // Compute average duration for only common tasks
         return variants.values
             .flatten()
             .flatMap { it.taskExecution.toList() }
@@ -260,6 +327,7 @@ class ChartGenerator(
     private fun generateChartScripts(
         variants: Map<String, List<BuildWithResourceUsage>>,
         mostExpensiveTaskPath: String,
+        commonTaskPaths: List<String>,
         header: Header,
         containsKotlinProcess: Boolean,
         containsGradleProcess: Boolean,
@@ -272,7 +340,9 @@ class ChartGenerator(
         scripts.add(generateConfigurationTimeChart(variants, header))
         scripts.add(generateProcessMemoryChart(variants, header))
         scripts.add(generateChildProcessMemoryChart(variants, header))
-        scripts.add(generateExpensiveTaskChart(variants, mostExpensiveTaskPath, header))
+        if (commonTaskPaths.isNotEmpty()) {
+            scripts.add(generateExpensiveTaskChart(variants, mostExpensiveTaskPath, commonTaskPaths, header))
+        }
 
         // Process charts
         if (containsKotlinProcess) {
@@ -360,20 +430,213 @@ class ChartGenerator(
     private fun generateExpensiveTaskChart(
         variants: Map<String, List<BuildWithResourceUsage>>,
         mostExpensiveTaskPath: String,
+        commonTaskPaths: List<String>,
         header: Header,
-    ): String =
-        chartDataGenerator.generateChartData(
-            "expensiveTaskChart",
-            variants,
-            "Task Duration (seconds)",
-            { build ->
-                build.taskExecution
-                    .find { it.taskPath == mostExpensiveTaskPath }
-                    ?.duration
-                    ?.toDouble() ?: 0.0
-            },
-            header,
-        )
+    ): String {
+        val taskPaths = if (commonTaskPaths.isNotEmpty()) commonTaskPaths else listOf(mostExpensiveTaskPath)
+        val defaultTask = taskPaths.firstOrNull { it == mostExpensiveTaskPath } ?: taskPaths.firstOrNull() ?: "Unknown"
+        val chartOptionsTask = chartOptions.getChartOptions("Task Duration (seconds)")
+
+        val taskData =
+            taskPaths.joinToString(",\n") { taskPath ->
+                val perVariant =
+                    variants
+                        .map { (variant, builds) ->
+                            val cleanedVariant = variant.removeExperimentId(header.experimentId)
+                            val values =
+                                builds.joinToString(",") { build ->
+                                    build.taskExecution
+                                        .find { it.taskPath == taskPath }
+                                        ?.duration
+                                        ?.toDouble()
+                                        ?.toString() ?: "0.0"
+                                }
+                            "'${escapeForJs(cleanedVariant)}': [$values]"
+                        }.joinToString(",")
+                "'${escapeForJs(taskPath)}': {$perVariant}"
+            }
+
+        val variantColors =
+            variants.keys
+                .joinToString(",") { variant ->
+                    val cleanedVariant = variant.removeExperimentId(header.experimentId)
+                    "'${escapeForJs(cleanedVariant)}': '${chartColors.getColorForVariant(variant)}'"
+                }
+
+        return """
+            const taskData = {$taskData};
+            const taskSearchInput = document.getElementById('taskSearchInput');
+            const taskDropdown = document.getElementById('taskDropdown');
+            const taskChartTitle = document.getElementById('taskChartTitle');
+            const variantColors = {$variantColors};
+            let selectedTask = '${escapeForJs(defaultTask)}';
+            const allTaskPaths = Object.keys(taskData).sort(function(a, b) { return a.localeCompare(b); });
+            const MAX_TASK_SUGGESTIONS = 100;
+            let highlightIndex = -1;
+            let currentMatches = [];
+
+            function createTaskDatasets(taskPath) {
+                const series = taskData[taskPath] || {};
+                return Object.keys(series).map(variant => ({
+                    label: variant,
+                    data: series[variant],
+                    borderColor: variantColors[variant],
+                    tension: 0.1
+                }));
+            }
+
+            const expensiveTaskChart = new Chart(document.getElementById('expensiveTaskChart'), {
+                type: 'line',
+                data: {
+                    labels: ${(1..variants.values.first().size).toList()},
+                    datasets: createTaskDatasets('${escapeForJs(defaultTask)}')
+                },
+                options: $chartOptionsTask
+            });
+
+            function applyTask(taskPath) {
+                if (!taskData[taskPath]) return;
+                selectedTask = taskPath;
+                if (taskSearchInput) taskSearchInput.value = taskPath;
+                expensiveTaskChart.data.datasets = createTaskDatasets(taskPath);
+                expensiveTaskChart.update();
+                if (taskChartTitle) {
+                    taskChartTitle.textContent = 'Task Duration: ' + taskPath;
+                }
+                hideTaskDropdown();
+            }
+
+            function hideTaskDropdown() {
+                if (!taskDropdown) return;
+                taskDropdown.classList.remove('open');
+                taskDropdown.innerHTML = '';
+                highlightIndex = -1;
+                currentMatches = [];
+            }
+
+            function getFilteredMatches(query) {
+                const q = query.trim().toLowerCase();
+                if (!q) {
+                    return allTaskPaths.slice(0, MAX_TASK_SUGGESTIONS);
+                }
+                const out = [];
+                for (let i = 0; i < allTaskPaths.length && out.length < MAX_TASK_SUGGESTIONS; i++) {
+                    if (allTaskPaths[i].toLowerCase().indexOf(q) !== -1) {
+                        out.push(allTaskPaths[i]);
+                    }
+                }
+                return out;
+            }
+
+            function updateTaskHighlight() {
+                if (!taskDropdown) return;
+                const items = taskDropdown.querySelectorAll('.task-dropdown-item');
+                for (let i = 0; i < items.length; i++) {
+                    items[i].classList.toggle('task-dropdown-item-active', i === highlightIndex);
+                }
+                if (highlightIndex >= 0 && items[highlightIndex]) {
+                    items[highlightIndex].scrollIntoView({ block: 'nearest' });
+                }
+            }
+
+            function renderTaskDropdown(matches, query) {
+                if (!taskDropdown) return;
+                taskDropdown.innerHTML = '';
+                const hint = document.createElement('div');
+                hint.className = 'task-dropdown-hint';
+                const total = allTaskPaths.length;
+                if (matches.length === 0) {
+                    hint.textContent = 'No tasks match your filter.';
+                    taskDropdown.appendChild(hint);
+                } else {
+                    if (!query.trim()) {
+                        hint.textContent = 'Showing first ' + matches.length + ' of ' + total + ' tasks — type to narrow the list';
+                    } else if (matches.length === MAX_TASK_SUGGESTIONS) {
+                        hint.textContent = 'Showing first ' + MAX_TASK_SUGGESTIONS + ' matches — refine your search';
+                    } else {
+                        hint.textContent = matches.length + (matches.length === 1 ? ' match' : ' matches');
+                    }
+                    taskDropdown.appendChild(hint);
+                    for (let j = 0; j < matches.length; j++) {
+                        const path = matches[j];
+                        const btn = document.createElement('button');
+                        btn.type = 'button';
+                        btn.className = 'task-dropdown-item';
+                        btn.textContent = path;
+                        btn.addEventListener('mousedown', function(e) {
+                            e.preventDefault();
+                            applyTask(path);
+                        });
+                        taskDropdown.appendChild(btn);
+                    }
+                }
+                taskDropdown.classList.add('open');
+                highlightIndex = matches.length > 0 ? 0 : -1;
+                updateTaskHighlight();
+            }
+
+            if (taskSearchInput && taskDropdown) {
+                taskSearchInput.value = selectedTask;
+
+                taskSearchInput.addEventListener('focus', function() {
+                    const q = taskSearchInput.value;
+                    currentMatches = getFilteredMatches(q);
+                    renderTaskDropdown(currentMatches, q);
+                });
+
+                taskSearchInput.addEventListener('input', function() {
+                    const q = taskSearchInput.value;
+                    currentMatches = getFilteredMatches(q);
+                    renderTaskDropdown(currentMatches, q);
+                });
+
+                taskSearchInput.addEventListener('keydown', function(e) {
+                    if (!taskDropdown.classList.contains('open')) return;
+                    const items = taskDropdown.querySelectorAll('.task-dropdown-item');
+                    if (e.key === 'ArrowDown') {
+                        e.preventDefault();
+                        highlightIndex = Math.min(highlightIndex + 1, items.length - 1);
+                        updateTaskHighlight();
+                    } else if (e.key === 'ArrowUp') {
+                        e.preventDefault();
+                        highlightIndex = Math.max(highlightIndex - 1, 0);
+                        updateTaskHighlight();
+                    } else if (e.key === 'Enter') {
+                        e.preventDefault();
+                        if (highlightIndex >= 0 && items[highlightIndex]) {
+                            applyTask(items[highlightIndex].textContent);
+                        } else if (currentMatches.length === 1) {
+                            applyTask(currentMatches[0]);
+                        } else {
+                            const v = taskSearchInput.value.trim();
+                            if (taskData[v]) applyTask(v);
+                        }
+                    } else if (e.key === 'Escape') {
+                        e.preventDefault();
+                        taskSearchInput.value = selectedTask;
+                        hideTaskDropdown();
+                    }
+                });
+
+                taskSearchInput.addEventListener('blur', function() {
+                    setTimeout(function() {
+                        const v = taskSearchInput.value.trim();
+                        if (taskData[v]) {
+                            if (v !== selectedTask) applyTask(v);
+                        } else {
+                            taskSearchInput.value = selectedTask;
+                        }
+                        hideTaskDropdown();
+                    }, 200);
+                });
+
+                document.addEventListener('click', function(e) {
+                    if (taskSearchInput.contains(e.target) || taskDropdown.contains(e.target)) return;
+                    hideTaskDropdown();
+                });
+            }
+            """.trimIndent()
+    }
 
     private fun generateKotlinGCChart(
         variants: Map<String, List<BuildWithResourceUsage>>,
@@ -498,4 +761,13 @@ class ChartGenerator(
             },
             header,
         )
+
+    private fun escapeForJs(value: String): String =
+        value
+            .replace("\\", "\\\\")
+            .replace("'", "\\'")
+            .replace("\"", "\\\"")
+            .replace("\n", "\\n")
+            .replace("\r", "")
 }
+
