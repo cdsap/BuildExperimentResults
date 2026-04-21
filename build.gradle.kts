@@ -24,7 +24,7 @@ dependencies {
     implementation("io.github.cdsap:geapi-data:0.3.3")
     implementation("com.google.code.gson:gson:2.13.2")
     implementation("com.jakewharton.picnic:picnic:0.7.0")
-    implementation("com.github.ajalt.clikt:clikt:3.5.4")
+    implementation("com.github.ajalt.clikt:clikt:5.1.0")
     implementation("org.nield:kotlin-statistics:1.2.1")
     // Must stay on Ktor 2.x: io.github.cdsap:geapi-data is compiled against Ktor 2.3.x. Ktor 3 removed
     // io.ktor.client.plugins.contentnegotiation.ContentNegotiation as a class (replaced by Kotlin DSL),
