@@ -8,33 +8,51 @@ class MeasurementsByReport(
     private val report: Report,
 ) {
     fun get(variants: Map<String, List<BuildWithResourceUsage>>): Map<String, List<SingleMeasurement>> {
+        val enabledProviders = measurementProviders.filter { it.enabled(report) }
         val measurementsPerVariant = mutableMapOf<String, List<SingleMeasurement>>()
-        variants.forEach { t, u ->
-            val measurements = mutableListOf<SingleMeasurement>()
-            if (report.buildReport) {
-                measurements += BuildMeasurement(u).get()
-            }
-            if (report.processesReport) {
-                measurements += ProcessMeasurement(u, report.isProfile).get()
-            }
-            if (report.taskTypeReport) {
-                measurements += TasksTypeMeasurements(u, report).get()
-            }
-            if (report.taskPathReport) {
-                measurements += TasksPathMeasurements(u, report).get()
-            }
-            if (report.kotlinBuildReport) {
-                measurements += KotlinBuildReportsMeasurements(u).get()
-            }
-            if (report.resourceUsageReport) {
-                measurements += ResourceUsageMeasurement(u).get()
-            }
-            if (report.gcReport) {
-                measurements += GCReportMeasurement(u, report.isProfile).get()
-            }
-            measurementsPerVariant[t] = measurements
+        variants.forEach { (variant, builds) ->
+            measurementsPerVariant[variant] = enabledProviders.flatMap { it.measure(builds, report) }
         }
 
         return measurementsPerVariant
+    }
+
+    private data class MeasurementProvider(
+        val enabled: (Report) -> Boolean,
+        val measure: (List<BuildWithResourceUsage>, Report) -> List<SingleMeasurement>,
+    )
+
+    private companion object {
+        private val measurementProviders =
+            listOf(
+                MeasurementProvider(
+                    enabled = { it.buildReport },
+                    measure = { builds, _ -> BuildMeasurement(builds).get() },
+                ),
+                MeasurementProvider(
+                    enabled = { it.processesReport },
+                    measure = { builds, report -> ProcessMeasurement(builds, report.isProfile).get() },
+                ),
+                MeasurementProvider(
+                    enabled = { it.taskTypeReport },
+                    measure = { builds, report -> TasksTypeMeasurements(builds, report).get() },
+                ),
+                MeasurementProvider(
+                    enabled = { it.taskPathReport },
+                    measure = { builds, report -> TasksPathMeasurements(builds, report).get() },
+                ),
+                MeasurementProvider(
+                    enabled = { it.kotlinBuildReport },
+                    measure = { builds, _ -> KotlinBuildReportsMeasurements(builds).get() },
+                ),
+                MeasurementProvider(
+                    enabled = { it.resourceUsageReport },
+                    measure = { builds, _ -> ResourceUsageMeasurement(builds).get() },
+                ),
+                MeasurementProvider(
+                    enabled = { it.gcReport },
+                    measure = { builds, report -> GCReportMeasurement(builds, report.isProfile).get() },
+                ),
+            )
     }
 }
