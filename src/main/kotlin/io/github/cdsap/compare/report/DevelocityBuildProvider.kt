@@ -1,5 +1,6 @@
 package io.github.cdsap.compare.report
 
+import io.github.cdsap.compare.model.Report
 import io.github.cdsap.geapi.client.domain.impl.GetBuildsFromQueryWithAttributesRequest
 import io.github.cdsap.geapi.client.domain.impl.GetBuildsProfileRequest
 import io.github.cdsap.geapi.client.domain.impl.GetBuildsResourceUsageRequest
@@ -10,19 +11,19 @@ import io.github.cdsap.geapi.client.model.BuildWithResourceUsage
 import io.github.cdsap.geapi.client.model.Filter
 import io.github.cdsap.geapi.client.repository.impl.GradleRepositoryImpl
 
-class BuildsWithResourceUsageProvider(
+class DevelocityBuildProvider(
     private val repository: GradleRepositoryImpl,
-) {
-    suspend fun request(
+) : BuildProvider {
+    override suspend fun get(
         filter: Filter,
-        isProfile: Boolean,
+        report: Report,
     ): List<BuildWithResourceUsage> {
         val getBuildScans = GetBuildsFromQueryWithAttributesRequest(repository).get(filter)
         val getOutcome = GetBuildsWithCachePerformanceRequest(repository)
         val outcome = getOutcome.get(getBuildScans, filter)
         val buildWithResourceUsage = GetBuildsResourceUsageRequest(repository).get(getBuildScans, filter)
         val buildProfile = GetBuildsProfileRequest(repository).get(getBuildScans, filter)
-        return enrich(outcome, buildWithResourceUsage, buildProfile, isProfile)
+        return enrich(outcome, buildWithResourceUsage, buildProfile, report.isProfile)
     }
 
     companion object {
