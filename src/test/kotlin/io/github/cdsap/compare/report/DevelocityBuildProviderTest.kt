@@ -13,7 +13,7 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
-class BuildsWithResourceUsageProviderTest {
+class DevelocityBuildProviderTest {
     private val metrics = BuildWithResourceUsageProvider()
 
     @Test
@@ -53,7 +53,7 @@ class BuildsWithResourceUsageProviderTest {
                 ),
             )
 
-        val enriched = BuildsWithResourceUsageProvider.enrich(outcome, usage, profiles, isProfile = false)
+        val enriched = DevelocityBuildProvider.enrich(outcome, usage, profiles, isProfile = false)
 
         assertEquals(2, enriched.size)
         val matched = enriched.first { it.id == "build-1" }
@@ -125,10 +125,10 @@ class BuildsWithResourceUsageProviderTest {
                 usageBuild(id = "clean-and-assemble"),
             )
 
-        val profileResult = BuildsWithResourceUsageProvider.enrich(outcome, usage, emptyList(), isProfile = true)
+        val profileResult = DevelocityBuildProvider.enrich(outcome, usage, emptyList(), isProfile = true)
         assertEquals(listOf("assemble-build", "clean-and-assemble"), profileResult.map { it.id })
 
-        val nonProfileResult = BuildsWithResourceUsageProvider.enrich(outcome, usage, emptyList(), isProfile = false)
+        val nonProfileResult = DevelocityBuildProvider.enrich(outcome, usage, emptyList(), isProfile = false)
         assertEquals(listOf("clean-build", "assemble-build", "clean-and-assemble"), nonProfileResult.map { it.id })
     }
 

@@ -6,18 +6,17 @@ import io.github.cdsap.compare.report.measurements.FilterBuildsPerVariant
 import io.github.cdsap.compare.report.measurements.MeasurementsByReport
 import io.github.cdsap.geapi.client.model.BuildWithResourceUsage
 import io.github.cdsap.geapi.client.model.Filter
-import io.github.cdsap.geapi.client.repository.impl.GradleRepositoryImpl
 
 class ExperimentReport(
     private val filter: Filter,
-    private val repository: GradleRepositoryImpl,
+    private val buildProvider: BuildProvider,
     private val report: Report,
 ) {
     suspend fun process() {
         if (report.variants.isEmpty()) {
             throw IllegalArgumentException("At least one variant is required")
         } else {
-            val buildWithResourceUsage = BuildsWithResourceUsageProvider(repository).request(filter, report.isProfile)
+            val buildWithResourceUsage = buildProvider.get(filter, report)
             val variants = checkVariantsData(FilterBuildsPerVariant(report).get(buildWithResourceUsage))
             val measurements = MeasurementsByReport(report).get(variants)
             if (measurements.isNotEmpty()) {
