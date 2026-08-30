@@ -1,4 +1,4 @@
-package io.github.cdsap.compare.model
+package io.github.cdsap.compare.output.ai
 
 data class ClaudeResponse(
     val id: String,

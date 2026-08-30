@@ -1,8 +1,8 @@
 package io.github.cdsap.compare.output
 
-import io.github.cdsap.compare.model.ClaudeMessage
-import io.github.cdsap.compare.model.ClaudeRequest
-import io.github.cdsap.compare.model.ClaudeResponse
+import io.github.cdsap.compare.output.ai.ClaudeMessage
+import io.github.cdsap.compare.output.ai.ClaudeRequest
+import io.github.cdsap.compare.output.ai.ClaudeResponse
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.engine.cio.CIO
