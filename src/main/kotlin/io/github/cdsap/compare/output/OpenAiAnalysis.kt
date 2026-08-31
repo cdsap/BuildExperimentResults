@@ -1,8 +1,8 @@
 package io.github.cdsap.compare.output
 
-import io.github.cdsap.compare.model.OpenAiRequest
-import io.github.cdsap.compare.model.OpenAiResponse
-import io.github.cdsap.compare.model.Role
+import io.github.cdsap.compare.output.ai.OpenAiRequest
+import io.github.cdsap.compare.output.ai.OpenAiResponse
+import io.github.cdsap.compare.output.ai.Role
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.engine.cio.CIO
