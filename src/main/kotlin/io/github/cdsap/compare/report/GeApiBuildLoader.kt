@@ -9,9 +9,9 @@ import io.github.cdsap.geapi.client.model.BuildWithResourceUsage
 import io.github.cdsap.geapi.client.model.Filter
 import io.github.cdsap.geapi.client.repository.impl.GradleRepositoryImpl
 
-class DevelocityBuildProvider(
+class GeApiBuildLoader(
     private val repository: GradleRepositoryImpl,
-) : BuildProvider {
+) : BuildLoader {
     override suspend fun get(
         filter: Filter,
         report: Report,
