@@ -13,12 +13,12 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
-class BuildResourceUsageEnricherTest {
+class BuildUsageAssemblerTest {
     private val metrics = BuildWithResourceUsageProvider()
-    private val enricher = BuildResourceUsageEnricher()
+    private val assembler = BuildUsageAssembler()
 
     @Test
-    fun enrichCopiesOutcomeAndProfileFieldsForMatchingBuildIds() {
+    fun assembleCopiesOutcomeAndProfileFieldsForMatchingBuildIds() {
         val tasks =
             arrayOf(
                 Task("compile", ":app:compileDebugKotlin", "executed_cacheable", 1500, 10),
@@ -48,10 +48,10 @@ class BuildResourceUsageEnricherTest {
                 profile(id = "build-1", configuration = 42, totalGarbageCollectionTime = 77L),
             )
 
-        val enriched = enricher.enrich(outcome, usage, profiles, isProfile = false)
+        val assembled = assembler.assemble(outcome, usage, profiles, isProfile = false)
 
-        assertEquals(2, enriched.size)
-        val matched = enriched.first { it.id == "build-1" }
+        assertEquals(2, assembled.size)
+        val matched = assembled.first { it.id == "build-1" }
         assertEquals(listOf("assemble"), matched.requestedTask.toList())
         assertEquals(values.toList(), matched.values.toList())
         assertEquals(listOf("variant-a"), matched.tags.toList())
@@ -63,21 +63,21 @@ class BuildResourceUsageEnricherTest {
         assertEquals(42L, matched.configuration)
         assertEquals(77L, matched.totalGarbageCollectionTime)
 
-        val unmatched = enriched.first { it.id == "build-unmatched" }
+        val unmatched = assembled.first { it.id == "build-unmatched" }
         assertEquals(0L, unmatched.configuration)
         assertEquals(0L, unmatched.totalGarbageCollectionTime)
         assertTrue(unmatched.requestedTask.isEmpty())
     }
 
     @Test
-    fun enrichLeavesProfileFieldsUnsetWhenProfileIsMissing() {
+    fun assembleLeavesProfileFieldsUnsetWhenProfileIsMissing() {
         val tasks =
             arrayOf(
                 Task("test", ":app:testDebugUnitTest", "executed", 2500, 3),
             )
         val values = arrayOf(CustomValue("profile", "missing"))
-        val enriched =
-            enricher.enrich(
+        val assembled =
+            assembler.assemble(
                 outcome =
                     listOf(
                         build(
@@ -97,7 +97,7 @@ class BuildResourceUsageEnricherTest {
                 isProfile = false,
             )
 
-        val matched = enriched.single()
+        val matched = assembled.single()
         assertEquals(listOf("test"), matched.requestedTask.toList())
         assertEquals(values.toList(), matched.values.toList())
         assertEquals(listOf("missing-profile"), matched.tags.toList())
@@ -111,7 +111,30 @@ class BuildResourceUsageEnricherTest {
     }
 
     @Test
-    fun enrichInProfileModeFiltersCleanOnlyBuilds() {
+    fun assembleLeavesUsageUnchangedWhenOutcomeIsMissing() {
+        val usage = listOf(usageBuild(id = "usage-only"))
+        val profiles =
+            listOf(
+                profile(id = "usage-only", configuration = 99, totalGarbageCollectionTime = 11L),
+            )
+
+        val assembled =
+            assembler.assemble(
+                outcome = emptyList(),
+                buildWithResourceUsage = usage,
+                buildProfile = profiles,
+                isProfile = false,
+            )
+
+        val unmatched = assembled.single()
+        assertEquals("usage-only", unmatched.id)
+        assertTrue(unmatched.requestedTask.isEmpty())
+        assertEquals(0L, unmatched.configuration)
+        assertEquals(0L, unmatched.totalGarbageCollectionTime)
+    }
+
+    @Test
+    fun assembleInProfileModeFiltersCleanOnlyBuilds() {
         val outcome =
             listOf(
                 build(id = "clean-build", requestedTask = arrayOf("clean")),
@@ -125,10 +148,10 @@ class BuildResourceUsageEnricherTest {
                 usageBuild(id = "clean-and-assemble"),
             )
 
-        val profileResult = enricher.enrich(outcome, usage, emptyList(), isProfile = true)
+        val profileResult = assembler.assemble(outcome, usage, emptyList(), isProfile = true)
         assertEquals(listOf("assemble-build", "clean-and-assemble"), profileResult.map { it.id })
 
-        val nonProfileResult = enricher.enrich(outcome, usage, emptyList(), isProfile = false)
+        val nonProfileResult = assembler.assemble(outcome, usage, emptyList(), isProfile = false)
         assertEquals(listOf("clean-build", "assemble-build", "clean-and-assemble"), nonProfileResult.map { it.id })
     }
 

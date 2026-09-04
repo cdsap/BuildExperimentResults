@@ -4,8 +4,8 @@ import io.github.cdsap.geapi.client.model.Build
 import io.github.cdsap.geapi.client.model.BuildProfileOverview
 import io.github.cdsap.geapi.client.model.BuildWithResourceUsage
 
-internal class BuildResourceUsageEnricher {
-    fun enrich(
+internal class BuildUsageAssembler {
+    fun assemble(
         outcome: List<Build>,
         buildWithResourceUsage: List<BuildWithResourceUsage>,
         buildProfile: List<BuildProfileOverview>,
