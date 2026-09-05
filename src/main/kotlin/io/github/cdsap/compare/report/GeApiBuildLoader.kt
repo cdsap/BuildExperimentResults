@@ -21,6 +21,6 @@ class GeApiBuildLoader(
         val outcome = getOutcome.get(getBuildScans, filter)
         val buildWithResourceUsage = GetBuildsResourceUsageRequest(repository).get(getBuildScans, filter)
         val buildProfile = GetBuildsProfileRequest(repository).get(getBuildScans, filter)
-        return BuildResourceUsageEnricher().enrich(outcome, buildWithResourceUsage, buildProfile, report.isProfile)
+        return BuildUsageAssembler().assemble(outcome, buildWithResourceUsage, buildProfile, report.isProfile)
     }
 }
