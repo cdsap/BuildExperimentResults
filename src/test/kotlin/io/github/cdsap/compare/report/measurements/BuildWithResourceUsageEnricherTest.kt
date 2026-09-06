@@ -1,6 +1,5 @@
-package io.github.cdsap.compare.report
+package io.github.cdsap.compare.report.measurements
 
-import io.github.cdsap.compare.report.measurements.BuildWithResourceUsageProvider
 import io.github.cdsap.geapi.client.model.AvoidanceSavingsSummary
 import io.github.cdsap.geapi.client.model.Breakdown
 import io.github.cdsap.geapi.client.model.Build
@@ -13,12 +12,12 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
-class BuildUsageAssemblerTest {
+class BuildWithResourceUsageEnricherTest {
     private val metrics = BuildWithResourceUsageProvider()
-    private val assembler = BuildUsageAssembler()
+    private val enricher = BuildWithResourceUsageEnricher()
 
     @Test
-    fun assembleCopiesOutcomeAndProfileFieldsForMatchingBuildIds() {
+    fun enrichCopiesOutcomeAndProfileFieldsForMatchingBuildIds() {
         val tasks =
             arrayOf(
                 Task("compile", ":app:compileDebugKotlin", "executed_cacheable", 1500, 10),
@@ -48,10 +47,10 @@ class BuildUsageAssemblerTest {
                 profile(id = "build-1", configuration = 42, totalGarbageCollectionTime = 77L),
             )
 
-        val assembled = assembler.assemble(outcome, usage, profiles, isProfile = false)
+        val enriched = enricher.enrich(outcome, usage, profiles, isProfile = false)
 
-        assertEquals(2, assembled.size)
-        val matched = assembled.first { it.id == "build-1" }
+        assertEquals(2, enriched.size)
+        val matched = enriched.first { it.id == "build-1" }
         assertEquals(listOf("assemble"), matched.requestedTask.toList())
         assertEquals(values.toList(), matched.values.toList())
         assertEquals(listOf("variant-a"), matched.tags.toList())
@@ -63,21 +62,21 @@ class BuildUsageAssemblerTest {
         assertEquals(42L, matched.configuration)
         assertEquals(77L, matched.totalGarbageCollectionTime)
 
-        val unmatched = assembled.first { it.id == "build-unmatched" }
+        val unmatched = enriched.first { it.id == "build-unmatched" }
         assertEquals(0L, unmatched.configuration)
         assertEquals(0L, unmatched.totalGarbageCollectionTime)
         assertTrue(unmatched.requestedTask.isEmpty())
     }
 
     @Test
-    fun assembleLeavesProfileFieldsUnsetWhenProfileIsMissing() {
+    fun enrichLeavesProfileFieldsUnsetWhenProfileIsMissing() {
         val tasks =
             arrayOf(
                 Task("test", ":app:testDebugUnitTest", "executed", 2500, 3),
             )
         val values = arrayOf(CustomValue("profile", "missing"))
-        val assembled =
-            assembler.assemble(
+        val enriched =
+            enricher.enrich(
                 outcome =
                     listOf(
                         build(
@@ -97,7 +96,7 @@ class BuildUsageAssemblerTest {
                 isProfile = false,
             )
 
-        val matched = assembled.single()
+        val matched = enriched.single()
         assertEquals(listOf("test"), matched.requestedTask.toList())
         assertEquals(values.toList(), matched.values.toList())
         assertEquals(listOf("missing-profile"), matched.tags.toList())
@@ -111,22 +110,22 @@ class BuildUsageAssemblerTest {
     }
 
     @Test
-    fun assembleLeavesUsageUnchangedWhenOutcomeIsMissing() {
+    fun enrichLeavesUsageUnchangedWhenOutcomeIsMissing() {
         val usage = listOf(usageBuild(id = "usage-only"))
         val profiles =
             listOf(
                 profile(id = "usage-only", configuration = 99, totalGarbageCollectionTime = 11L),
             )
 
-        val assembled =
-            assembler.assemble(
+        val enriched =
+            enricher.enrich(
                 outcome = emptyList(),
                 buildWithResourceUsage = usage,
                 buildProfile = profiles,
                 isProfile = false,
             )
 
-        val unmatched = assembled.single()
+        val unmatched = enriched.single()
         assertEquals("usage-only", unmatched.id)
         assertTrue(unmatched.requestedTask.isEmpty())
         assertEquals(0L, unmatched.configuration)
@@ -134,7 +133,7 @@ class BuildUsageAssemblerTest {
     }
 
     @Test
-    fun assembleInProfileModeFiltersCleanOnlyBuilds() {
+    fun enrichInProfileModeFiltersCleanOnlyBuilds() {
         val outcome =
             listOf(
                 build(id = "clean-build", requestedTask = arrayOf("clean")),
@@ -148,10 +147,10 @@ class BuildUsageAssemblerTest {
                 usageBuild(id = "clean-and-assemble"),
             )
 
-        val profileResult = assembler.assemble(outcome, usage, emptyList(), isProfile = true)
+        val profileResult = enricher.enrich(outcome, usage, emptyList(), isProfile = true)
         assertEquals(listOf("assemble-build", "clean-and-assemble"), profileResult.map { it.id })
 
-        val nonProfileResult = assembler.assemble(outcome, usage, emptyList(), isProfile = false)
+        val nonProfileResult = enricher.enrich(outcome, usage, emptyList(), isProfile = false)
         assertEquals(listOf("clean-build", "assemble-build", "clean-and-assemble"), nonProfileResult.map { it.id })
     }
 

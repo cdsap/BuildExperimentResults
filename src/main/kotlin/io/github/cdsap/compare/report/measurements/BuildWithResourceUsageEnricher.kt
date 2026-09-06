@@ -1,11 +1,11 @@
-package io.github.cdsap.compare.report
+package io.github.cdsap.compare.report.measurements
 
 import io.github.cdsap.geapi.client.model.Build
 import io.github.cdsap.geapi.client.model.BuildProfileOverview
 import io.github.cdsap.geapi.client.model.BuildWithResourceUsage
 
-internal class BuildUsageAssembler {
-    fun assemble(
+class BuildWithResourceUsageEnricher {
+    fun enrich(
         outcome: List<Build>,
         buildWithResourceUsage: List<BuildWithResourceUsage>,
         buildProfile: List<BuildProfileOverview>,
