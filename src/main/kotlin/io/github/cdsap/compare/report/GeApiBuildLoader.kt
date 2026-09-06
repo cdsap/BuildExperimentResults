@@ -7,10 +7,10 @@ import io.github.cdsap.geapi.client.domain.impl.GetBuildsResourceUsageRequest
 import io.github.cdsap.geapi.client.domain.impl.GetBuildsWithCachePerformanceRequest
 import io.github.cdsap.geapi.client.model.BuildWithResourceUsage
 import io.github.cdsap.geapi.client.model.Filter
-import io.github.cdsap.geapi.client.repository.impl.GradleRepositoryImpl
+import io.github.cdsap.geapi.client.repository.GradleEnterpriseRepository
 
 class GeApiBuildLoader(
-    private val repository: GradleRepositoryImpl,
+    private val repository: GradleEnterpriseRepository,
 ) : BuildLoader {
     override suspend fun get(
         filter: Filter,
