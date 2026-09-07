@@ -1,6 +1,5 @@
 package io.github.cdsap.compare.report
 
-import io.github.cdsap.compare.model.Report
 import io.github.cdsap.compare.report.measurements.BuildWithResourceUsageEnricher
 import io.github.cdsap.geapi.client.domain.impl.GetBuildsFromQueryWithAttributesRequest
 import io.github.cdsap.geapi.client.domain.impl.GetBuildsProfileRequest
@@ -10,18 +9,16 @@ import io.github.cdsap.geapi.client.model.BuildWithResourceUsage
 import io.github.cdsap.geapi.client.model.Filter
 import io.github.cdsap.geapi.client.repository.GradleEnterpriseRepository
 
-class GeApiBuildLoader(
+class GeApiBuildDataSource(
     private val repository: GradleEnterpriseRepository,
-) : BuildLoader {
-    override suspend fun get(
-        filter: Filter,
-        report: Report,
-    ): List<BuildWithResourceUsage> {
+    private val isProfile: Boolean,
+) : BuildDataSource {
+    override suspend fun getBuilds(filter: Filter): List<BuildWithResourceUsage> {
         val getBuildScans = GetBuildsFromQueryWithAttributesRequest(repository).get(filter)
         val getOutcome = GetBuildsWithCachePerformanceRequest(repository)
         val outcome = getOutcome.get(getBuildScans, filter)
         val buildWithResourceUsage = GetBuildsResourceUsageRequest(repository).get(getBuildScans, filter)
         val buildProfile = GetBuildsProfileRequest(repository).get(getBuildScans, filter)
-        return BuildWithResourceUsageEnricher().enrich(outcome, buildWithResourceUsage, buildProfile, report.isProfile)
+        return BuildWithResourceUsageEnricher().enrich(outcome, buildWithResourceUsage, buildProfile, isProfile)
     }
 }
