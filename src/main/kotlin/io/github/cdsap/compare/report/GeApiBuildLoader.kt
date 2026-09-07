@@ -1,6 +1,7 @@
 package io.github.cdsap.compare.report
 
 import io.github.cdsap.compare.model.Report
+import io.github.cdsap.compare.report.measurements.BuildWithResourceUsageEnricher
 import io.github.cdsap.geapi.client.domain.impl.GetBuildsFromQueryWithAttributesRequest
 import io.github.cdsap.geapi.client.domain.impl.GetBuildsProfileRequest
 import io.github.cdsap.geapi.client.domain.impl.GetBuildsResourceUsageRequest
@@ -21,6 +22,6 @@ class GeApiBuildLoader(
         val outcome = getOutcome.get(getBuildScans, filter)
         val buildWithResourceUsage = GetBuildsResourceUsageRequest(repository).get(getBuildScans, filter)
         val buildProfile = GetBuildsProfileRequest(repository).get(getBuildScans, filter)
-        return BuildUsageAssembler().assemble(outcome, buildWithResourceUsage, buildProfile, report.isProfile)
+        return BuildWithResourceUsageEnricher().enrich(outcome, buildWithResourceUsage, buildProfile, report.isProfile)
     }
 }
