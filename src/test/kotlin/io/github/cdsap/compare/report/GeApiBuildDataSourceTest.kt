@@ -5,11 +5,11 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import kotlin.reflect.full.primaryConstructor
 
-class GeApiBuildLoaderTest {
+class GeApiBuildDataSourceTest {
     @Test
     fun dependsOnGradleEnterpriseRepositoryPort() {
         val repositoryParameter =
-            GeApiBuildLoader::class
+            GeApiBuildDataSource::class
                 .primaryConstructor!!
                 .parameters
                 .single { it.name == "repository" }

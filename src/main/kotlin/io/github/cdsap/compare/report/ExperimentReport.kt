@@ -9,14 +9,14 @@ import io.github.cdsap.geapi.client.model.Filter
 
 class ExperimentReport(
     private val filter: Filter,
-    private val buildLoader: BuildLoader,
+    private val buildDataSource: BuildDataSource,
     private val report: Report,
 ) {
     suspend fun process() {
         if (report.variants.isEmpty()) {
             throw IllegalArgumentException("At least one variant is required")
         } else {
-            val buildWithResourceUsage = buildLoader.get(filter, report)
+            val buildWithResourceUsage = buildDataSource.getBuilds(filter)
             val variants = checkVariantsData(FilterBuildsPerVariant(report).get(buildWithResourceUsage))
             val measurements = MeasurementsByReport(report).get(variants)
             if (measurements.isNotEmpty()) {
