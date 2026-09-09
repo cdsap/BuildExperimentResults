@@ -19,8 +19,8 @@ class ExperimentReportTest {
 
     @Test
     fun processThrowsWhenVariantsAreEmptyWithoutGeClient() {
-        val fakeDataSource =
-            object : BuildDataSource {
+        val fakeBuildsProvider =
+            object : BuildsProvider {
                 override suspend fun getBuilds(filter: Filter): List<BuildWithResourceUsage> = emptyList()
             }
 
@@ -29,7 +29,7 @@ class ExperimentReportTest {
                 runBlocking {
                     ExperimentReport(
                         filter = filter(),
-                        buildDataSource = fakeDataSource,
+                        buildsProvider = fakeBuildsProvider,
                         report = report(variants = emptyList()),
                     ).process()
                 }
@@ -40,11 +40,11 @@ class ExperimentReportTest {
 
     @Test
     fun processThrowsWhenAllVariantResultsAreEmpty() {
-        var dataSourceInvoked = false
-        val fakeDataSource =
-            object : BuildDataSource {
+        var buildsProviderInvoked = false
+        val fakeBuildsProvider =
+            object : BuildsProvider {
                 override suspend fun getBuilds(filter: Filter): List<BuildWithResourceUsage> {
-                    dataSourceInvoked = true
+                    buildsProviderInvoked = true
                     return emptyList()
                 }
             }
@@ -54,23 +54,23 @@ class ExperimentReportTest {
                 runBlocking {
                     ExperimentReport(
                         filter = filter(),
-                        buildDataSource = fakeDataSource,
+                        buildsProvider = fakeBuildsProvider,
                         report = report(variants = listOf("variant-a")),
                     ).process()
                 }
             }
 
-        assertTrue(dataSourceInvoked)
+        assertTrue(buildsProviderInvoked)
         assertEquals("All variants have empty lists. Please check your input data.", exception.message)
     }
 
     @Test
-    fun processContinuesWithNonEmptyVariantsUsingFakeBuildDataSource() {
-        var dataSourceInvoked = false
-        val fakeDataSource =
-            object : BuildDataSource {
+    fun processContinuesWithNonEmptyVariantsUsingFakeBuildsProvider() {
+        var buildsProviderInvoked = false
+        val fakeBuildsProvider =
+            object : BuildsProvider {
                 override suspend fun getBuilds(filter: Filter): List<BuildWithResourceUsage> {
-                    dataSourceInvoked = true
+                    buildsProviderInvoked = true
                     return listOf(
                         usageBuild(id = "build-1", tags = arrayOf("variant-a"), buildDuration = 10L),
                         usageBuild(id = "build-2", tags = arrayOf("variant-a"), buildDuration = 20L),
@@ -92,7 +92,7 @@ class ExperimentReportTest {
             runBlocking {
                 ExperimentReport(
                     filter = filter(),
-                    buildDataSource = fakeDataSource,
+                    buildsProvider = fakeBuildsProvider,
                     report =
                         report(
                             variants = listOf("variant-a", "variant-empty"),
@@ -109,7 +109,7 @@ class ExperimentReportTest {
                 ?.forEach { it.delete() }
         }
 
-        assertTrue(dataSourceInvoked)
+        assertTrue(buildsProviderInvoked)
     }
 
     private fun filter() =
