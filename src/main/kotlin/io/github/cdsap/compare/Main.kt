@@ -12,7 +12,7 @@ import com.github.ajalt.clikt.parameters.types.int
 import com.github.ajalt.clikt.parameters.types.long
 import io.github.cdsap.compare.model.Report
 import io.github.cdsap.compare.report.ExperimentReport
-import io.github.cdsap.compare.report.GeApiBuildDataSource
+import io.github.cdsap.compare.report.GradleBuildsProvider
 import io.github.cdsap.geapi.client.model.ClientType
 import io.github.cdsap.geapi.client.model.Filter
 import io.github.cdsap.geapi.client.network.GEClient
@@ -73,7 +73,7 @@ class Experiment : CliktCommand() {
         runBlocking {
             ExperimentReport(
                 filter = filter,
-                buildDataSource = GeApiBuildDataSource(dvRepository, isProfile = profile),
+                buildsProvider = GradleBuildsProvider(dvRepository, isProfile = profile),
                 Report(
                     taskPathReport = taskPathReport,
                     taskTypeReport = taskTypeReport,
