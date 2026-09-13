@@ -5,11 +5,11 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import kotlin.reflect.full.primaryConstructor
 
-class GradleBuildsProviderTest {
+class GradleBuildDataProviderTest {
     @Test
     fun dependsOnGradleEnterpriseRepositoryPort() {
         val repositoryParameter =
-            GradleBuildsProvider::class
+            GradleBuildDataProvider::class
                 .primaryConstructor!!
                 .parameters
                 .single { it.name == "repository" }
