@@ -59,4 +59,47 @@ class TasksPathMeasurementsTest {
         assertTrue(measurements[0].variantP90.toString().startsWith("1500"))
         assertEquals("ms", measurements[0].qualifier)
     }
+
+    @Test
+    fun `onlyCacheableOutcome excludes non-cacheable task paths`() {
+        val variantA =
+            listOf(
+                BuildWithResourceUsage(
+                    builtTool = "A",
+                    taskExecution =
+                        arrayOf(
+                            Task("compile", ":app:compileDebugKotlin", "executed_cacheable", 1500, 10),
+                            Task("assemble", ":app:assembleDebug", "executed_not_cacheable", 2000, 20),
+                        ),
+                    goalExecution = emptyArray(),
+                    avoidanceSavingsSummary = AvoidanceSavingsSummary("", "", ""),
+                    execution = buildWithResourceUsageProvider.get(),
+                    nonExecution = buildWithResourceUsageProvider.get(),
+                    total = buildWithResourceUsageProvider.get(),
+                    totalMemory = 0L,
+                ),
+            )
+
+        val report =
+            Report(
+                taskPathReport = true,
+                taskTypeReport = true,
+                kotlinBuildReport = true,
+                processesReport = false,
+                buildReport = true,
+                isProfile = false,
+                resourceUsageReport = false,
+                warmupsToDiscard = 2,
+                variants = listOf("lint-4-1-different-process", "lint-2-1-different-process"),
+                experimentId = "154",
+                onlyCacheableOutcome = true,
+                thresholdTaskDuration = -1,
+                gcReport = false,
+            )
+
+        val measurements = TasksPathMeasurements(variantA, report).get()
+
+        assertEquals(1, measurements.size)
+        assertEquals(":app:compileDebugKotlin", measurements[0].name)
+    }
 }
