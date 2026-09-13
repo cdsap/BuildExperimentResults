@@ -14,7 +14,8 @@ class TasksPathMeasurements(
     fun get(): List<SingleMeasurement> = getTaskPathMeasurements()
 
     private fun getTaskPathMeasurements(): List<SingleMeasurement> {
-        val variantAAggregatedTaskPath = getTasksByPath(variant)
+        val variantAAggregatedTaskPath =
+            TaskExecutionAggregator(report.onlyCacheableOutcome).aggregate(variant) { it.taskPath }
         val measurementsP = mutableListOf<SingleMeasurement>()
         variantAAggregatedTaskPath
             .filter { it.value.sumOf { it } / it.value.size > report.thresholdTaskDuration }
@@ -33,28 +34,5 @@ class TasksPathMeasurements(
             }
 
         return measurementsP
-    }
-
-    private fun getTasksByPath(builds: List<BuildWithResourceUsage>): Map<String, MutableList<Long>> {
-        val variantAggregatedTaskPath = mutableMapOf<String, MutableList<Long>>()
-        builds.forEach {
-            val tasksExecution =
-                if (report.onlyCacheableOutcome) {
-                    it.taskExecution.filter { (it.avoidanceOutcome == "executed_cacheable") }
-                } else {
-                    it.taskExecution.toList()
-                }
-
-            tasksExecution.forEach {
-                if (variantAggregatedTaskPath.contains(it.taskPath)) {
-                    variantAggregatedTaskPath[it.taskPath]?.add(it.duration)
-                } else {
-                    variantAggregatedTaskPath[it.taskPath] = mutableListOf()
-                    variantAggregatedTaskPath[it.taskPath]?.add(it.duration)
-                }
-            }
-        }
-
-        return variantAggregatedTaskPath
     }
 }

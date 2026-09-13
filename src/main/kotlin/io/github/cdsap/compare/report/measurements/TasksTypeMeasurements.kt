@@ -15,7 +15,8 @@ class TasksTypeMeasurements(
 
     private fun getTaskTypeMeasurements(): List<SingleMeasurement> {
         val measurements = mutableListOf<SingleMeasurement>()
-        val variantAggregatedTaskType = getTasksByType(variant)
+        val variantAggregatedTaskType =
+            TaskExecutionAggregator(report.onlyCacheableOutcome).aggregate(variant) { it.taskType }
         variantAggregatedTaskType.forEach {
             measurements.add(
                 SingleMeasurement(
@@ -31,26 +32,5 @@ class TasksTypeMeasurements(
         }
 
         return measurements
-    }
-
-    private fun getTasksByType(builds: List<BuildWithResourceUsage>): Map<String, MutableList<Long>> {
-        val variantAggregatedTaskType = mutableMapOf<String, MutableList<Long>>()
-        builds.forEach {
-            val tasksExecution =
-                if (report.onlyCacheableOutcome) {
-                    it.taskExecution.filter { (it.avoidanceOutcome == "executed_cacheable") }
-                } else {
-                    it.taskExecution.toList()
-                }
-            tasksExecution.forEach {
-                if (variantAggregatedTaskType.contains(it.taskType)) {
-                    variantAggregatedTaskType[it.taskType]?.add(it.duration)
-                } else {
-                    variantAggregatedTaskType[it.taskType] = mutableListOf()
-                    variantAggregatedTaskType[it.taskType]?.add(it.duration)
-                }
-            }
-        }
-        return variantAggregatedTaskType
     }
 }
