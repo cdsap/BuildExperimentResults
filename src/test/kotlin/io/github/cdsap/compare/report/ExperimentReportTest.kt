@@ -7,15 +7,30 @@ import io.github.cdsap.geapi.client.model.BuildWithResourceUsage
 import io.github.cdsap.geapi.client.model.ClientType
 import io.github.cdsap.geapi.client.model.Filter
 import io.github.cdsap.geapi.client.model.Task
+import io.github.cdsap.geapi.client.repository.impl.GradleRepositoryImpl
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import java.io.File
+import kotlin.reflect.full.primaryConstructor
 
 class ExperimentReportTest {
     private val metrics = BuildWithResourceUsageProvider()
+
+    @Test
+    fun dependsOnBuildDataProviderPortNotGradleRepositoryImpl() {
+        val constructorParameters = ExperimentReport::class.primaryConstructor!!.parameters
+        val buildDataProviderParameter = constructorParameters.single { it.name == "buildDataProvider" }
+
+        assertEquals(BuildDataProvider::class, buildDataProviderParameter.type.classifier)
+        assertFalse(
+            constructorParameters.any { it.type.classifier == GradleRepositoryImpl::class },
+            "ExperimentReport must not depend on GradleRepositoryImpl",
+        )
+    }
 
     @Test
     fun processThrowsWhenVariantsAreEmptyWithoutGeClient() {
