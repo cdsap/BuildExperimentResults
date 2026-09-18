@@ -9,10 +9,10 @@ import io.github.cdsap.geapi.client.model.BuildWithResourceUsage
 import io.github.cdsap.geapi.client.model.Filter
 import io.github.cdsap.geapi.client.repository.GradleEnterpriseRepository
 
-class GradleBuildDataProvider(
+class GradleBuildDataSource(
     private val repository: GradleEnterpriseRepository,
     private val isProfile: Boolean,
-) : BuildDataProvider {
+) : BuildDataSource {
     override suspend fun getBuilds(filter: Filter): List<BuildWithResourceUsage> {
         val getBuildScans = GetBuildsFromQueryWithAttributesRequest(repository).get(filter)
         val getOutcome = GetBuildsWithCachePerformanceRequest(repository)
