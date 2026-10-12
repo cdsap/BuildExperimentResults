@@ -7,12 +7,15 @@ import io.github.cdsap.geapi.client.domain.impl.GetBuildsResourceUsageRequest
 import io.github.cdsap.geapi.client.domain.impl.GetBuildsWithCachePerformanceRequest
 import io.github.cdsap.geapi.client.model.BuildWithResourceUsage
 import io.github.cdsap.geapi.client.model.Filter
-import io.github.cdsap.geapi.client.repository.GradleEnterpriseRepository
+import io.github.cdsap.geapi.client.network.GEClient
+import io.github.cdsap.geapi.client.repository.impl.GradleRepositoryImpl
 
-class DevelocityBuildsProvider(
-    private val repository: GradleEnterpriseRepository,
+class GradleBuildDataSource(
+    client: GEClient,
     private val isProfile: Boolean,
-) : BuildsProvider {
+) : BuildDataSource {
+    private val repository = GradleRepositoryImpl(client)
+
     override suspend fun getBuilds(filter: Filter): List<BuildWithResourceUsage> {
         val getBuildScans = GetBuildsFromQueryWithAttributesRequest(repository).get(filter)
         val getOutcome = GetBuildsWithCachePerformanceRequest(repository)

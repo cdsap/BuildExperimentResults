@@ -11,12 +11,11 @@ import com.github.ajalt.clikt.parameters.options.required
 import com.github.ajalt.clikt.parameters.types.int
 import com.github.ajalt.clikt.parameters.types.long
 import io.github.cdsap.compare.model.Report
-import io.github.cdsap.compare.report.DevelocityBuildsProvider
 import io.github.cdsap.compare.report.ExperimentReport
+import io.github.cdsap.compare.report.GradleBuildDataSource
 import io.github.cdsap.geapi.client.model.ClientType
 import io.github.cdsap.geapi.client.model.Filter
 import io.github.cdsap.geapi.client.network.GEClient
-import io.github.cdsap.geapi.client.repository.impl.GradleRepositoryImpl
 import kotlinx.coroutines.runBlocking
 
 fun main(args: Array<String>) {
@@ -68,12 +67,10 @@ class Experiment : CliktCommand() {
                 exclusiveTags = false,
                 clientType = ClientType.CLI,
             )
-        val dvRepository = GradleRepositoryImpl(GEClient(apiKey, url))
-
         runBlocking {
             ExperimentReport(
                 filter = filter,
-                buildsProvider = DevelocityBuildsProvider(dvRepository, isProfile = profile),
+                buildDataSource = GradleBuildDataSource(GEClient(apiKey, url), isProfile = profile),
                 Report(
                     taskPathReport = taskPathReport,
                     taskTypeReport = taskTypeReport,
