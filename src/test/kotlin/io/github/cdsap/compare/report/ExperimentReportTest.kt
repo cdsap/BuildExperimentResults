@@ -7,10 +7,8 @@ import io.github.cdsap.geapi.client.model.BuildWithResourceUsage
 import io.github.cdsap.geapi.client.model.ClientType
 import io.github.cdsap.geapi.client.model.Filter
 import io.github.cdsap.geapi.client.model.Task
-import io.github.cdsap.geapi.client.repository.impl.GradleRepositoryImpl
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
@@ -21,21 +19,17 @@ class ExperimentReportTest {
     private val metrics = BuildWithResourceUsageProvider()
 
     @Test
-    fun dependsOnBuildsProviderPortNotGradleRepositoryImpl() {
+    fun dependsOnBuildDataSourcePort() {
         val constructorParameters = ExperimentReport::class.primaryConstructor!!.parameters
-        val buildsProviderParameter = constructorParameters.single { it.name == "buildsProvider" }
+        val buildDataSourceParameter = constructorParameters.single { it.name == "buildDataSource" }
 
-        assertEquals(BuildsProvider::class, buildsProviderParameter.type.classifier)
-        assertFalse(
-            constructorParameters.any { it.type.classifier == GradleRepositoryImpl::class },
-            "ExperimentReport must not depend on GradleRepositoryImpl",
-        )
+        assertEquals(BuildDataSource::class, buildDataSourceParameter.type.classifier)
     }
 
     @Test
     fun processThrowsWhenVariantsAreEmptyWithoutGeClient() {
-        val fakeBuildsProvider =
-            object : BuildsProvider {
+        val fakeBuildDataSource =
+            object : BuildDataSource {
                 override suspend fun getBuilds(filter: Filter): List<BuildWithResourceUsage> = emptyList()
             }
 
@@ -44,7 +38,7 @@ class ExperimentReportTest {
                 runBlocking {
                     ExperimentReport(
                         filter = filter(),
-                        buildsProvider = fakeBuildsProvider,
+                        buildDataSource = fakeBuildDataSource,
                         report = report(variants = emptyList()),
                     ).process()
                 }
@@ -55,11 +49,11 @@ class ExperimentReportTest {
 
     @Test
     fun processThrowsWhenAllVariantResultsAreEmpty() {
-        var buildsProviderInvoked = false
-        val fakeBuildsProvider =
-            object : BuildsProvider {
+        var buildDataSourceInvoked = false
+        val fakeBuildDataSource =
+            object : BuildDataSource {
                 override suspend fun getBuilds(filter: Filter): List<BuildWithResourceUsage> {
-                    buildsProviderInvoked = true
+                    buildDataSourceInvoked = true
                     return emptyList()
                 }
             }
@@ -69,23 +63,23 @@ class ExperimentReportTest {
                 runBlocking {
                     ExperimentReport(
                         filter = filter(),
-                        buildsProvider = fakeBuildsProvider,
+                        buildDataSource = fakeBuildDataSource,
                         report = report(variants = listOf("variant-a")),
                     ).process()
                 }
             }
 
-        assertTrue(buildsProviderInvoked)
+        assertTrue(buildDataSourceInvoked)
         assertEquals("All variants have empty lists. Please check your input data.", exception.message)
     }
 
     @Test
-    fun processContinuesWithNonEmptyVariantsUsingFakeBuildsProvider() {
-        var buildsProviderInvoked = false
-        val fakeBuildsProvider =
-            object : BuildsProvider {
+    fun processContinuesWithNonEmptyVariantsUsingFakeBuildDataSource() {
+        var buildDataSourceInvoked = false
+        val fakeBuildDataSource =
+            object : BuildDataSource {
                 override suspend fun getBuilds(filter: Filter): List<BuildWithResourceUsage> {
-                    buildsProviderInvoked = true
+                    buildDataSourceInvoked = true
                     return listOf(
                         usageBuild(id = "build-1", tags = arrayOf("variant-a"), buildDuration = 10L),
                         usageBuild(id = "build-2", tags = arrayOf("variant-a"), buildDuration = 20L),
@@ -107,7 +101,7 @@ class ExperimentReportTest {
             runBlocking {
                 ExperimentReport(
                     filter = filter(),
-                    buildsProvider = fakeBuildsProvider,
+                    buildDataSource = fakeBuildDataSource,
                     report =
                         report(
                             variants = listOf("variant-a", "variant-empty"),
@@ -124,7 +118,7 @@ class ExperimentReportTest {
                 ?.forEach { it.delete() }
         }
 
-        assertTrue(buildsProviderInvoked)
+        assertTrue(buildDataSourceInvoked)
     }
 
     private fun filter() =
