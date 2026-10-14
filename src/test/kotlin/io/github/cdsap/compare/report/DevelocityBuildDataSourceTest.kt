@@ -6,11 +6,11 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import kotlin.reflect.full.primaryConstructor
 
-class GradleBuildDataRepositoryTest {
+class DevelocityBuildDataSourceTest {
     @Test
     fun dependsOnGeClient() {
         val clientParameter =
-            GradleBuildDataRepository::class
+            DevelocityBuildDataSource::class
                 .primaryConstructor!!
                 .parameters
                 .single { it.name == "client" }
@@ -19,7 +19,7 @@ class GradleBuildDataRepositoryTest {
     }
 
     @Test
-    fun implementsBuildDataRepository() {
-        assertTrue(BuildDataRepository::class.java.isAssignableFrom(GradleBuildDataRepository::class.java))
+    fun implementsBuildDataSource() {
+        assertTrue(BuildDataSource::class.java.isAssignableFrom(DevelocityBuildDataSource::class.java))
     }
 }
