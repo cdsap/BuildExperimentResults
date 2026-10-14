@@ -19,17 +19,17 @@ class ExperimentReportTest {
     private val metrics = BuildWithResourceUsageProvider()
 
     @Test
-    fun dependsOnBuildDataRepositoryPort() {
+    fun dependsOnBuildDataSourcePort() {
         val constructorParameters = ExperimentReport::class.primaryConstructor!!.parameters
-        val buildDataRepositoryParameter = constructorParameters.single { it.name == "buildDataRepository" }
+        val buildDataSourceParameter = constructorParameters.single { it.name == "buildDataSource" }
 
-        assertEquals(BuildDataRepository::class, buildDataRepositoryParameter.type.classifier)
+        assertEquals(BuildDataSource::class, buildDataSourceParameter.type.classifier)
     }
 
     @Test
     fun processThrowsWhenVariantsAreEmptyWithoutGeClient() {
-        val fakeBuildDataRepository =
-            object : BuildDataRepository {
+        val fakeBuildDataSource =
+            object : BuildDataSource {
                 override suspend fun getBuilds(filter: Filter): List<BuildWithResourceUsage> = emptyList()
             }
 
@@ -38,7 +38,7 @@ class ExperimentReportTest {
                 runBlocking {
                     ExperimentReport(
                         filter = filter(),
-                        buildDataRepository = fakeBuildDataRepository,
+                        buildDataSource = fakeBuildDataSource,
                         report = report(variants = emptyList()),
                     ).process()
                 }
@@ -49,11 +49,11 @@ class ExperimentReportTest {
 
     @Test
     fun processThrowsWhenAllVariantResultsAreEmpty() {
-        var buildDataRepositoryInvoked = false
-        val fakeBuildDataRepository =
-            object : BuildDataRepository {
+        var buildDataSourceInvoked = false
+        val fakeBuildDataSource =
+            object : BuildDataSource {
                 override suspend fun getBuilds(filter: Filter): List<BuildWithResourceUsage> {
-                    buildDataRepositoryInvoked = true
+                    buildDataSourceInvoked = true
                     return emptyList()
                 }
             }
@@ -63,23 +63,23 @@ class ExperimentReportTest {
                 runBlocking {
                     ExperimentReport(
                         filter = filter(),
-                        buildDataRepository = fakeBuildDataRepository,
+                        buildDataSource = fakeBuildDataSource,
                         report = report(variants = listOf("variant-a")),
                     ).process()
                 }
             }
 
-        assertTrue(buildDataRepositoryInvoked)
+        assertTrue(buildDataSourceInvoked)
         assertEquals("All variants have empty lists. Please check your input data.", exception.message)
     }
 
     @Test
-    fun processContinuesWithNonEmptyVariantsUsingFakeBuildDataRepository() {
-        var buildDataRepositoryInvoked = false
-        val fakeBuildDataRepository =
-            object : BuildDataRepository {
+    fun processContinuesWithNonEmptyVariantsUsingFakeBuildDataSource() {
+        var buildDataSourceInvoked = false
+        val fakeBuildDataSource =
+            object : BuildDataSource {
                 override suspend fun getBuilds(filter: Filter): List<BuildWithResourceUsage> {
-                    buildDataRepositoryInvoked = true
+                    buildDataSourceInvoked = true
                     return listOf(
                         usageBuild(id = "build-1", tags = arrayOf("variant-a"), buildDuration = 10L),
                         usageBuild(id = "build-2", tags = arrayOf("variant-a"), buildDuration = 20L),
@@ -101,7 +101,7 @@ class ExperimentReportTest {
             runBlocking {
                 ExperimentReport(
                     filter = filter(),
-                    buildDataRepository = fakeBuildDataRepository,
+                    buildDataSource = fakeBuildDataSource,
                     report =
                         report(
                             variants = listOf("variant-a", "variant-empty"),
@@ -118,7 +118,7 @@ class ExperimentReportTest {
                 ?.forEach { it.delete() }
         }
 
-        assertTrue(buildDataRepositoryInvoked)
+        assertTrue(buildDataSourceInvoked)
     }
 
     private fun filter() =
