@@ -19,17 +19,17 @@ class ExperimentReportTest {
     private val metrics = BuildWithResourceUsageProvider()
 
     @Test
-    fun dependsOnBuildDataSourcePort() {
+    fun dependsOnExperimentDataSourcePort() {
         val constructorParameters = ExperimentReport::class.primaryConstructor!!.parameters
-        val buildDataSourceParameter = constructorParameters.single { it.name == "buildDataSource" }
+        val experimentDataSourceParameter = constructorParameters.single { it.name == "experimentDataSource" }
 
-        assertEquals(BuildDataSource::class, buildDataSourceParameter.type.classifier)
+        assertEquals(ExperimentDataSource::class, experimentDataSourceParameter.type.classifier)
     }
 
     @Test
     fun processThrowsWhenVariantsAreEmptyWithoutGeClient() {
-        val fakeBuildDataSource =
-            object : BuildDataSource {
+        val fakeExperimentDataSource =
+            object : ExperimentDataSource {
                 override suspend fun getBuilds(filter: Filter): List<BuildWithResourceUsage> = emptyList()
             }
 
@@ -38,7 +38,7 @@ class ExperimentReportTest {
                 runBlocking {
                     ExperimentReport(
                         filter = filter(),
-                        buildDataSource = fakeBuildDataSource,
+                        experimentDataSource = fakeExperimentDataSource,
                         report = report(variants = emptyList()),
                     ).process()
                 }
@@ -49,11 +49,11 @@ class ExperimentReportTest {
 
     @Test
     fun processThrowsWhenAllVariantResultsAreEmpty() {
-        var buildDataSourceInvoked = false
-        val fakeBuildDataSource =
-            object : BuildDataSource {
+        var experimentDataSourceInvoked = false
+        val fakeExperimentDataSource =
+            object : ExperimentDataSource {
                 override suspend fun getBuilds(filter: Filter): List<BuildWithResourceUsage> {
-                    buildDataSourceInvoked = true
+                    experimentDataSourceInvoked = true
                     return emptyList()
                 }
             }
@@ -63,23 +63,23 @@ class ExperimentReportTest {
                 runBlocking {
                     ExperimentReport(
                         filter = filter(),
-                        buildDataSource = fakeBuildDataSource,
+                        experimentDataSource = fakeExperimentDataSource,
                         report = report(variants = listOf("variant-a")),
                     ).process()
                 }
             }
 
-        assertTrue(buildDataSourceInvoked)
+        assertTrue(experimentDataSourceInvoked)
         assertEquals("All variants have empty lists. Please check your input data.", exception.message)
     }
 
     @Test
-    fun processContinuesWithNonEmptyVariantsUsingFakeBuildDataSource() {
-        var buildDataSourceInvoked = false
-        val fakeBuildDataSource =
-            object : BuildDataSource {
+    fun processContinuesWithNonEmptyVariantsUsingFakeExperimentDataSource() {
+        var experimentDataSourceInvoked = false
+        val fakeExperimentDataSource =
+            object : ExperimentDataSource {
                 override suspend fun getBuilds(filter: Filter): List<BuildWithResourceUsage> {
-                    buildDataSourceInvoked = true
+                    experimentDataSourceInvoked = true
                     return listOf(
                         usageBuild(id = "build-1", tags = arrayOf("variant-a"), buildDuration = 10L),
                         usageBuild(id = "build-2", tags = arrayOf("variant-a"), buildDuration = 20L),
@@ -101,7 +101,7 @@ class ExperimentReportTest {
             runBlocking {
                 ExperimentReport(
                     filter = filter(),
-                    buildDataSource = fakeBuildDataSource,
+                    experimentDataSource = fakeExperimentDataSource,
                     report =
                         report(
                             variants = listOf("variant-a", "variant-empty"),
@@ -118,7 +118,7 @@ class ExperimentReportTest {
                 ?.forEach { it.delete() }
         }
 
-        assertTrue(buildDataSourceInvoked)
+        assertTrue(experimentDataSourceInvoked)
     }
 
     private fun filter() =

@@ -10,10 +10,10 @@ import io.github.cdsap.geapi.client.model.Filter
 import io.github.cdsap.geapi.client.network.GEClient
 import io.github.cdsap.geapi.client.repository.impl.GradleRepositoryImpl
 
-class DevelocityBuildDataSource(
+class GeApiExperimentDataSource(
     client: GEClient,
     private val isProfile: Boolean,
-) : BuildDataSource {
+) : ExperimentDataSource {
     private val repository = GradleRepositoryImpl(client)
 
     override suspend fun getBuilds(filter: Filter): List<BuildWithResourceUsage> {
