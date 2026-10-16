@@ -11,8 +11,8 @@ import com.github.ajalt.clikt.parameters.options.required
 import com.github.ajalt.clikt.parameters.types.int
 import com.github.ajalt.clikt.parameters.types.long
 import io.github.cdsap.compare.model.Report
+import io.github.cdsap.compare.report.DevelocityBuildDataProvider
 import io.github.cdsap.compare.report.ExperimentReport
-import io.github.cdsap.compare.report.GeApiExperimentDataSource
 import io.github.cdsap.geapi.client.model.ClientType
 import io.github.cdsap.geapi.client.model.Filter
 import io.github.cdsap.geapi.client.network.GEClient
@@ -70,7 +70,7 @@ class Experiment : CliktCommand() {
         runBlocking {
             ExperimentReport(
                 filter = filter,
-                experimentDataSource = GeApiExperimentDataSource(GEClient(apiKey, url), isProfile = profile),
+                buildDataProvider = DevelocityBuildDataProvider(GEClient(apiKey, url), isProfile = profile),
                 Report(
                     taskPathReport = taskPathReport,
                     taskTypeReport = taskTypeReport,
