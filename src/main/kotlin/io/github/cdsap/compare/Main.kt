@@ -53,6 +53,10 @@ class Experiment : CliktCommand() {
     private val openAiKey: String? by option()
     private val claudeRequest by option("--claude-request").flag("--no-claude-request", default = false)
     private val claudeKey: String? by option()
+    private val diagnosticsPackagePath: String? by option(
+        "--diagnostics-package",
+        help = "Path to ExperimentDiagnosticsReport JSON package (CPU/JFR aggregates)",
+    )
 
     override fun run() {
         if (!taskPathReport && !taskTypeReport && !kotlinBuildReport && !processesReport) {
@@ -92,6 +96,7 @@ class Experiment : CliktCommand() {
                     openAiKey = openAiKey,
                     claudeRequest = claudeRequest,
                     claudeKey = claudeKey,
+                    diagnosticsPackagePath = diagnosticsPackagePath,
                 ),
             ).process()
         }
