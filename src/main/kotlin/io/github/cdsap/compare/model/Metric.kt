@@ -9,4 +9,6 @@ enum class Metric {
     BUILD,
     RESOURCE_USAGE,
     GC_REPORT,
+    CPU_DIAGNOSTICS,
+    JFR,
 }

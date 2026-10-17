@@ -21,4 +21,5 @@ data class Report(
     val openAiKey: String? = null,
     val claudeRequest: Boolean = false,
     val claudeKey: String? = null,
+    val diagnosticsPackagePath: String? = null,
 )
