@@ -2,7 +2,8 @@ package io.github.cdsap.compare.report
 
 import io.github.cdsap.compare.model.Report
 import io.github.cdsap.compare.output.ExperimentView
-import io.github.cdsap.compare.report.diagnostics.DiagnosticsMeasurementAugmenter
+import io.github.cdsap.compare.report.diagnostics.DiagnosticsMeasurementsSource
+import io.github.cdsap.compare.report.diagnostics.FileDiagnosticsMeasurementsSource
 import io.github.cdsap.compare.report.measurements.FilterBuildsPerVariant
 import io.github.cdsap.compare.report.measurements.MeasurementsByReport
 import io.github.cdsap.geapi.client.model.BuildWithResourceUsage
@@ -12,7 +13,7 @@ class ExperimentReport(
     private val filter: Filter,
     private val buildDataProvider: BuildDataProvider,
     private val report: Report,
-    private val diagnosticsMeasurementAugmenter: DiagnosticsMeasurementAugmenter = DiagnosticsMeasurementAugmenter(),
+    private val diagnosticsMeasurementsSource: DiagnosticsMeasurementsSource = FileDiagnosticsMeasurementsSource(),
 ) {
     suspend fun process() {
         if (report.variants.isEmpty()) {
@@ -21,12 +22,13 @@ class ExperimentReport(
             val buildWithResourceUsage = buildDataProvider.getBuilds(filter)
             val variants = checkVariantsData(FilterBuildsPerVariant(report).get(buildWithResourceUsage))
             val measurements = MeasurementsByReport(report).get(variants)
-            val augmentedMeasurements =
-                diagnosticsMeasurementAugmenter.augment(
-                    measurements = measurements,
-                    diagnosticsPackagePath = report.diagnosticsPackagePath,
-                    reportVariants = report.variants,
-                )
+            val diagnostics = diagnosticsMeasurementsSource.load(report.diagnosticsPackagePath, report.variants)
+            diagnostics.warnings.forEach { println("diagnostics warning: $it") }
+            val augmentedMeasurements = measurements.toMutableMap().apply {
+                for ((variant, rows) in diagnostics.measurements) {
+                    this[variant] = get(variant).orEmpty() + rows
+                }
+            }
             if (augmentedMeasurements.isNotEmpty()) {
                 ExperimentView(report).generateOutputs(augmentedMeasurements, variants)
             }

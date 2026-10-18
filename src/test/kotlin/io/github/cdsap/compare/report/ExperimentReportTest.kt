@@ -1,6 +1,10 @@
 package io.github.cdsap.compare.report
 
+import io.github.cdsap.compare.model.Metric
 import io.github.cdsap.compare.model.Report
+import io.github.cdsap.compare.model.SingleMeasurement
+import io.github.cdsap.compare.report.diagnostics.DiagnosticsMeasurements
+import io.github.cdsap.compare.report.diagnostics.DiagnosticsMeasurementsSource
 import io.github.cdsap.compare.report.measurements.BuildWithResourceUsageProvider
 import io.github.cdsap.geapi.client.model.AvoidanceSavingsSummary
 import io.github.cdsap.geapi.client.model.BuildWithResourceUsage
@@ -24,6 +28,14 @@ class ExperimentReportTest {
         val buildDataProviderParameter = constructorParameters.single { it.name == "buildDataProvider" }
 
         assertEquals(BuildDataProvider::class, buildDataProviderParameter.type.classifier)
+    }
+
+    @Test
+    fun dependsOnDiagnosticsMeasurementsSourcePort() {
+        val constructorParameters = ExperimentReport::class.primaryConstructor!!.parameters
+        val diagnosticsSourceParameter = constructorParameters.single { it.name == "diagnosticsMeasurementsSource" }
+
+        assertEquals(DiagnosticsMeasurementsSource::class, diagnosticsSourceParameter.type.classifier)
     }
 
     @Test
@@ -119,6 +131,76 @@ class ExperimentReportTest {
         }
 
         assertTrue(buildDataProviderInvoked)
+    }
+
+    @Test
+    fun processUsesInjectedDiagnosticsMeasurementsSourceWithoutPackageFile() {
+        var sourceInvoked = false
+        val fakeBuildDataProvider =
+            object : BuildDataProvider {
+                override suspend fun getBuilds(filter: Filter): List<BuildWithResourceUsage> =
+                    listOf(usageBuild(id = "build-1", tags = arrayOf("variant-a"), buildDuration = 10L))
+            }
+        val fakeDiagnosticsSource =
+            object : DiagnosticsMeasurementsSource {
+                override fun load(
+                    diagnosticsPackagePath: String?,
+                    reportVariants: List<String>,
+                ): DiagnosticsMeasurements {
+                    sourceInvoked = true
+                    assertEquals("does-not-exist.json", diagnosticsPackagePath)
+                    assertEquals(listOf("variant-a"), reportVariants)
+                    return DiagnosticsMeasurements(
+                        measurements =
+                            mapOf(
+                                "variant-a" to
+                                    listOf(
+                                        SingleMeasurement(
+                                            category = "diagnostics",
+                                            name = "cpu",
+                                            variantMean = 1.0,
+                                            variantP50 = 1.0,
+                                            variantP90 = 1.0,
+                                            qualifier = "",
+                                            metric = Metric.CPU_DIAGNOSTICS,
+                                        ),
+                                    ),
+                            ),
+                    )
+                }
+            }
+
+        val before =
+            File(".")
+                .listFiles()
+                ?.filter { it.name.startsWith("experiment_results") }
+                ?.map { it.absolutePath }
+                ?.toSet()
+                .orEmpty()
+
+        try {
+            runBlocking {
+                ExperimentReport(
+                    filter = filter(),
+                    buildDataProvider = fakeBuildDataProvider,
+                    diagnosticsMeasurementsSource = fakeDiagnosticsSource,
+                    report =
+                        report(
+                            variants = listOf("variant-a"),
+                            buildReport = true,
+                            taskPathReport = false,
+                            taskTypeReport = false,
+                        ).copy(diagnosticsPackagePath = "does-not-exist.json"),
+                ).process()
+            }
+        } finally {
+            File(".")
+                .listFiles()
+                ?.filter { it.name.startsWith("experiment_results") && it.absolutePath !in before }
+                ?.forEach { it.delete() }
+        }
+
+        assertTrue(sourceInvoked)
     }
 
     private fun filter() =
