@@ -2,8 +2,8 @@ package io.github.cdsap.compare.report
 
 import io.github.cdsap.compare.model.Report
 import io.github.cdsap.compare.output.ExperimentView
-import io.github.cdsap.compare.report.diagnostics.DiagnosticsMeasurementsSource
-import io.github.cdsap.compare.report.diagnostics.FileDiagnosticsMeasurementsSource
+import io.github.cdsap.compare.report.diagnostics.DiagnosticsMeasurementSource
+import io.github.cdsap.compare.report.diagnostics.DiagnosticsPackageLoader
 import io.github.cdsap.compare.report.measurements.FilterBuildsPerVariant
 import io.github.cdsap.compare.report.measurements.MeasurementsByReport
 import io.github.cdsap.geapi.client.model.BuildWithResourceUsage
@@ -13,7 +13,7 @@ class ExperimentReport(
     private val filter: Filter,
     private val buildDataProvider: BuildDataProvider,
     private val report: Report,
-    private val diagnosticsMeasurementsSource: DiagnosticsMeasurementsSource = FileDiagnosticsMeasurementsSource(),
+    private val diagnosticsMeasurementsSource: DiagnosticsMeasurementSource = DiagnosticsPackageLoader(),
 ) {
     suspend fun process() {
         if (report.variants.isEmpty()) {
