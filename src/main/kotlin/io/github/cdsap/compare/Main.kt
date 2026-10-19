@@ -13,7 +13,6 @@ import com.github.ajalt.clikt.parameters.types.long
 import io.github.cdsap.compare.model.Report
 import io.github.cdsap.compare.report.DevelocityBuildDataProvider
 import io.github.cdsap.compare.report.ExperimentReport
-import io.github.cdsap.compare.report.diagnostics.FileDiagnosticsMeasurementsSource
 import io.github.cdsap.geapi.client.model.ClientType
 import io.github.cdsap.geapi.client.model.Filter
 import io.github.cdsap.geapi.client.network.GEClient
@@ -99,7 +98,6 @@ class Experiment : CliktCommand() {
                     claudeKey = claudeKey,
                     diagnosticsPackagePath = diagnosticsPackagePath,
                 ),
-                diagnosticsMeasurementsSource = FileDiagnosticsMeasurementsSource(),
             ).process()
         }
     }

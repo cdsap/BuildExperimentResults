@@ -41,10 +41,9 @@ class DiagnosticsPackageLoaderTest {
             """.trimIndent(),
         )
 
-        val dto = loader.load(file)
-        val (measurements, warnings) = loader.toMeasurements(dto, listOf("owner-1_varianta_lint-4-1"))
-        assertTrue(warnings.isEmpty())
-        val rows = measurements.getValue("owner-1_varianta_lint-4-1")
+        val diagnostics = loader.load(file.path, listOf("owner-1_varianta_lint-4-1"))
+        assertTrue(diagnostics.warnings.isEmpty())
+        val rows = diagnostics.measurements.getValue("owner-1_varianta_lint-4-1")
         assertEquals(2, rows.size)
         assertEquals(Metric.CPU_DIAGNOSTICS, rows[0].metric)
         assertEquals(Metric.JFR, rows[1].metric)

@@ -3,11 +3,8 @@ package io.github.cdsap.compare.report.diagnostics
 import io.github.cdsap.compare.model.SingleMeasurement
 
 class DiagnosticsMeasurementAugmenter(
-    private val diagnosticsMeasurementsSource: DiagnosticsMeasurementsSource = FileDiagnosticsMeasurementsSource(),
+    private val diagnosticsMeasurementsSource: DiagnosticsMeasurementSource = DiagnosticsPackageLoader(),
 ) {
-    constructor(diagnosticsPackageLoader: DiagnosticsPackageLoader) : this(
-        FileDiagnosticsMeasurementsSource(diagnosticsPackageLoader),
-    )
 
     fun augment(
         measurements: Map<String, List<SingleMeasurement>>,

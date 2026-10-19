@@ -7,7 +7,18 @@ import java.io.File
 
 class DiagnosticsPackageLoader(
     private val gson: Gson = Gson(),
-) {
+) : DiagnosticsMeasurementSource {
+    override fun load(
+        diagnosticsPackagePath: String?,
+        reportVariants: List<String>,
+    ): DiagnosticsMeasurements {
+        if (diagnosticsPackagePath == null) return DiagnosticsMeasurements()
+
+        val dto = load(File(diagnosticsPackagePath))
+        val (measurements, warnings) = toMeasurements(dto, reportVariants)
+        return DiagnosticsMeasurements(measurements, warnings)
+    }
+
     fun load(path: File): DiagnosticsPackageDto {
         require(path.isFile) { "Diagnostics package not found: ${path.path}" }
         val dto = gson.fromJson(path.readText(), DiagnosticsPackageDto::class.java)
