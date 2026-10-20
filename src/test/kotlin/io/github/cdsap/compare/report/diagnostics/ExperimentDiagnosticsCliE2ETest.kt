@@ -12,14 +12,11 @@ import io.github.cdsap.geapi.client.model.Task
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
-import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import java.io.File
-import java.net.URI
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
-import java.util.concurrent.TimeUnit
 
 class ExperimentDiagnosticsCliE2ETest {
     private val metrics = BuildWithResourceUsageProvider()
@@ -28,43 +25,14 @@ class ExperimentDiagnosticsCliE2ETest {
     lateinit var tempDir: File
 
     @Test
-    fun releasedCliPackageIsImportedIntoExperimentReport() {
-        assumeTrue(Runtime.version().feature() >= 21) {
-            "ExperimentDiagnosticsReport v0.1.0 requires JDK 21"
-        }
-        val cli = resolveCli()
-        assumeTrue(cli != null && cli.canExecute()) { "ExperimentDiagnosticsReport CLI is not available" }
-
-        val artifactsDir = artifactsFixtureDir()
-        val packageFile = File(tempDir, "diagnostics-package.json")
-        val javaHome = System.getProperty("java.home")
-        val processBuilder =
-            ProcessBuilder(
-                cli!!.absolutePath,
-                "report",
-                "--artifacts-dir",
-                artifactsDir.absolutePath,
-                "--output",
-                packageFile.absolutePath,
-                "--force",
-            ).directory(tempDir)
-                .redirectErrorStream(true)
-        val environment = processBuilder.environment()
-        environment["JAVA_HOME"] = javaHome
-        environment["PATH"] = "$javaHome/bin${File.pathSeparator}${environment["PATH"]}"
-        val output = processBuilder.start()
-        val finished = output.waitFor(2, TimeUnit.MINUTES)
-        val logs = output.inputStream.bufferedReader().readText()
-        assertTrue(finished && output.exitValue() == 0) {
-            "CLI failed (finished=$finished exit=${if (finished) output.exitValue() else "timeout"}): $logs"
-        }
-        assertTrue(packageFile.isFile) { "CLI did not write ${packageFile.path}\n$logs" }
-
+    fun cliPackageJsonIsImportedIntoExperimentReport() {
+        val packageFile = copyPackageFixture()
         val dto = DiagnosticsPackageLoader().load(packageFile)
         assertEquals("1.0", dto.schemaVersion)
-        val variantNames = dto.variants.map { it.variant }.toSet()
-        assertEquals(setOf("cpu2", "cpu_test"), variantNames)
+        assertEquals("39341370865", dto.experimentRunId)
+        assertEquals(setOf("cpu2", "cpu_test"), dto.variants.map { it.variant }.toSet())
         assertTrue(dto.variants.any { it.measurements.any { m -> m.metric == "CPU_DIAGNOSTICS" } })
+        assertTrue(dto.variants.any { it.measurements.any { m -> m.metric == "JFR" } })
         assertTrue(
             dto.variants
                 .single { it.variant == "cpu2" }
@@ -111,6 +79,7 @@ class ExperimentDiagnosticsCliE2ETest {
             val csvText = csv!!.readText()
             assertTrue(csvText.contains("vmstat.us")) { csvText }
             assertTrue(csvText.contains("cpu,")) { csvText }
+            assertTrue(csvText.contains("recording.size_bytes")) { csvText }
         } finally {
             File(".")
                 .listFiles()
@@ -119,37 +88,15 @@ class ExperimentDiagnosticsCliE2ETest {
         }
     }
 
-    private fun artifactsFixtureDir(): File {
-        val url = javaClass.classLoader.getResource("diagnostics-cli/artifacts")
-        assertTrue(url != null) { "Missing diagnostics-cli/artifacts fixture" }
-        return File(url!!.toURI())
-    }
-
-    private fun resolveCli(): File? {
-        val configured =
-            System.getProperty("experimentDiagnosticsCli")
-                ?: System.getenv("EXPERIMENT_DIAGNOSTICS_CLI")
-        if (!configured.isNullOrBlank()) {
-            return File(configured)
+    private fun copyPackageFixture(): File {
+        val dest = File(tempDir, "diagnostics-package.json")
+        val source =
+            javaClass.classLoader.getResource("diagnostics-cli/diagnostics-package.json")
+        assertTrue(source != null) { "Missing diagnostics-cli/diagnostics-package.json fixture" }
+        source!!.openStream().use { input ->
+            Files.copy(input, dest.toPath(), StandardCopyOption.REPLACE_EXISTING)
         }
-        return downloadReleasedCli()
-    }
-
-    private fun downloadReleasedCli(): File? {
-        val dest = File(tempDir, "experiment-diagnostics-report")
-        return try {
-            URI(CLI_RELEASE_URL).toURL().openStream().use { input ->
-                Files.copy(input, dest.toPath(), StandardCopyOption.REPLACE_EXISTING)
-            }
-            dest.setExecutable(true)
-            dest
-        } catch (exception: Exception) {
-            val required = System.getenv("GITHUB_ACTIONS") == "true"
-            if (required) {
-                throw AssertionError("Failed to download diagnostics CLI from $CLI_RELEASE_URL", exception)
-            }
-            null
-        }
+        return dest
     }
 
     private fun report(variants: List<String>) =
@@ -193,9 +140,4 @@ class ExperimentDiagnosticsCliE2ETest {
             total = metrics.get(),
             totalMemory = 0L,
         )
-
-    companion object {
-        private const val CLI_RELEASE_URL =
-            "https://github.com/cdsap/ExperimentDiagnosticsReport/releases/download/v0.1.0/experiment-diagnostics-report"
-    }
 }

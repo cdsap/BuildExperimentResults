@@ -1,0 +1,82 @@
+{
+  "schemaVersion": "1.0",
+  "experimentRunId": "39341370865",
+  "sourceRepo": "cdsap/Telltale",
+  "variants": [
+    {
+      "variant": "cpu2",
+      "jobKeys": [
+        "execution-caching-1",
+        "execution-caching-3"
+      ],
+      "measurements": [
+        {
+          "category": "cpu",
+          "name": "pidstat.percent_cpu",
+          "mean": 2.0075,
+          "p50": 0.0,
+          "p90": 0.0,
+          "qualifier": "all-processes",
+          "metric": "CPU_DIAGNOSTICS"
+        },
+        {
+          "category": "cpu",
+          "name": "vmstat.us",
+          "mean": 85.9452,
+          "p50": 91.0,
+          "p90": 95.0,
+          "qualifier": "system",
+          "metric": "CPU_DIAGNOSTICS"
+        },
+        {
+          "category": "jfr",
+          "name": "recording.size_bytes",
+          "mean": 2.349485946E8,
+          "p50": 2.385229245E8,
+          "p90": 2.548328703E8,
+          "qualifier": "gradle",
+          "metric": "JFR"
+        }
+      ]
+    },
+    {
+      "variant": "cpu_test",
+      "jobKeys": [
+        "execution-caching-0",
+        "execution-caching-2"
+      ],
+      "measurements": [
+        {
+          "category": "cpu",
+          "name": "pidstat.percent_cpu",
+          "mean": 1.9273,
+          "p50": 0.0,
+          "p90": 0.0,
+          "qualifier": "all-processes",
+          "metric": "CPU_DIAGNOSTICS"
+        },
+        {
+          "category": "cpu",
+          "name": "vmstat.us",
+          "mean": 85.1244,
+          "p50": 90.0,
+          "p90": 95.0,
+          "qualifier": "system",
+          "metric": "CPU_DIAGNOSTICS"
+        },
+        {
+          "category": "jfr",
+          "name": "recording.size_bytes",
+          "mean": 2.424126796667E8,
+          "p50": 2.4509343E8,
+          "p90": 2.58489444E8,
+          "qualifier": "gradle",
+          "metric": "JFR"
+        }
+      ]
+    }
+  ],
+  "warnings": [
+    "Could not read JFR duration for kotlin-3639.jfr"
+  ]
+}
