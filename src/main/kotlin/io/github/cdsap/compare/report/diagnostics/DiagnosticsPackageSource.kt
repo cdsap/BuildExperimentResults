@@ -7,7 +7,7 @@ data class DiagnosticsMeasurements(
     val warnings: List<String> = emptyList(),
 )
 
-interface DiagnosticsMeasurementSource {
+interface DiagnosticsPackageSource {
     fun load(
         diagnosticsPackagePath: String?,
         reportVariants: List<String>,

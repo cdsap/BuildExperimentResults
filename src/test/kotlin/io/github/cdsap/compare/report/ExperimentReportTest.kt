@@ -4,7 +4,7 @@ import io.github.cdsap.compare.model.Metric
 import io.github.cdsap.compare.model.Report
 import io.github.cdsap.compare.model.SingleMeasurement
 import io.github.cdsap.compare.report.diagnostics.DiagnosticsMeasurements
-import io.github.cdsap.compare.report.diagnostics.DiagnosticsMeasurementSource
+import io.github.cdsap.compare.report.diagnostics.DiagnosticsPackageSource
 import io.github.cdsap.compare.report.measurements.BuildWithResourceUsageProvider
 import io.github.cdsap.geapi.client.model.AvoidanceSavingsSummary
 import io.github.cdsap.geapi.client.model.BuildWithResourceUsage
@@ -31,11 +31,11 @@ class ExperimentReportTest {
     }
 
     @Test
-    fun dependsOnDiagnosticsMeasurementSourcePort() {
+    fun dependsOnDiagnosticsPackageSourcePort() {
         val constructorParameters = ExperimentReport::class.primaryConstructor!!.parameters
         val diagnosticsSourceParameter = constructorParameters.single { it.name == "diagnosticsMeasurementsSource" }
 
-        assertEquals(DiagnosticsMeasurementSource::class, diagnosticsSourceParameter.type.classifier)
+        assertEquals(DiagnosticsPackageSource::class, diagnosticsSourceParameter.type.classifier)
     }
 
     @Test
@@ -134,7 +134,7 @@ class ExperimentReportTest {
     }
 
     @Test
-    fun processUsesInjectedDiagnosticsMeasurementSourceWithoutPackageFile() {
+    fun processUsesInjectedDiagnosticsPackageSourceWithoutPackageFile() {
         var sourceInvoked = false
         val fakeBuildDataProvider =
             object : BuildDataProvider {
@@ -142,7 +142,7 @@ class ExperimentReportTest {
                     listOf(usageBuild(id = "build-1", tags = arrayOf("variant-a"), buildDuration = 10L))
             }
         val fakeDiagnosticsSource =
-            object : DiagnosticsMeasurementSource {
+            object : DiagnosticsPackageSource {
                 override fun load(
                     diagnosticsPackagePath: String?,
                     reportVariants: List<String>,

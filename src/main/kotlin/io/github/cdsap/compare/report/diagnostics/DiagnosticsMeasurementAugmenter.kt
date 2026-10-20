@@ -3,7 +3,7 @@ package io.github.cdsap.compare.report.diagnostics
 import io.github.cdsap.compare.model.SingleMeasurement
 
 class DiagnosticsMeasurementAugmenter(
-    private val diagnosticsMeasurementsSource: DiagnosticsMeasurementSource = DiagnosticsPackageLoader(),
+    private val diagnosticsMeasurementsSource: DiagnosticsPackageSource = DiagnosticsPackageLoader(),
 ) {
 
     fun augment(

@@ -7,7 +7,7 @@ import java.io.File
 
 class DiagnosticsPackageLoader(
     private val gson: Gson = Gson(),
-) : DiagnosticsMeasurementSource {
+) : DiagnosticsPackageSource {
     override fun load(
         diagnosticsPackagePath: String?,
         reportVariants: List<String>,
