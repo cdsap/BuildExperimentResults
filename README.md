@@ -239,6 +239,7 @@ A comprehensive HTML report (`experiment_results_[timestamp].html`) containing:
   - Build Child Processes Memory
   - Most Expensive Task Performance
   - GC Collections (when GC reporting is enabled)
+  - CPU Diagnostics and JFR aggregates (when imported with `--diagnostics-package`)
 - Detailed metrics tables
 
 ![resources/html_output.png](resources/html_output.png)
@@ -328,5 +329,4 @@ Kotlin build report outputs are still included.
 * kotlin-statistics
 * ktor
 * chart.js (html report)
-
 

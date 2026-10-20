@@ -50,7 +50,7 @@ class HtmlGenerator(
         buildVariants: Map<String, List<BuildWithResourceUsage>>,
     ): String {
         val experimentInfo = generateExperimentInfo(variants, header, buildVariants)
-        val charts = chartGenerator.generateCharts(buildVariants, header)
+        val charts = chartGenerator.generateCharts(buildVariants, header, measurements)
         val metricsTable = generateMetricsTable(measurements, variants, false, header)
         return "$experimentInfo$charts$metricsTable"
     }

@@ -56,4 +56,39 @@ class DiagnosticsPackageLoaderTest {
         file.writeText("""{"schemaVersion":"2.0","variants":[]}""")
         assertThrows(IllegalArgumentException::class.java) { loader.load(file) }
     }
+
+    @Test
+    fun missingPackageIsSoftFailureWhenLoadedThroughSource() {
+        val result = loader.load(File(tempDir, "missing.json").path, listOf("variant-a"))
+
+        assertTrue(result.measurements.isEmpty())
+        assertEquals(
+            "Diagnostics package not found: ${File(tempDir, "missing.json").path}; continuing without diagnostics",
+            result.warnings.single(),
+        )
+    }
+
+    @Test
+    fun warnsAndSkipsAmbiguousVariantMatches() {
+        val result =
+            loader.toMeasurements(
+                DiagnosticsPackageDto(
+                    schemaVersion = "1.0",
+                    variants =
+                        listOf(
+                            VariantDiagnosticsDto(
+                                variant = "raw",
+                                measurements =
+                                    listOf(
+                                        PackageMeasurementDto(metric = "JFR", name = "duration"),
+                                    ),
+                            ),
+                        ),
+                ),
+                listOf("varianta_raw", "variantb_raw"),
+            )
+
+        assertTrue(result.first.isEmpty())
+        assertTrue(result.second.single().contains("no unique match"))
+    }
 }

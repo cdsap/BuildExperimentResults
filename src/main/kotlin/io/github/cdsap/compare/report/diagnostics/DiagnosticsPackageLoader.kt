@@ -14,7 +14,27 @@ class DiagnosticsPackageLoader(
     ): DiagnosticsMeasurements {
         if (diagnosticsPackagePath == null) return DiagnosticsMeasurements()
 
-        val dto = load(File(diagnosticsPackagePath))
+        val path = File(diagnosticsPackagePath)
+        if (!path.isFile) {
+            return DiagnosticsMeasurements(
+                warnings = listOf("Diagnostics package not found: ${path.path}; continuing without diagnostics"),
+            )
+        }
+        val dto =
+            try {
+                load(path)
+            } catch (exception: IllegalArgumentException) {
+                // Schema-version errors are deliberate compatibility failures and must remain visible.
+                throw exception
+            } catch (exception: Exception) {
+                return DiagnosticsMeasurements(
+                    warnings =
+                        listOf(
+                            "Unable to parse diagnostics package ${path.path}: " +
+                                "${exception.message ?: exception::class.simpleName}; continuing without diagnostics",
+                        ),
+                )
+            }
         val (measurements, warnings) = toMeasurements(dto, reportVariants)
         return DiagnosticsMeasurements(measurements, warnings)
     }
