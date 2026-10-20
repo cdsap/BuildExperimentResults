@@ -1,7 +1,9 @@
 package io.github.cdsap.compare.output
 
 import io.github.cdsap.compare.model.Header
+import io.github.cdsap.compare.model.Metric
 import io.github.cdsap.compare.model.Report
+import io.github.cdsap.compare.model.SingleMeasurement
 import io.github.cdsap.compare.output.chart.ChartColors
 import io.github.cdsap.compare.output.chart.ChartDataGenerator
 import io.github.cdsap.compare.output.chart.ChartOptions
@@ -24,6 +26,7 @@ class ChartGenerator(
     fun generateCharts(
         variants: Map<String, List<BuildWithResourceUsage>>,
         header: Header,
+        measurements: Map<String, List<SingleMeasurement>> = emptyMap(),
     ): String {
         val commonTaskPathsRaw = getCommonTaskPaths(variants)
         val commonTaskPaths = filterTasksByMinAverageDuration(variants, commonTaskPathsRaw)
@@ -47,6 +50,7 @@ class ChartGenerator(
             containsBuildReports,
             variants,
             header,
+            measurements,
         )
     }
 
@@ -81,6 +85,7 @@ class ChartGenerator(
         containsBuildReports: Boolean,
         variants: Map<String, List<BuildWithResourceUsage>>,
         header: Header,
+        measurements: Map<String, List<SingleMeasurement>>,
     ): String =
         """
         <div class="charts-grid">
@@ -100,6 +105,7 @@ class ChartGenerator(
             )
         }
         ${generateBuildReportsCharts(containsBuildReports)}
+        ${generateDiagnosticsCharts(measurements)}
           </div>
                                                                             <script>
                                                                                 ${
@@ -112,6 +118,7 @@ class ChartGenerator(
                 containsGradleProcess,
                 containsBuildReports,
                 uniqueTotalCollections,
+                measurements,
             )
         }
                                                                             </script>
@@ -241,6 +248,44 @@ class ChartGenerator(
         }
     }
 
+    private fun generateDiagnosticsCharts(
+        measurements: Map<String, List<SingleMeasurement>>,
+    ): String {
+        val diagnostics =
+            measurements
+                .flatMap { (variant, rows) -> rows.map { variant to it } }
+                .filter { (_, row) -> row.metric == Metric.CPU_DIAGNOSTICS || row.metric == Metric.JFR }
+        return listOf(Metric.CPU_DIAGNOSTICS, Metric.JFR).joinToString("") { metric ->
+            val rows =
+                diagnostics
+                    .filter { it.second.metric == metric }
+                    .map { it.second }
+                    .distinctBy { Triple(it.category, it.name, it.qualifier) }
+            if (rows.isEmpty()) return@joinToString ""
+            val chartId = diagnosticChartId(metric)
+            """
+            <div class="chart-container">
+                <h2>${diagnosticChartTitle(metric)}</h2>
+                <canvas id="$chartId"></canvas>
+            </div>
+            """.trimIndent()
+        }
+    }
+
+    private fun diagnosticChartId(metric: Metric) =
+        when (metric) {
+            Metric.CPU_DIAGNOSTICS -> "cpuDiagnosticsChart"
+            Metric.JFR -> "jfrChart"
+            else -> error("Not a diagnostics metric: $metric")
+        }
+
+    private fun diagnosticChartTitle(metric: Metric) =
+        when (metric) {
+            Metric.CPU_DIAGNOSTICS -> "CPU Diagnostics"
+            Metric.JFR -> "JFR Diagnostics"
+            else -> error("Not a diagnostics metric: $metric")
+        }
+
     private fun getCommonTaskPaths(variants: Map<String, List<BuildWithResourceUsage>>): List<String> {
         val taskPathsPerVariant =
             variants.values.map { builds ->
@@ -333,6 +378,7 @@ class ChartGenerator(
         containsGradleProcess: Boolean,
         containsBuildReports: Boolean,
         uniqueTotalCollections: Set<String>,
+        measurements: Map<String, List<SingleMeasurement>>,
     ): String {
         val scripts = mutableListOf<String>()
         // Basic charts
@@ -364,8 +410,48 @@ class ChartGenerator(
             scripts.add(generateGCCollectionsChart(variants, header, collection))
         }
 
+        scripts.addAll(generateDiagnosticsChartScripts(measurements, header))
+
         return scripts.joinToString("\n")
     }
+
+    private fun generateDiagnosticsChartScripts(
+        measurements: Map<String, List<SingleMeasurement>>,
+        header: Header,
+    ): List<String> =
+        listOf(Metric.CPU_DIAGNOSTICS, Metric.JFR).mapNotNull { metric ->
+            val rows =
+                measurements.values
+                    .flatten()
+                    .filter { it.metric == metric }
+                    .distinctBy { Triple(it.category, it.name, it.qualifier) }
+            if (rows.isEmpty()) return@mapNotNull null
+            val labels = rows.joinToString(",") {
+                "'${escapeForJs(it.name + if (it.qualifier.isBlank()) "" else " (${it.qualifier})")}'"
+            }
+            val datasets = measurements.keys.joinToString(",") { variant ->
+                val values =
+                    rows.joinToString(",") { row ->
+                        measurements[variant]
+                            .orEmpty()
+                            .firstOrNull {
+                                it.metric == metric &&
+                                    it.category == row.category &&
+                                    it.name == row.name &&
+                                    it.qualifier == row.qualifier
+                            }?.variantMean?.toString() ?: "null"
+                    }
+                "{label: '${escapeForJs(variant.removeExperimentId(header.experimentId))}', " +
+                    "data: [$values], borderColor: '${chartColors.getColorForVariant(variant)}', tension: 0.1}"
+            }
+            """
+            new Chart(document.getElementById('${diagnosticChartId(metric)}'), {
+                type: 'line',
+                data: {labels: [$labels], datasets: [$datasets]},
+                options: ${chartOptions.getChartOptions("${diagnosticChartTitle(metric)} mean")}
+            });
+            """.trimIndent()
+        }
 
     private fun generateBuildDurationChart(
         variants: Map<String, List<BuildWithResourceUsage>>,
@@ -770,4 +856,3 @@ class ChartGenerator(
             .replace("\n", "\\n")
             .replace("\r", "")
 }
-
