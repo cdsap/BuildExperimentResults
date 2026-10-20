@@ -57,6 +57,24 @@ class Experiment : CliktCommand() {
         "--diagnostics-package",
         help = "Path to ExperimentDiagnosticsReport JSON package (CPU/JFR aggregates)",
     )
+    private val outputJson: String? by option(
+        "--output-json",
+        help = "Write canonical experiment-result JSON (opt-in; HTML/CSV defaults stay enabled)",
+    )
+    private val reportKind: String by option(
+        "--report-kind",
+        help = "Report kind slug used in report.id (for example caching or no-caching)",
+    ).default("report")
+    private val runAttempt: Int? by option(
+        "--run-attempt",
+        help = "GitHub Actions run attempt for immutable report identity",
+    ).int()
+    private val includeObservations by option("--include-observations")
+        .flag("--no-include-observations", default = true)
+    private val reportTitle: String? by option(
+        "--report-title",
+        help = "Optional report title for canonical JSON",
+    )
 
     override fun run() {
         if (!taskPathReport && !taskTypeReport && !kotlinBuildReport && !processesReport) {
@@ -97,6 +115,11 @@ class Experiment : CliktCommand() {
                     claudeRequest = claudeRequest,
                     claudeKey = claudeKey,
                     diagnosticsPackagePath = diagnosticsPackagePath,
+                    outputJson = outputJson,
+                    reportKind = reportKind,
+                    runAttempt = runAttempt,
+                    includeObservations = includeObservations,
+                    reportTitle = reportTitle,
                 ),
             ).process()
         }

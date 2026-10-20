@@ -1,0 +1,142 @@
+{
+  "schemaVersion": "1.0.0",
+  "generatedAt": "2026-10-20T21:00:00Z",
+  "producer": {
+    "name": "BuildExperimentResults",
+    "version": "1.0-SNAPSHOT",
+    "revision": "example-sha"
+  },
+  "report": {
+    "id": "run-123456789-caching-attempt-1",
+    "kind": "caching",
+    "title": "Kotlin daemon comparison",
+    "status": "complete"
+  },
+  "experiment": {
+    "id": "cdsap-410",
+    "repository": "cdsap/Telltale",
+    "requestedTasks": [":app:assembleDebug"],
+    "mode": "caching",
+    "isProfiler": false
+  },
+  "execution": {
+    "source": "github-actions",
+    "runId": "123456789",
+    "runAttempt": 1,
+    "workflowName": null,
+    "startedAt": null,
+    "links": {
+      "workflow": "https://github.com/cdsap/Telltale/actions/runs/123456789"
+    }
+  },
+  "variants": [
+    {
+      "id": "kgp-2.4.20",
+      "label": "varianta_kgp-2.4.20",
+      "sourceTag": "cdsap-410_varianta_kgp-2.4.20",
+      "role": "baseline",
+      "buildCount": 2
+    },
+    {
+      "id": "kgp-2.4.21",
+      "label": "variantb_kgp-2.4.21",
+      "sourceTag": "cdsap-410_variantb_kgp-2.4.21",
+      "role": "candidate",
+      "buildCount": 2
+    }
+  ],
+  "metrics": [
+    {
+      "id": "build.duration",
+      "family": "build",
+      "category": "Build",
+      "name": "Build time",
+      "unit": "ms",
+      "valueType": "duration",
+      "direction": "lower-is-better",
+      "scope": null,
+      "aggregation": {
+        "sampleUnit": "build",
+        "method": "existing-ber-method"
+      },
+      "values": {
+        "kgp-2.4.20": { "mean": 240000, "p50": 236000, "p90": 258000, "count": 2 },
+        "kgp-2.4.21": { "mean": 233000, "p50": 230000, "p90": 249000, "count": 2 }
+      }
+    },
+    {
+      "id": "cpu.cpu.pidstat-percent-cpu.all-processes",
+      "family": "cpu-diagnostics",
+      "category": "cpu",
+      "name": "pidstat.percent_cpu",
+      "unit": "all-processes",
+      "valueType": "quantity",
+      "direction": null,
+      "scope": { "qualifier": "all-processes" },
+      "aggregation": {
+        "sampleUnit": "diagnostic-sample",
+        "method": "existing-ber-method"
+      },
+      "values": {
+        "kgp-2.4.20": { "mean": 1.9, "p50": 0.0, "p90": 0.0, "count": null },
+        "kgp-2.4.21": { "mean": 2.0, "p50": 0.0, "p90": 0.0, "count": null }
+      }
+    }
+  ],
+  "datasets": {
+    "builds": {
+      "kgp-2.4.20": [
+        {
+          "observationId": "b-001",
+          "sequence": 1,
+          "durationMs": 239100,
+          "configurationMs": 28000,
+          "startedAt": "2026-10-20T18:00:00Z",
+          "scanUrl": "https://ge.example/s/b-001"
+        }
+      ],
+      "kgp-2.4.21": [
+        {
+          "observationId": "b-051",
+          "sequence": 1,
+          "durationMs": 231900,
+          "configurationMs": 27200,
+          "startedAt": "2026-10-20T18:01:00Z",
+          "scanUrl": "https://ge.example/s/b-051"
+        }
+      ]
+    },
+    "taskSeries": {},
+    "resourceSeries": {},
+    "processSeries": {},
+    "gcSeries": {},
+    "kotlinBuildReportSeries": {}
+  },
+  "diagnostics": {
+    "status": "present",
+    "source": {
+      "tool": "ExperimentDiagnosticsReport",
+      "schemaVersion": "1.0",
+      "experimentRunId": "123456789",
+      "sourceRepo": "cdsap/Telltale"
+    },
+    "groups": [
+      {
+        "id": "cpu",
+        "family": "cpu-diagnostics",
+        "sampleUnit": "diagnostic-sample",
+        "metricIds": ["cpu.cpu.pidstat-percent-cpu.all-processes"],
+        "jobKeysByVariant": {
+          "kgp-2.4.20": ["execution-caching-0"]
+        }
+      }
+    ]
+  },
+  "warnings": [],
+  "completeness": {
+    "requestedVariantIds": ["kgp-2.4.20", "kgp-2.4.21"],
+    "observedVariantIds": ["kgp-2.4.20", "kgp-2.4.21"],
+    "missingMetricIds": [],
+    "diagnostics": "present"
+  }
+}

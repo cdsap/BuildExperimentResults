@@ -22,4 +22,9 @@ data class Report(
     val claudeRequest: Boolean = false,
     val claudeKey: String? = null,
     val diagnosticsPackagePath: String? = null,
+    val outputJson: String? = null,
+    val reportKind: String = "report",
+    val runAttempt: Int? = null,
+    val includeObservations: Boolean = true,
+    val reportTitle: String? = null,
 )
