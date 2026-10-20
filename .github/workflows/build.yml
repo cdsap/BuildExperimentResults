@@ -25,3 +25,24 @@ jobs:
       - name: Run Tests
         run: ./gradlew test
 
+  e2e-diagnostics-cli:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5.0.0
+
+      - name: Configure JDK 21
+        uses: actions/setup-java@v5
+        with:
+          distribution: 'zulu'
+          java-version: 21
+
+      - name: Download ExperimentDiagnosticsReport CLI
+        run: |
+          curl -fsSL -o experiment-diagnostics-report \
+            https://github.com/cdsap/ExperimentDiagnosticsReport/releases/download/v0.1.0/experiment-diagnostics-report
+          chmod 0755 experiment-diagnostics-report
+
+      - name: Run diagnostics CLI e2e
+        run: ./gradlew test --tests io.github.cdsap.compare.report.diagnostics.ExperimentDiagnosticsCliE2ETest -PtestJavaVersion=21 -PexperimentDiagnosticsCli=${{ github.workspace }}/experiment-diagnostics-report
+

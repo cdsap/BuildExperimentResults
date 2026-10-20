@@ -39,7 +39,23 @@ dependencies {
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
 }
 
-tasks.withType<Test>().configureEach { useJUnitPlatform() }
+tasks.withType<Test>().configureEach {
+    useJUnitPlatform()
+    val testJava = (findProperty("testJavaVersion") as String?)?.toIntOrNull()
+    if (testJava != null) {
+        javaLauncher.set(
+            javaToolchains.launcherFor {
+                languageVersion.set(JavaLanguageVersion.of(testJava))
+            },
+        )
+    }
+    val cli =
+        (findProperty("experimentDiagnosticsCli") as String?)
+            ?: System.getenv("EXPERIMENT_DIAGNOSTICS_CLI")
+    if (!cli.isNullOrBlank()) {
+        systemProperty("experimentDiagnosticsCli", cli)
+    }
+}
 
 java {
     toolchain {
