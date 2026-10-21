@@ -1,5 +1,7 @@
 package io.github.cdsap.compare.report
 
+import io.github.cdsap.compare.export.ExperimentJsonWriter
+import io.github.cdsap.compare.export.ExperimentResultAssembler
 import io.github.cdsap.compare.model.Report
 import io.github.cdsap.compare.output.ExperimentView
 import io.github.cdsap.compare.report.diagnostics.DiagnosticsPackageSource
@@ -8,6 +10,7 @@ import io.github.cdsap.compare.report.measurements.FilterBuildsPerVariant
 import io.github.cdsap.compare.report.measurements.MeasurementsByReport
 import io.github.cdsap.geapi.client.model.BuildWithResourceUsage
 import io.github.cdsap.geapi.client.model.Filter
+import java.nio.file.Path
 
 class ExperimentReport(
     private val filter: Filter,
@@ -30,6 +33,18 @@ class ExperimentReport(
                 }
             }
             if (augmentedMeasurements.isNotEmpty()) {
+                val outputJson = report.outputJson
+                if (outputJson != null) {
+                    val result =
+                        ExperimentResultAssembler().assemble(
+                            report = report,
+                            measurements = augmentedMeasurements,
+                            buildsByVariant = variants,
+                            diagnostics = diagnostics,
+                        )
+                    ExperimentJsonWriter().write(result, Path.of(outputJson))
+                    println("generating json $outputJson")
+                }
                 ExperimentView(report).generateOutputs(augmentedMeasurements, variants)
             }
         }

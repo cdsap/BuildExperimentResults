@@ -130,6 +130,11 @@ explicitly using the --requested-task parameter. Example:
 | `--experiment-id` | Identifier for the experiment                                                                         | - |
 | `--repository` | Repository name                                                                                       | - |
 | `--experiment-run-id` | Identifier for the experiment run                                                                     | - |
+| `--output-json` | Write canonical `experiment-result.json` (schemaVersion `1.0.0`)                                      | disabled |
+| `--report-kind` | Report kind slug used in `report.id` (`caching`, `no-caching`, `profiler`, …)                         | `report` |
+| `--run-attempt` | GitHub Actions run attempt stored in the JSON identity                                                | - |
+| `--report-title` | Optional report title in canonical JSON                                                               | - |
+| `--include-observations` | Include per-build observation datasets in JSON (`--no-include-observations` to omit)                  | enabled |
 
 #### Report Types
 | Parameter | Description | Default |
@@ -152,8 +157,31 @@ explicitly using the --requested-task parameter. Example:
 **Note**: At least one type of report must be enabled (task-path-report, task-type-report, kotlin-build-report, or process-report). All report types can be disabled using the `--no-` prefix (e.g., `--no-task-path-report`).
 
 
+#### Canonical JSON (`--output-json`)
+
+HTML, CSV, and the GitHub Actions summary remain the default compatibility outputs. `--output-json` is opt-in and does not disable them.
+
+```
+./build-experiment-results \
+    --variants "$VARIANT_A" \
+    --variants "$VARIANT_B" \
+    --api-key "$GE_API" \
+    --url "$GE_URL" \
+    --experiment-id "$EXPERIMENT_ID" \
+    --experiment-run-id "$GITHUB_RUN_ID" \
+    --run-attempt "$GITHUB_RUN_ATTEMPT" \
+    --report-kind caching \
+    --diagnostics-package diagnostics-package.json \
+    --output-json experiment-result.json
+```
+
+The file uses `schemaVersion: "1.0.0"`. Compatible `1.x` additions may appear later; a new major version is a breaking contract change. The schema lives in [`schema/experiment-result.v1.json`](schema/experiment-result.v1.json). Numbers are JSON numbers (never formatted strings). CPU/JFR diagnostics stay typed aggregates with `sampleUnit: diagnostic-sample`; they are not a build-number time series.
+
 ### Output Formats
 The tool generates results in multiple formats:
+
+#### Canonical JSON
+When `--output-json` is set, BER writes a versioned experiment result for viewers and other tools. This is the machine-readable contract; the standalone HTML report is compatibility output.
 
 #### Console Output
 A detailed table showing:

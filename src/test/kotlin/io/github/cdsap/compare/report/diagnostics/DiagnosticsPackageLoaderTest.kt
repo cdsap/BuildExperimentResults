@@ -48,6 +48,8 @@ class DiagnosticsPackageLoaderTest {
         assertEquals(Metric.CPU_DIAGNOSTICS, rows[0].metric)
         assertEquals(Metric.JFR, rows[1].metric)
         assertEquals(10.0, rows[0].variantMean)
+        assertEquals("present", diagnostics.status)
+        assertEquals("1.0", diagnostics.sourceSchemaVersion)
     }
 
     @Test
@@ -66,6 +68,7 @@ class DiagnosticsPackageLoaderTest {
             "Diagnostics package not found: ${File(tempDir, "missing.json").path}; continuing without diagnostics",
             result.warnings.single(),
         )
+        assertEquals("unavailable", result.status)
     }
 
     @Test

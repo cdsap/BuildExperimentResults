@@ -18,6 +18,7 @@ class DiagnosticsPackageLoader(
         if (!path.isFile) {
             return DiagnosticsMeasurements(
                 warnings = listOf("Diagnostics package not found: ${path.path}; continuing without diagnostics"),
+                status = "unavailable",
             )
         }
         val dto =
@@ -33,10 +34,34 @@ class DiagnosticsPackageLoader(
                             "Unable to parse diagnostics package ${path.path}: " +
                                 "${exception.message ?: exception::class.simpleName}; continuing without diagnostics",
                         ),
+                    status = "unavailable",
                 )
             }
         val (measurements, warnings) = toMeasurements(dto, reportVariants)
-        return DiagnosticsMeasurements(measurements, warnings)
+        val jobKeysByVariant = linkedMapOf<String, List<String>>()
+        var unmatched = 0
+        for (variantBlock in dto.variants) {
+            val mapped = remapVariant(variantBlock.variant, reportVariants)
+            if (mapped == null) {
+                unmatched++
+                continue
+            }
+            jobKeysByVariant[mapped] = variantBlock.jobKeys
+        }
+        val status =
+            when {
+                unmatched > 0 -> "partial"
+                else -> "present"
+            }
+        return DiagnosticsMeasurements(
+            measurements = measurements,
+            warnings = warnings,
+            status = status,
+            sourceSchemaVersion = dto.schemaVersion,
+            sourceExperimentRunId = dto.experimentRunId,
+            sourceRepo = dto.sourceRepo,
+            jobKeysByVariant = jobKeysByVariant,
+        )
     }
 
     fun load(path: File): DiagnosticsPackageDto {

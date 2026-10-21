@@ -9,6 +9,7 @@ import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
 
+/** Compatibility HTML/CSV/GHA output. Canonical machine-readable results are written by --output-json. */
 class ExperimentView(
     val report: Report,
 ) {
