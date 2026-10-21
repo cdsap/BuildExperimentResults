@@ -16,11 +16,16 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.io.TempDir
 import java.io.File
+import java.nio.file.Path
 import kotlin.reflect.full.primaryConstructor
 
 class ExperimentReportTest {
     private val metrics = BuildWithResourceUsageProvider()
+
+    @TempDir
+    lateinit var tempDir: Path
 
     @Test
     fun dependsOnBuildDataProviderPort() {
@@ -190,7 +195,10 @@ class ExperimentReportTest {
                             buildReport = true,
                             taskPathReport = false,
                             taskTypeReport = false,
-                        ).copy(diagnosticsPackagePath = "does-not-exist.json"),
+                        ).copy(
+                            diagnosticsPackagePath = "does-not-exist.json",
+                            outputJson = tempDir.resolve("experiment-result.json").toString(),
+                        ),
                 ).process()
             }
         } finally {
@@ -201,6 +209,9 @@ class ExperimentReportTest {
         }
 
         assertTrue(sourceInvoked)
+        assertTrue(
+            tempDir.resolve("experiment-result.json").toFile().readText().contains("\"name\": \"cpu\""),
+        )
     }
 
     private fun filter() =
