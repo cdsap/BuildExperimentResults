@@ -4,8 +4,9 @@ import io.github.cdsap.compare.export.ExperimentJsonWriter
 import io.github.cdsap.compare.export.ExperimentResultAssembler
 import io.github.cdsap.compare.model.Report
 import io.github.cdsap.compare.output.ExperimentView
-import io.github.cdsap.compare.report.diagnostics.DiagnosticsPackageSource
+import io.github.cdsap.compare.report.diagnostics.DiagnosticsMeasurementAugmenter
 import io.github.cdsap.compare.report.diagnostics.DiagnosticsPackageLoader
+import io.github.cdsap.compare.report.diagnostics.DiagnosticsPackageSource
 import io.github.cdsap.compare.report.measurements.FilterBuildsPerVariant
 import io.github.cdsap.compare.report.measurements.MeasurementsByReport
 import io.github.cdsap.geapi.client.model.BuildWithResourceUsage
@@ -25,13 +26,13 @@ class ExperimentReport(
             val buildWithResourceUsage = buildDataProvider.getBuilds(filter)
             val variants = checkVariantsData(FilterBuildsPerVariant(report).get(buildWithResourceUsage))
             val measurements = MeasurementsByReport(report).get(variants)
-            val diagnostics = diagnosticsMeasurementsSource.load(report.diagnosticsPackagePath, report.variants)
-            diagnostics.warnings.forEach { println("diagnostics warning: $it") }
-            val augmentedMeasurements = measurements.toMutableMap().apply {
-                for ((variant, rows) in diagnostics.measurements) {
-                    this[variant] = get(variant).orEmpty() + rows
-                }
-            }
+            val diagnosticsAugmentation =
+                DiagnosticsMeasurementAugmenter(diagnosticsMeasurementsSource).augmentWithDiagnostics(
+                    measurements = measurements,
+                    diagnosticsPackagePath = report.diagnosticsPackagePath,
+                    reportVariants = report.variants,
+                )
+            val augmentedMeasurements = diagnosticsAugmentation.measurements
             if (augmentedMeasurements.isNotEmpty()) {
                 val outputJson = report.outputJson
                 if (outputJson != null) {
@@ -40,7 +41,7 @@ class ExperimentReport(
                             report = report,
                             measurements = augmentedMeasurements,
                             buildsByVariant = variants,
-                            diagnostics = diagnostics,
+                            diagnostics = diagnosticsAugmentation.diagnostics,
                         )
                     ExperimentJsonWriter().write(result, Path.of(outputJson))
                     println("generating json $outputJson")
