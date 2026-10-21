@@ -10,6 +10,7 @@ import io.github.cdsap.compare.output.chart.ChartOptions
 import io.github.cdsap.compare.output.chart.KotlinBuildReportsConstants
 import io.github.cdsap.geapi.client.model.BuildWithResourceUsage
 import org.nield.kotlinstatistics.median
+import java.util.Locale
 
 class ChartGenerator(
     val report: Report,
@@ -286,6 +287,26 @@ class ChartGenerator(
             else -> error("Not a diagnostics metric: $metric")
         }
 
+    private fun diagnosticYAxisLabel(metric: Metric) =
+        when (metric) {
+            Metric.CPU_DIAGNOSTICS -> "CPU Diagnostics mean"
+            Metric.JFR -> "JFR size (MB)"
+            else -> error("Not a diagnostics metric: $metric")
+        }
+
+    private fun diagnosticChartValue(
+        row: SingleMeasurement,
+        mean: Double,
+    ): String {
+        val value =
+            if (row.metric == Metric.JFR && row.name.contains("size_bytes")) {
+                mean / (1024.0 * 1024.0)
+            } else {
+                mean
+            }
+        return String.format(Locale.US, "%.4f", value)
+    }
+
     private fun getCommonTaskPaths(variants: Map<String, List<BuildWithResourceUsage>>): List<String> {
         val taskPathsPerVariant =
             variants.values.map { builds ->
@@ -406,8 +427,10 @@ class ChartGenerator(
         }
 
         // GC collections
-        uniqueTotalCollections.forEach { collection ->
-            scripts.add(generateGCCollectionsChart(variants, header, collection))
+        if (report.gcReport) {
+            uniqueTotalCollections.forEach { collection ->
+                scripts.add(generateGCCollectionsChart(variants, header, collection))
+            }
         }
 
         scripts.addAll(generateDiagnosticsChartScripts(measurements, header))
@@ -426,29 +449,38 @@ class ChartGenerator(
                     .filter { it.metric == metric }
                     .distinctBy { Triple(it.category, it.name, it.qualifier) }
             if (rows.isEmpty()) return@mapNotNull null
-            val labels = rows.joinToString(",") {
-                "'${escapeForJs(it.name + if (it.qualifier.isBlank()) "" else " (${it.qualifier})")}'"
-            }
-            val datasets = measurements.keys.joinToString(",") { variant ->
-                val values =
-                    rows.joinToString(",") { row ->
-                        measurements[variant]
-                            .orEmpty()
-                            .firstOrNull {
-                                it.metric == metric &&
-                                    it.category == row.category &&
-                                    it.name == row.name &&
-                                    it.qualifier == row.qualifier
-                            }?.variantMean?.toString() ?: "null"
-                    }
-                "{label: '${escapeForJs(variant.removeExperimentId(header.experimentId))}', " +
-                    "data: [$values], borderColor: '${chartColors.getColorForVariant(variant)}', tension: 0.1}"
-            }
+            val labels =
+                rows.joinToString(",") {
+                    "'${escapeForJs(it.name + if (it.qualifier.isBlank()) "" else " (${it.qualifier})")}'"
+                }
+            val datasets =
+                measurements.keys.joinToString(",") { variant ->
+                    val color = chartColors.getColorForVariant(variant)
+                    val values =
+                        rows.joinToString(",") { row ->
+                            val mean =
+                                measurements[variant]
+                                    .orEmpty()
+                                    .firstOrNull {
+                                        it.metric == metric &&
+                                            it.category == row.category &&
+                                            it.name == row.name &&
+                                            it.qualifier == row.qualifier
+                                    }?.variantMean
+                            (mean as? Number)?.toDouble()?.let { diagnosticChartValue(row, it) } ?: "null"
+                        }
+                    "{label: '${escapeForJs(variant.removeExperimentId(header.experimentId))}', " +
+                        "data: [$values], backgroundColor: '$color', borderColor: '$color'}"
+                }
             """
             new Chart(document.getElementById('${diagnosticChartId(metric)}'), {
-                type: 'line',
+                type: 'bar',
                 data: {labels: [$labels], datasets: [$datasets]},
-                options: ${chartOptions.getChartOptions("${diagnosticChartTitle(metric)} mean")}
+                options: ${chartOptions.getChartOptions(
+                yAxisLabel = diagnosticYAxisLabel(metric),
+                minY = 0,
+                xAxisLabel = "Metric",
+            )}
             });
             """.trimIndent()
         }
