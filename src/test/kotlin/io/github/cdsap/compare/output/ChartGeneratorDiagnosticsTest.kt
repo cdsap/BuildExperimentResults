@@ -6,6 +6,7 @@ import io.github.cdsap.compare.model.Report
 import io.github.cdsap.compare.model.SingleMeasurement
 import io.github.cdsap.geapi.client.model.AvoidanceSavingsSummary
 import io.github.cdsap.geapi.client.model.BuildWithResourceUsage
+import io.github.cdsap.geapi.client.model.CustomValue
 import io.github.cdsap.geapi.client.model.PerformanceMetrics
 import io.github.cdsap.geapi.client.model.Task
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -56,10 +57,67 @@ class ChartGeneratorDiagnosticsTest {
         assertTrue(html.contains("<h2>CPU Diagnostics</h2>"))
         assertTrue(html.contains("id=\"cpuDiagnosticsChart\""))
         assertTrue(html.contains("vmstat.us"))
+        assertTrue(html.contains("type: 'bar'"))
+        assertTrue(html.contains("text: 'Metric'"))
         assertTrue(!html.contains("<h2>JFR Diagnostics</h2>"))
     }
 
-    private fun build() =
+    @Test
+    fun doesNotEmitGcChartScriptsWhenGcReportIsDisabled() {
+        val html =
+            ChartGenerator(report()).generateCharts(
+                variants = mapOf("variant-a" to listOf(buildWithGcCustomValues())),
+                header = Header(task = "assemble", numberOfBuilds = listOf(1), url = "https://ge/"),
+                measurements = cpuMeasurements(),
+            )
+
+        assertTrue(html.contains("id=\"cpuDiagnosticsChart\""))
+        assertTrue(html.contains("getElementById('cpuDiagnosticsChart')"))
+        assertTrue(!html.contains("getElementById('gc-gradle_gc.log')"))
+        assertTrue(!html.contains("<canvas id=\"gc-gradle_gc.log\""))
+    }
+
+    private fun report() =
+        Report(
+            taskPathReport = false,
+            taskTypeReport = false,
+            kotlinBuildReport = false,
+            processesReport = false,
+            buildReport = false,
+            resourceUsageReport = false,
+            isProfile = false,
+            gcReport = false,
+            warmupsToDiscard = 0,
+            variants = listOf("variant-a"),
+            onlyCacheableOutcome = false,
+            thresholdTaskDuration = -1,
+        )
+
+    private fun cpuMeasurements() =
+        mapOf(
+            "variant-a" to
+                listOf(
+                    SingleMeasurement(
+                        category = "cpu",
+                        name = "vmstat.us",
+                        variantMean = 10.0,
+                        variantP50 = 9.0,
+                        variantP90 = 12.0,
+                        qualifier = "%",
+                        metric = Metric.CPU_DIAGNOSTICS,
+                    ),
+                ),
+        )
+
+    private fun buildWithGcCustomValues() =
+        build(
+            values =
+                arrayOf(
+                    CustomValue("gc-gradle_gc.log-total-collections", "10"),
+                ),
+        )
+
+    private fun build(values: Array<CustomValue> = emptyArray()): BuildWithResourceUsage =
         BuildWithResourceUsage(
             id = "build-1",
             builtTool = "gradle",
@@ -76,6 +134,7 @@ class ChartGeneratorDiagnosticsTest {
             nonExecution = metrics(),
             total = metrics(),
             totalMemory = 0L,
+            values = values,
         )
 
     private fun metrics() =

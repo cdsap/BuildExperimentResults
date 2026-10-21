@@ -4,6 +4,7 @@ class ChartOptions {
     fun getChartOptions(
         yAxisLabel: String,
         minY: Int? = null,
+        xAxisLabel: String = "Build Number",
     ): String =
         """
         {
@@ -35,7 +36,7 @@ class ChartOptions {
                 x: {
                     title: {
                         display: true,
-                        text: 'Build Number'
+                        text: '$xAxisLabel'
                     }
                 }
             }
