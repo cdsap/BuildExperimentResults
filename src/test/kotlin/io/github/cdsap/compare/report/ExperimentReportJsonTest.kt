@@ -2,6 +2,7 @@ package io.github.cdsap.compare.report
 
 import com.google.gson.JsonParser
 import io.github.cdsap.compare.model.Report
+import io.github.cdsap.compare.output.ExperimentView
 import io.github.cdsap.compare.report.measurements.BuildWithResourceUsageProvider
 import io.github.cdsap.geapi.client.model.AvoidanceSavingsSummary
 import io.github.cdsap.geapi.client.model.BuildWithResourceUsage
@@ -51,6 +52,7 @@ class ExperimentReportJsonTest {
                             diagnosticsPackagePath =
                                 javaClass.classLoader.getResource("diagnostics-cli/diagnostics-package.json")!!.path,
                         ),
+                    output = ExperimentView(report(jsonPath.toString())),
                 ).process()
             }
 
