@@ -1,6 +1,7 @@
 package io.github.cdsap.compare.report.diagnostics
 
 import io.github.cdsap.compare.model.Report
+import io.github.cdsap.compare.output.ExperimentView
 import io.github.cdsap.compare.report.BuildDataProvider
 import io.github.cdsap.compare.report.ExperimentReport
 import io.github.cdsap.compare.report.measurements.BuildWithResourceUsageProvider
@@ -68,6 +69,7 @@ class ExperimentDiagnosticsCliE2ETest {
                     report =
                         report(listOf("cpu2", "cpu_test"))
                             .copy(diagnosticsPackagePath = packageFile.absolutePath),
+                    output = ExperimentView(report(listOf("cpu2", "cpu_test"))),
                 ).process()
             }
             val csv =

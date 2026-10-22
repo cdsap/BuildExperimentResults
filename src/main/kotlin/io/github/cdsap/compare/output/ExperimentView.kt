@@ -4,6 +4,7 @@ import ConsoleGenerator
 import io.github.cdsap.compare.model.Header
 import io.github.cdsap.compare.model.Report
 import io.github.cdsap.compare.model.SingleMeasurement
+import io.github.cdsap.compare.report.ExperimentOutput
 import io.github.cdsap.geapi.client.model.BuildWithResourceUsage
 import java.io.File
 import java.text.SimpleDateFormat
@@ -12,14 +13,14 @@ import java.util.Date
 /** Compatibility HTML/CSV/GHA output. Canonical machine-readable results are written by --output-json. */
 class ExperimentView(
     val report: Report,
-) {
+) : ExperimentOutput {
     private val htmlGenerator: HtmlGenerator = HtmlGenerator(report, chartGenerator = ChartGenerator(report))
     private val csvGenerator: CsvGenerator = CsvGenerator(report)
     private val consoleGenerator: ConsoleGenerator = ConsoleGenerator(report)
 
-    fun generateOutputs(
+    override fun generateOutputs(
         measurement: Map<String, List<SingleMeasurement>>,
-        variants1: Map<String, List<BuildWithResourceUsage>>,
+        buildsByVariant: Map<String, List<BuildWithResourceUsage>>,
     ) {
         val variants = measurement.keys.toList()
         val timestamp = SimpleDateFormat("yyyyMMddHHmmss").format(Date())
@@ -29,9 +30,9 @@ class ExperimentView(
 
         val header =
             Header(
-                numberOfBuilds = variants1.values.flatMap { listOf(it.size) },
+                numberOfBuilds = buildsByVariant.values.flatMap { listOf(it.size) },
                 task =
-                    variants1.values
+                    buildsByVariant.values
                         .first()
                         .first()
                         .requestedTask
@@ -42,14 +43,14 @@ class ExperimentView(
                 linkCsv = csvFile,
                 experimentRunId = report.experimentRunId,
             )
-        println(consoleGenerator.generate(measurement, variants, header, variants1))
+        println(consoleGenerator.generate(measurement, variants, header, buildsByVariant))
         println("generating html charts $htmlFile")
         File(htmlFile).writeText(
             htmlGenerator.generate(
                 measurement,
                 variants,
                 header.copy(htmlSummary = true),
-                variants1,
+                buildsByVariant,
             ),
         )
         println("generating csv $csvFile")
@@ -60,7 +61,7 @@ class ExperimentView(
                 measurement,
                 variants,
                 header,
-                variants1,
+                buildsByVariant,
             ),
         )
         if (File(csvFile).exists() && report.openAiRequest) {

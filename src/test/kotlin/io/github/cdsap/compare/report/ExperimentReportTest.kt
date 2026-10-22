@@ -16,16 +16,17 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.io.TempDir
-import java.io.File
-import java.nio.file.Path
 import kotlin.reflect.full.primaryConstructor
 
 class ExperimentReportTest {
     private val metrics = BuildWithResourceUsageProvider()
-
-    @TempDir
-    lateinit var tempDir: Path
+    private val fakeOutput =
+        object : ExperimentOutput {
+            override fun generateOutputs(
+                measurement: Map<String, List<SingleMeasurement>>,
+                buildsByVariant: Map<String, List<BuildWithResourceUsage>>,
+            ) = Unit
+        }
 
     @Test
     fun dependsOnBuildDataProviderPort() {
@@ -57,6 +58,7 @@ class ExperimentReportTest {
                         filter = filter(),
                         buildDataProvider = fakeBuildDataProvider,
                         report = report(variants = emptyList()),
+                        output = fakeOutput,
                     ).process()
                 }
             }
@@ -82,6 +84,7 @@ class ExperimentReportTest {
                         filter = filter(),
                         buildDataProvider = fakeBuildDataProvider,
                         report = report(variants = listOf("variant-a")),
+                        output = fakeOutput,
                     ).process()
                 }
             }
@@ -93,6 +96,7 @@ class ExperimentReportTest {
     @Test
     fun processContinuesWithNonEmptyVariantsUsingFakeBuildDataProvider() {
         var buildDataProviderInvoked = false
+        var outputInvoked = false
         val fakeBuildDataProvider =
             object : BuildDataProvider {
                 override suspend fun getBuilds(filter: Filter): List<BuildWithResourceUsage> {
@@ -106,36 +110,31 @@ class ExperimentReportTest {
                 }
             }
 
-        val before =
-            File(".")
-                .listFiles()
-                ?.filter { it.name.startsWith("experiment_results") }
-                ?.map { it.absolutePath }
-                ?.toSet()
-                .orEmpty()
-
-        try {
-            runBlocking {
-                ExperimentReport(
-                    filter = filter(),
-                    buildDataProvider = fakeBuildDataProvider,
-                    report =
-                        report(
-                            variants = listOf("variant-a", "variant-empty"),
-                            buildReport = true,
-                            taskPathReport = false,
-                            taskTypeReport = false,
-                        ),
-                ).process()
-            }
-        } finally {
-            File(".")
-                .listFiles()
-                ?.filter { it.name.startsWith("experiment_results") && it.absolutePath !in before }
-                ?.forEach { it.delete() }
+        runBlocking {
+            ExperimentReport(
+                filter = filter(),
+                buildDataProvider = fakeBuildDataProvider,
+                report =
+                    report(
+                        variants = listOf("variant-a", "variant-empty"),
+                        buildReport = true,
+                        taskPathReport = false,
+                        taskTypeReport = false,
+                    ),
+                output =
+                    object : ExperimentOutput {
+                        override fun generateOutputs(
+                            measurement: Map<String, List<SingleMeasurement>>,
+                            buildsByVariant: Map<String, List<BuildWithResourceUsage>>,
+                        ) {
+                            outputInvoked = true
+                        }
+                    },
+            ).process()
         }
 
         assertTrue(buildDataProviderInvoked)
+        assertTrue(outputInvoked)
     }
 
     @Test
@@ -175,43 +174,34 @@ class ExperimentReportTest {
                 }
             }
 
-        val before =
-            File(".")
-                .listFiles()
-                ?.filter { it.name.startsWith("experiment_results") }
-                ?.map { it.absolutePath }
-                ?.toSet()
-                .orEmpty()
-
-        try {
-            runBlocking {
-                ExperimentReport(
-                    filter = filter(),
-                    buildDataProvider = fakeBuildDataProvider,
-                    diagnosticsMeasurementsSource = fakeDiagnosticsSource,
-                    report =
-                        report(
-                            variants = listOf("variant-a"),
-                            buildReport = true,
-                            taskPathReport = false,
-                            taskTypeReport = false,
-                        ).copy(
-                            diagnosticsPackagePath = "does-not-exist.json",
-                            outputJson = tempDir.resolve("experiment-result.json").toString(),
-                        ),
-                ).process()
-            }
-        } finally {
-            File(".")
-                .listFiles()
-                ?.filter { it.name.startsWith("experiment_results") && it.absolutePath !in before }
-                ?.forEach { it.delete() }
+        val outputJson = java.io.File.createTempFile("experiment-report-test", ".json")
+        runBlocking {
+            ExperimentReport(
+                filter = filter(),
+                buildDataProvider = fakeBuildDataProvider,
+                diagnosticsMeasurementsSource = fakeDiagnosticsSource,
+                report =
+                    report(
+                        variants = listOf("variant-a"),
+                        buildReport = true,
+                        taskPathReport = false,
+                        taskTypeReport = false,
+                    ).copy(
+                        diagnosticsPackagePath = "does-not-exist.json",
+                        outputJson = outputJson.toString(),
+                    ),
+                output =
+                    object : ExperimentOutput {
+                        override fun generateOutputs(
+                            measurement: Map<String, List<SingleMeasurement>>,
+                            buildsByVariant: Map<String, List<BuildWithResourceUsage>>,
+                        ) = Unit
+                    },
+            ).process()
         }
 
         assertTrue(sourceInvoked)
-        assertTrue(
-            tempDir.resolve("experiment-result.json").toFile().readText().contains("\"name\": \"cpu\""),
-        )
+        assertTrue(outputJson.readText().contains("\"name\": \"cpu\""))
     }
 
     private fun filter() =

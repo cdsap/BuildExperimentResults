@@ -3,7 +3,6 @@ package io.github.cdsap.compare.report
 import io.github.cdsap.compare.export.ExperimentJsonWriter
 import io.github.cdsap.compare.export.ExperimentResultAssembler
 import io.github.cdsap.compare.model.Report
-import io.github.cdsap.compare.output.ExperimentView
 import io.github.cdsap.compare.report.diagnostics.DiagnosticsMeasurementAugmenter
 import io.github.cdsap.compare.report.diagnostics.DiagnosticsPackageLoader
 import io.github.cdsap.compare.report.diagnostics.DiagnosticsPackageSource
@@ -17,6 +16,7 @@ class ExperimentReport(
     private val filter: Filter,
     private val buildDataProvider: BuildDataProvider,
     private val report: Report,
+    private val output: ExperimentOutput,
     private val diagnosticsMeasurementsSource: DiagnosticsPackageSource = DiagnosticsPackageLoader(),
 ) {
     suspend fun process() {
@@ -46,7 +46,7 @@ class ExperimentReport(
                     ExperimentJsonWriter().write(result, Path.of(outputJson))
                     println("generating json $outputJson")
                 }
-                ExperimentView(report).generateOutputs(augmentedMeasurements, variants)
+                output.generateOutputs(augmentedMeasurements, variants)
             }
         }
     }
