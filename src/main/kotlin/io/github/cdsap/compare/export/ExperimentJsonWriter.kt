@@ -13,7 +13,6 @@ class ExperimentJsonWriter(
     private val gson: Gson =
         GsonBuilder()
             .serializeNulls()
-            .setPrettyPrinting()
             .create(),
 ) {
     fun write(
