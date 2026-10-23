@@ -1,7 +1,9 @@
 package io.github.cdsap.compare.export
 
+import com.google.gson.GsonBuilder
 import com.google.gson.JsonParser
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
@@ -14,11 +16,21 @@ class ExperimentJsonWriterTest {
     lateinit var tempDir: Path
 
     @Test
-    fun writesPrettyJsonWithFiniteNumbers() {
+    fun writesCompactJsonWithFiniteNumbers() {
         val path = tempDir.resolve("experiment-result.json")
         ExperimentJsonWriter().write(validResult(), path)
 
-        val json = JsonParser.parseString(path.toFile().readText()).asJsonObject
+        val text = path.toFile().readText()
+        val pretty =
+            GsonBuilder()
+                .serializeNulls()
+                .setPrettyPrinting()
+                .create()
+                .toJson(validResult())
+        assertFalse(text.contains('\n'), "canonical JSON must be compact, not pretty-printed")
+        assertTrue(text.length < pretty.length)
+
+        val json = JsonParser.parseString(text).asJsonObject
         assertEquals("1.0.0", json.get("schemaVersion").asString)
         assertTrue(json.getAsJsonArray("metrics")[0].asJsonObject.getAsJsonObject("values")
             .getAsJsonObject("baseline").get("mean").isJsonPrimitive)
