@@ -1,5 +1,6 @@
 package io.github.cdsap.compare.report
 
+import com.google.gson.JsonParser
 import io.github.cdsap.compare.model.Metric
 import io.github.cdsap.compare.model.Report
 import io.github.cdsap.compare.model.SingleMeasurement
@@ -201,7 +202,8 @@ class ExperimentReportTest {
         }
 
         assertTrue(sourceInvoked)
-        assertTrue(outputJson.readText().contains("\"name\": \"cpu\""))
+        val metrics = JsonParser.parseString(outputJson.readText()).asJsonObject.getAsJsonArray("metrics")
+        assertTrue(metrics.any { it.asJsonObject.get("name").asString == "cpu" })
     }
 
     private fun filter() =
