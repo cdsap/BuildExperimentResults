@@ -19,6 +19,8 @@ class ExperimentReport(
     private val output: ExperimentOutput,
     private val diagnosticsMeasurementsSource: DiagnosticsPackageSource = DiagnosticsPackageLoader(),
 ) {
+    private val diagnosticsMeasurementAugmenter = DiagnosticsMeasurementAugmenter(diagnosticsMeasurementsSource)
+
     suspend fun process() {
         if (report.variants.isEmpty()) {
             throw IllegalArgumentException("At least one variant is required")
@@ -27,7 +29,7 @@ class ExperimentReport(
             val variants = checkVariantsData(FilterBuildsPerVariant(report).get(buildWithResourceUsage))
             val measurements = MeasurementsByReport(report).get(variants)
             val diagnosticsAugmentation =
-                DiagnosticsMeasurementAugmenter(diagnosticsMeasurementsSource).augmentWithDiagnostics(
+                diagnosticsMeasurementAugmenter.augmentWithDiagnostics(
                     measurements = measurements,
                     diagnosticsPackagePath = report.diagnosticsPackagePath,
                     reportVariants = report.variants,
