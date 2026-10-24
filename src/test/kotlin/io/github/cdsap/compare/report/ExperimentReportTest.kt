@@ -1,6 +1,7 @@
 package io.github.cdsap.compare.report
 
 import com.google.gson.JsonParser
+import io.github.cdsap.compare.export.ExperimentResultDto
 import io.github.cdsap.compare.model.Metric
 import io.github.cdsap.compare.model.Report
 import io.github.cdsap.compare.model.SingleMeasurement
@@ -14,6 +15,7 @@ import io.github.cdsap.geapi.client.model.Filter
 import io.github.cdsap.geapi.client.model.Task
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
@@ -43,6 +45,14 @@ class ExperimentReportTest {
         val diagnosticsSourceParameter = constructorParameters.single { it.name == "diagnosticsMeasurementsSource" }
 
         assertEquals(DiagnosticsPackageSource::class, diagnosticsSourceParameter.type.classifier)
+    }
+
+    @Test
+    fun dependsOnCanonicalResultOutputPort() {
+        val constructorParameters = ExperimentReport::class.primaryConstructor!!.parameters
+        val resultOutputParameter = constructorParameters.single { it.name == "resultOutput" }
+
+        assertEquals(ExperimentResultOutput::class, resultOutputParameter.type.classifier)
     }
 
     @Test
@@ -204,6 +214,44 @@ class ExperimentReportTest {
         assertTrue(sourceInvoked)
         val metrics = JsonParser.parseString(outputJson.readText()).asJsonObject.getAsJsonArray("metrics")
         assertTrue(metrics.any { it.asJsonObject.get("name").asString == "cpu" })
+    }
+
+    @Test
+    fun processDeliversCanonicalResultToInjectedOutputWithoutFilesystemAccess() {
+        var deliveredResult: ExperimentResultDto? = null
+        var deliveredPath: String? = null
+        val fakeBuildDataProvider =
+            object : BuildDataProvider {
+                override suspend fun getBuilds(filter: Filter): List<BuildWithResourceUsage> =
+                    listOf(usageBuild(id = "build-1", tags = arrayOf("variant-a"), buildDuration = 10L))
+            }
+        val fakeResultOutput =
+            object : ExperimentResultOutput {
+                override fun write(result: ExperimentResultDto, outputJson: String) {
+                    deliveredResult = result
+                    deliveredPath = outputJson
+                }
+            }
+
+        runBlocking {
+            ExperimentReport(
+                filter = filter(),
+                buildDataProvider = fakeBuildDataProvider,
+                report =
+                    report(
+                        variants = listOf("variant-a"),
+                        buildReport = true,
+                        taskPathReport = false,
+                        taskTypeReport = false,
+                    ).copy(outputJson = "does-not-need-to-exist.json"),
+                output = fakeOutput,
+                resultOutput = fakeResultOutput,
+            ).process()
+        }
+
+        assertNotNull(deliveredResult)
+        assertEquals("does-not-need-to-exist.json", deliveredPath)
+        assertEquals("1.0.0", deliveredResult?.schemaVersion)
     }
 
     private fun filter() =
