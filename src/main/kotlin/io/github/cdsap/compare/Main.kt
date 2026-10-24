@@ -11,6 +11,7 @@ import com.github.ajalt.clikt.parameters.options.required
 import com.github.ajalt.clikt.parameters.types.int
 import com.github.ajalt.clikt.parameters.types.long
 import io.github.cdsap.compare.model.Report
+import io.github.cdsap.compare.export.ExperimentJsonFileOutput
 import io.github.cdsap.compare.output.ExperimentView
 import io.github.cdsap.compare.report.DevelocityBuildDataProvider
 import io.github.cdsap.compare.report.ExperimentReport
@@ -125,6 +126,7 @@ class Experiment : CliktCommand() {
                 buildDataProvider = DevelocityBuildDataProvider(GEClient(apiKey, url), isProfile = profile),
                 report = report,
                 output = ExperimentView(report),
+                resultOutput = ExperimentJsonFileOutput(),
             ).process()
         }
     }
