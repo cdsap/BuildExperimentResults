@@ -1,7 +1,7 @@
 package io.github.cdsap.compare.report
 
 import com.google.gson.JsonParser
-import io.github.cdsap.compare.export.ExperimentResultDto
+import io.github.cdsap.compare.export.JsonExperimentResultOutput
 import io.github.cdsap.compare.model.Metric
 import io.github.cdsap.compare.model.Report
 import io.github.cdsap.compare.model.SingleMeasurement
@@ -28,6 +28,16 @@ class ExperimentReportTest {
             override fun generateOutputs(
                 measurement: Map<String, List<SingleMeasurement>>,
                 buildsByVariant: Map<String, List<BuildWithResourceUsage>>,
+            ) = Unit
+        }
+    private val fakeResultOutput =
+        object : ExperimentResultOutput {
+            override fun write(
+                report: Report,
+                measurements: Map<String, List<SingleMeasurement>>,
+                buildsByVariant: Map<String, List<BuildWithResourceUsage>>,
+                diagnostics: DiagnosticsMeasurements,
+                outputJson: String,
             ) = Unit
         }
 
@@ -70,6 +80,7 @@ class ExperimentReportTest {
                         buildDataProvider = fakeBuildDataProvider,
                         report = report(variants = emptyList()),
                         output = fakeOutput,
+                        resultOutput = fakeResultOutput,
                     ).process()
                 }
             }
@@ -96,6 +107,7 @@ class ExperimentReportTest {
                         buildDataProvider = fakeBuildDataProvider,
                         report = report(variants = listOf("variant-a")),
                         output = fakeOutput,
+                        resultOutput = fakeResultOutput,
                     ).process()
                 }
             }
@@ -141,6 +153,7 @@ class ExperimentReportTest {
                             outputInvoked = true
                         }
                     },
+                resultOutput = fakeResultOutput,
             ).process()
         }
 
@@ -208,6 +221,7 @@ class ExperimentReportTest {
                             buildsByVariant: Map<String, List<BuildWithResourceUsage>>,
                         ) = Unit
                     },
+                resultOutput = JsonExperimentResultOutput(),
             ).process()
         }
 
@@ -218,7 +232,10 @@ class ExperimentReportTest {
 
     @Test
     fun processDeliversCanonicalResultToInjectedOutputWithoutFilesystemAccess() {
-        var deliveredResult: ExperimentResultDto? = null
+        var deliveredReport: Report? = null
+        var deliveredMeasurements: Map<String, List<SingleMeasurement>>? = null
+        var deliveredBuilds: Map<String, List<BuildWithResourceUsage>>? = null
+        var deliveredDiagnostics: DiagnosticsMeasurements? = null
         var deliveredPath: String? = null
         val fakeBuildDataProvider =
             object : BuildDataProvider {
@@ -227,8 +244,17 @@ class ExperimentReportTest {
             }
         val fakeResultOutput =
             object : ExperimentResultOutput {
-                override fun write(result: ExperimentResultDto, outputJson: String) {
-                    deliveredResult = result
+                override fun write(
+                    report: Report,
+                    measurements: Map<String, List<SingleMeasurement>>,
+                    buildsByVariant: Map<String, List<BuildWithResourceUsage>>,
+                    diagnostics: DiagnosticsMeasurements,
+                    outputJson: String,
+                ) {
+                    deliveredReport = report
+                    deliveredMeasurements = measurements
+                    deliveredBuilds = buildsByVariant
+                    deliveredDiagnostics = diagnostics
                     deliveredPath = outputJson
                 }
             }
@@ -249,9 +275,12 @@ class ExperimentReportTest {
             ).process()
         }
 
-        assertNotNull(deliveredResult)
+        assertNotNull(deliveredReport)
+        assertNotNull(deliveredMeasurements)
+        assertNotNull(deliveredBuilds)
+        assertNotNull(deliveredDiagnostics)
         assertEquals("does-not-need-to-exist.json", deliveredPath)
-        assertEquals("1.0.0", deliveredResult?.schemaVersion)
+        assertEquals(1, deliveredBuilds?.getValue("variant-a")?.size)
     }
 
     private fun filter() =

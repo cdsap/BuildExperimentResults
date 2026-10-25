@@ -1,5 +1,6 @@
 package io.github.cdsap.compare.report.diagnostics
 
+import io.github.cdsap.compare.export.JsonExperimentResultOutput
 import io.github.cdsap.compare.model.Report
 import io.github.cdsap.compare.output.ExperimentView
 import io.github.cdsap.compare.report.BuildDataProvider
@@ -70,6 +71,7 @@ class ExperimentDiagnosticsCliE2ETest {
                         report(listOf("cpu2", "cpu_test"))
                             .copy(diagnosticsPackagePath = packageFile.absolutePath),
                     output = ExperimentView(report(listOf("cpu2", "cpu_test"))),
+                    resultOutput = JsonExperimentResultOutput(),
                 ).process()
             }
             val csv =
