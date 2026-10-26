@@ -1,7 +1,5 @@
 package io.github.cdsap.compare.report
 
-import io.github.cdsap.compare.export.ExperimentJsonFileOutput
-import io.github.cdsap.compare.export.ExperimentResultAssembler
 import io.github.cdsap.compare.model.Report
 import io.github.cdsap.compare.report.diagnostics.DiagnosticsMeasurementAugmenter
 import io.github.cdsap.compare.report.diagnostics.DiagnosticsPackageLoader
@@ -17,7 +15,7 @@ class ExperimentReport(
     private val report: Report,
     private val output: ExperimentOutput,
     private val diagnosticsMeasurementsSource: DiagnosticsPackageSource = DiagnosticsPackageLoader(),
-    private val resultOutput: ExperimentResultOutput = ExperimentJsonFileOutput(),
+    private val resultOutput: ExperimentResultOutput,
 ) {
     private val diagnosticsMeasurementAugmenter = DiagnosticsMeasurementAugmenter(diagnosticsMeasurementsSource)
 
@@ -38,14 +36,13 @@ class ExperimentReport(
             if (augmentedMeasurements.isNotEmpty()) {
                 val outputJson = report.outputJson
                 if (outputJson != null) {
-                    val result =
-                        ExperimentResultAssembler().assemble(
-                            report = report,
-                            measurements = augmentedMeasurements,
-                            buildsByVariant = variants,
-                            diagnostics = diagnosticsAugmentation.diagnostics,
-                        )
-                    resultOutput.write(result, outputJson)
+                    resultOutput.write(
+                        report = report,
+                        measurements = augmentedMeasurements,
+                        buildsByVariant = variants,
+                        diagnostics = diagnosticsAugmentation.diagnostics,
+                        outputJson = outputJson,
+                    )
                     println("generating json $outputJson")
                 }
                 output.generateOutputs(augmentedMeasurements, variants)
