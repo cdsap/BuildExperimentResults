@@ -15,7 +15,7 @@ class ExperimentReport(
     private val report: Report,
     private val output: ExperimentOutput,
     private val diagnosticsMeasurementsSource: DiagnosticsPackageSource = DiagnosticsPackageLoader(),
-    private val resultOutput: ExperimentResultOutput,
+    private val resultExporter: ExperimentResultExporter,
 ) {
     private val diagnosticsMeasurementAugmenter = DiagnosticsMeasurementAugmenter(diagnosticsMeasurementsSource)
 
@@ -36,14 +36,13 @@ class ExperimentReport(
             if (augmentedMeasurements.isNotEmpty()) {
                 val outputJson = report.outputJson
                 if (outputJson != null) {
-                    resultOutput.write(
+                    resultExporter.export(
                         report = report,
                         measurements = augmentedMeasurements,
                         buildsByVariant = variants,
                         diagnostics = diagnosticsAugmentation.diagnostics,
                         outputJson = outputJson,
                     )
-                    println("generating json $outputJson")
                 }
                 output.generateOutputs(augmentedMeasurements, variants)
             }

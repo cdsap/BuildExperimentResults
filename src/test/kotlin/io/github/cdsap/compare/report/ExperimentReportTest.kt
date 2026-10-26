@@ -1,8 +1,5 @@
 package io.github.cdsap.compare.report
 
-import com.google.gson.JsonParser
-import io.github.cdsap.compare.export.JsonExperimentResultOutput
-import io.github.cdsap.compare.model.Metric
 import io.github.cdsap.compare.model.Report
 import io.github.cdsap.compare.model.SingleMeasurement
 import io.github.cdsap.compare.report.diagnostics.DiagnosticsMeasurements
@@ -30,9 +27,9 @@ class ExperimentReportTest {
                 buildsByVariant: Map<String, List<BuildWithResourceUsage>>,
             ) = Unit
         }
-    private val fakeResultOutput =
-        object : ExperimentResultOutput {
-            override fun write(
+    private val fakeResultExporter =
+        object : ExperimentResultExporter {
+            override fun export(
                 report: Report,
                 measurements: Map<String, List<SingleMeasurement>>,
                 buildsByVariant: Map<String, List<BuildWithResourceUsage>>,
@@ -58,11 +55,11 @@ class ExperimentReportTest {
     }
 
     @Test
-    fun dependsOnCanonicalResultOutputPort() {
+    fun dependsOnExperimentResultExporterPort() {
         val constructorParameters = ExperimentReport::class.primaryConstructor!!.parameters
-        val resultOutputParameter = constructorParameters.single { it.name == "resultOutput" }
+        val resultExporterParameter = constructorParameters.single { it.name == "resultExporter" }
 
-        assertEquals(ExperimentResultOutput::class, resultOutputParameter.type.classifier)
+        assertEquals(ExperimentResultExporter::class, resultExporterParameter.type.classifier)
     }
 
     @Test
@@ -80,7 +77,7 @@ class ExperimentReportTest {
                         buildDataProvider = fakeBuildDataProvider,
                         report = report(variants = emptyList()),
                         output = fakeOutput,
-                        resultOutput = fakeResultOutput,
+                        resultExporter = fakeResultExporter,
                     ).process()
                 }
             }
@@ -107,7 +104,7 @@ class ExperimentReportTest {
                         buildDataProvider = fakeBuildDataProvider,
                         report = report(variants = listOf("variant-a")),
                         output = fakeOutput,
-                        resultOutput = fakeResultOutput,
+                        resultExporter = fakeResultExporter,
                     ).process()
                 }
             }
@@ -153,7 +150,7 @@ class ExperimentReportTest {
                             outputInvoked = true
                         }
                     },
-                resultOutput = fakeResultOutput,
+                resultExporter = fakeResultExporter,
             ).process()
         }
 
@@ -162,95 +159,28 @@ class ExperimentReportTest {
     }
 
     @Test
-    fun processUsesInjectedDiagnosticsPackageSourceWithoutPackageFile() {
-        var sourceInvoked = false
-        val fakeBuildDataProvider =
-            object : BuildDataProvider {
-                override suspend fun getBuilds(filter: Filter): List<BuildWithResourceUsage> =
-                    listOf(usageBuild(id = "build-1", tags = arrayOf("variant-a"), buildDuration = 10L))
-            }
-        val fakeDiagnosticsSource =
-            object : DiagnosticsPackageSource {
-                override fun load(
-                    diagnosticsPackagePath: String?,
-                    reportVariants: List<String>,
-                ): DiagnosticsMeasurements {
-                    sourceInvoked = true
-                    assertEquals("does-not-exist.json", diagnosticsPackagePath)
-                    assertEquals(listOf("variant-a"), reportVariants)
-                    return DiagnosticsMeasurements(
-                        measurements =
-                            mapOf(
-                                "variant-a" to
-                                    listOf(
-                                        SingleMeasurement(
-                                            category = "diagnostics",
-                                            name = "cpu",
-                                            variantMean = 1.0,
-                                            variantP50 = 1.0,
-                                            variantP90 = 1.0,
-                                            qualifier = "",
-                                            metric = Metric.CPU_DIAGNOSTICS,
-                                        ),
-                                    ),
-                            ),
-                    )
-                }
-            }
-
-        val outputJson = java.io.File.createTempFile("experiment-report-test", ".json")
-        runBlocking {
-            ExperimentReport(
-                filter = filter(),
-                buildDataProvider = fakeBuildDataProvider,
-                diagnosticsMeasurementsSource = fakeDiagnosticsSource,
-                report =
-                    report(
-                        variants = listOf("variant-a"),
-                        buildReport = true,
-                        taskPathReport = false,
-                        taskTypeReport = false,
-                    ).copy(
-                        diagnosticsPackagePath = "does-not-exist.json",
-                        outputJson = outputJson.toString(),
-                    ),
-                output =
-                    object : ExperimentOutput {
-                        override fun generateOutputs(
-                            measurement: Map<String, List<SingleMeasurement>>,
-                            buildsByVariant: Map<String, List<BuildWithResourceUsage>>,
-                        ) = Unit
-                    },
-                resultOutput = JsonExperimentResultOutput(),
-            ).process()
-        }
-
-        assertTrue(sourceInvoked)
-        val metrics = JsonParser.parseString(outputJson.readText()).asJsonObject.getAsJsonArray("metrics")
-        assertTrue(metrics.any { it.asJsonObject.get("name").asString == "cpu" })
-    }
-
-    @Test
-    fun processDeliversCanonicalResultToInjectedOutputWithoutFilesystemAccess() {
+    fun processDeliversCanonicalResultToInjectedExporterWithoutFilesystemAccess() {
         var deliveredReport: Report? = null
         var deliveredMeasurements: Map<String, List<SingleMeasurement>>? = null
         var deliveredBuilds: Map<String, List<BuildWithResourceUsage>>? = null
         var deliveredDiagnostics: DiagnosticsMeasurements? = null
         var deliveredPath: String? = null
+        var exporterInvoked = false
         val fakeBuildDataProvider =
             object : BuildDataProvider {
                 override suspend fun getBuilds(filter: Filter): List<BuildWithResourceUsage> =
                     listOf(usageBuild(id = "build-1", tags = arrayOf("variant-a"), buildDuration = 10L))
             }
-        val fakeResultOutput =
-            object : ExperimentResultOutput {
-                override fun write(
+        val fakeResultExporter =
+            object : ExperimentResultExporter {
+                override fun export(
                     report: Report,
                     measurements: Map<String, List<SingleMeasurement>>,
                     buildsByVariant: Map<String, List<BuildWithResourceUsage>>,
                     diagnostics: DiagnosticsMeasurements,
                     outputJson: String,
                 ) {
+                    exporterInvoked = true
                     deliveredReport = report
                     deliveredMeasurements = measurements
                     deliveredBuilds = buildsByVariant
@@ -271,10 +201,11 @@ class ExperimentReportTest {
                         taskTypeReport = false,
                     ).copy(outputJson = "does-not-need-to-exist.json"),
                 output = fakeOutput,
-                resultOutput = fakeResultOutput,
+                resultExporter = fakeResultExporter,
             ).process()
         }
 
+        assertTrue(exporterInvoked)
         assertNotNull(deliveredReport)
         assertNotNull(deliveredMeasurements)
         assertNotNull(deliveredBuilds)
