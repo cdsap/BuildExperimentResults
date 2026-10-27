@@ -71,7 +71,7 @@ class ExperimentDiagnosticsCliE2ETest {
                         report(listOf("cpu2", "cpu_test"))
                             .copy(diagnosticsPackagePath = packageFile.absolutePath),
                     output = ExperimentView(report(listOf("cpu2", "cpu_test"))),
-                    resultExporter = JsonExperimentResultExporter(),
+                    canonicalJsonExporter = JsonExperimentResultExporter(),
                 ).process()
             }
             val csv =
