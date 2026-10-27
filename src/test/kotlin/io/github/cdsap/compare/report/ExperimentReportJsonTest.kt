@@ -54,7 +54,7 @@ class ExperimentReportJsonTest {
                                 javaClass.classLoader.getResource("diagnostics-cli/diagnostics-package.json")!!.path,
                         ),
                     output = ExperimentView(report(jsonPath.toString())),
-                    resultExporter = JsonExperimentResultExporter(),
+                    canonicalJsonExporter = JsonExperimentResultExporter(),
                 ).process()
             }
 

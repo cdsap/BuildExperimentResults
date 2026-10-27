@@ -1,16 +1,10 @@
 package io.github.cdsap.compare.report
 
-import io.github.cdsap.compare.model.Report
-import io.github.cdsap.compare.model.SingleMeasurement
-import io.github.cdsap.compare.report.diagnostics.DiagnosticsMeasurements
-import io.github.cdsap.geapi.client.model.BuildWithResourceUsage
+import io.github.cdsap.compare.export.CanonicalJsonExporter
 
-interface ExperimentResultExporter {
-    fun export(
-        report: Report,
-        measurements: Map<String, List<SingleMeasurement>>,
-        buildsByVariant: Map<String, List<BuildWithResourceUsage>>,
-        diagnostics: DiagnosticsMeasurements,
-        outputJson: String,
-    )
-}
+/**
+ * Compatibility name for callers that used the report-layer export port.
+ * New report orchestration depends on [CanonicalJsonExporter] directly.
+ */
+@Deprecated("Use CanonicalJsonExporter")
+interface ExperimentResultExporter : CanonicalJsonExporter

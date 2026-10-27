@@ -1,5 +1,6 @@
 package io.github.cdsap.compare.report
 
+import io.github.cdsap.compare.export.CanonicalJsonExporter
 import io.github.cdsap.compare.model.Report
 import io.github.cdsap.compare.model.SingleMeasurement
 import io.github.cdsap.compare.report.diagnostics.DiagnosticsMeasurements
@@ -27,8 +28,8 @@ class ExperimentReportTest {
                 buildsByVariant: Map<String, List<BuildWithResourceUsage>>,
             ) = Unit
         }
-    private val fakeResultExporter =
-        object : ExperimentResultExporter {
+    private val fakeCanonicalJsonExporter =
+        object : CanonicalJsonExporter {
             override fun export(
                 report: Report,
                 measurements: Map<String, List<SingleMeasurement>>,
@@ -55,11 +56,11 @@ class ExperimentReportTest {
     }
 
     @Test
-    fun dependsOnExperimentResultExporterPort() {
+    fun dependsOnCanonicalJsonExporterPort() {
         val constructorParameters = ExperimentReport::class.primaryConstructor!!.parameters
-        val resultExporterParameter = constructorParameters.single { it.name == "resultExporter" }
+        val exporterParameter = constructorParameters.single { it.name == "canonicalJsonExporter" }
 
-        assertEquals(ExperimentResultExporter::class, resultExporterParameter.type.classifier)
+        assertEquals(CanonicalJsonExporter::class, exporterParameter.type.classifier)
     }
 
     @Test
@@ -77,7 +78,7 @@ class ExperimentReportTest {
                         buildDataProvider = fakeBuildDataProvider,
                         report = report(variants = emptyList()),
                         output = fakeOutput,
-                        resultExporter = fakeResultExporter,
+                        canonicalJsonExporter = fakeCanonicalJsonExporter,
                     ).process()
                 }
             }
@@ -104,7 +105,7 @@ class ExperimentReportTest {
                         buildDataProvider = fakeBuildDataProvider,
                         report = report(variants = listOf("variant-a")),
                         output = fakeOutput,
-                        resultExporter = fakeResultExporter,
+                        canonicalJsonExporter = fakeCanonicalJsonExporter,
                     ).process()
                 }
             }
@@ -150,7 +151,7 @@ class ExperimentReportTest {
                             outputInvoked = true
                         }
                     },
-                resultExporter = fakeResultExporter,
+                canonicalJsonExporter = fakeCanonicalJsonExporter,
             ).process()
         }
 
@@ -171,8 +172,8 @@ class ExperimentReportTest {
                 override suspend fun getBuilds(filter: Filter): List<BuildWithResourceUsage> =
                     listOf(usageBuild(id = "build-1", tags = arrayOf("variant-a"), buildDuration = 10L))
             }
-        val fakeResultExporter =
-            object : ExperimentResultExporter {
+        val fakeCanonicalJsonExporter =
+            object : CanonicalJsonExporter {
                 override fun export(
                     report: Report,
                     measurements: Map<String, List<SingleMeasurement>>,
@@ -201,7 +202,7 @@ class ExperimentReportTest {
                         taskTypeReport = false,
                     ).copy(outputJson = "does-not-need-to-exist.json"),
                 output = fakeOutput,
-                resultExporter = fakeResultExporter,
+                canonicalJsonExporter = fakeCanonicalJsonExporter,
             ).process()
         }
 

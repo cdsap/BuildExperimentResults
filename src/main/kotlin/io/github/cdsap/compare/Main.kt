@@ -126,7 +126,7 @@ class Experiment : CliktCommand() {
                 buildDataProvider = DevelocityBuildDataProvider(GEClient(apiKey, url), isProfile = profile),
                 report = report,
                 output = ExperimentView(report),
-                resultExporter = JsonExperimentResultExporter(),
+                canonicalJsonExporter = JsonExperimentResultExporter(),
             ).process()
         }
     }
