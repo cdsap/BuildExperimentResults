@@ -27,71 +27,56 @@ class ExperimentReportJsonTest {
     @Test
     fun processWritesCanonicalJsonWithoutChangingHtmlCsvDefaults() {
         val jsonPath = tempDir.resolve("experiment-result.json")
-        val before =
-            File(".")
-                .listFiles()
-                ?.filter { it.name.startsWith("experiment_results") }
-                ?.map { it.absolutePath }
-                ?.toSet()
-                .orEmpty()
-
-        try {
-            runBlocking {
-                ExperimentReport(
-                    filter = filter(),
-                    buildDataProvider =
-                        object : BuildDataProvider {
-                            override suspend fun getBuilds(filter: Filter): List<BuildWithResourceUsage> =
-                                listOf(
-                                    usageBuild("build-1", arrayOf("cpu_test"), 10L),
-                                    usageBuild("build-2", arrayOf("cpu2"), 20L),
-                                )
-                        },
-                    report =
-                        report(jsonPath.toString()).copy(
-                            variants = listOf("cpu_test", "cpu2"),
-                            diagnosticsPackagePath =
-                                javaClass.classLoader.getResource("diagnostics-cli/diagnostics-package.json")!!.path,
-                        ),
-                    output = ExperimentView(report(jsonPath.toString())),
-                    canonicalJsonExporter = JsonExperimentResultExporter(),
-                ).process()
-            }
-
-            assertTrue(jsonPath.toFile().isFile)
-            val json = JsonParser.parseString(jsonPath.toFile().readText()).asJsonObject
-            assertEquals("1.0.0", json.get("schemaVersion").asString)
-            assertTrue(json.getAsJsonArray("metrics").size() > 0)
-            assertTrue(
-                json.getAsJsonArray("metrics").any { metric ->
-                    metric.asJsonObject.get("id").asString == "build.duration"
-                },
-            )
-            assertEquals("present", json.getAsJsonObject("diagnostics").get("status").asString)
-            assertTrue(
-                json.getAsJsonArray("metrics").any { metric ->
-                    metric.asJsonObject.get("family").asString == "cpu-diagnostics"
-                },
-            )
-            assertTrue(
-                json.getAsJsonArray("metrics").any { metric ->
-                    metric.asJsonObject.get("family").asString == "jfr"
-                },
-            )
-            val created =
-                File(".")
-                    .listFiles()
-                    ?.filter { it.name.startsWith("experiment_results") && it.absolutePath !in before }
-                    .orEmpty()
-            assertTrue(created.any { it.name.endsWith(".html") })
-            assertTrue(created.any { it.name.endsWith(".csv") })
-            assertTrue(created.any { it.name == "experiment_results_summary_gha" })
-        } finally {
-            File(".")
-                .listFiles()
-                ?.filter { it.name.startsWith("experiment_results") && it.absolutePath !in before }
-                ?.forEach { it.delete() }
+        val artifactWriter = RecordingArtifactWriter()
+        runBlocking {
+            ExperimentReport(
+                filter = filter(),
+                buildDataProvider =
+                    object : BuildDataProvider {
+                        override suspend fun getBuilds(filter: Filter): List<BuildWithResourceUsage> =
+                            listOf(
+                                usageBuild("build-1", arrayOf("cpu_test"), 10L),
+                                usageBuild("build-2", arrayOf("cpu2"), 20L),
+                            )
+                    },
+                report =
+                    report(jsonPath.toString()).copy(
+                        variants = listOf("cpu_test", "cpu2"),
+                        diagnosticsPackagePath =
+                            javaClass.classLoader.getResource("diagnostics-cli/diagnostics-package.json")!!.path,
+                    ),
+                output = ExperimentView(report(jsonPath.toString()), artifactWriter),
+                canonicalJsonExporter = JsonExperimentResultExporter(),
+            ).process()
         }
+
+        assertTrue(jsonPath.toFile().isFile)
+        val json = JsonParser.parseString(jsonPath.toFile().readText()).asJsonObject
+        assertEquals("1.0.0", json.get("schemaVersion").asString)
+        assertTrue(json.getAsJsonArray("metrics").size() > 0)
+        assertTrue(
+            json.getAsJsonArray("metrics").any { metric ->
+                metric.asJsonObject.get("id").asString == "build.duration"
+            },
+        )
+        assertEquals("present", json.getAsJsonObject("diagnostics").get("status").asString)
+        assertTrue(
+            json.getAsJsonArray("metrics").any { metric ->
+                metric.asJsonObject.get("family").asString == "cpu-diagnostics"
+            },
+        )
+        assertTrue(
+            json.getAsJsonArray("metrics").any { metric ->
+                metric.asJsonObject.get("family").asString == "jfr"
+            },
+        )
+        assertEquals(
+            setOf(artifactWriter.artifacts.html, artifactWriter.artifacts.csv, artifactWriter.artifacts.ghaSummary),
+            artifactWriter.writes.keys,
+        )
+        assertTrue(artifactWriter.writes.getValue(artifactWriter.artifacts.html).isNotEmpty())
+        assertTrue(artifactWriter.writes.getValue(artifactWriter.artifacts.csv).isNotEmpty())
+        assertTrue(artifactWriter.writes.getValue(artifactWriter.artifacts.ghaSummary).isNotEmpty())
     }
 
     private fun filter() =
@@ -121,6 +106,24 @@ class ExperimentReportJsonTest {
             reportKind = "caching",
             outputJson = outputJson,
         )
+
+    private class RecordingArtifactWriter : ExperimentArtifactWriter {
+        val artifacts = ExperimentArtifacts.timestamped("20261028203000")
+        val writes = linkedMapOf<String, String>()
+
+        override fun artifacts(): ExperimentArtifacts = artifacts
+
+        override fun write(
+            name: String,
+            content: String,
+        ) {
+            writes[name] = content
+        }
+
+        override fun exists(name: String) = writes.containsKey(name)
+
+        override fun file(name: String) = File(name)
+    }
 
     private fun usageBuild(
         id: String,
