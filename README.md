@@ -122,6 +122,7 @@ explicitly using the --requested-task parameter. Example:
 | Parameter | Description                                                                                           | Default |
 |-----------|-------------------------------------------------------------------------------------------------------|---------|
 | `--max-builds` | Maximum number of builds to process (max: 1000)                                                       | 200 |
+| `--from-instant` | Develocity `fromInstant` epoch millis (with reverse listing, builds before this instant)            | - |
 | `--project` | Project name to filter builds                                                                         | - |
 | `--requested-task` | Specific task to analyze                                                                              | - |
 | `--profile` | Enable profile mode (if the variant builds have origin in a gralde-profiler execution)                | false |
