@@ -10,8 +10,8 @@ import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.options.required
 import com.github.ajalt.clikt.parameters.types.int
 import com.github.ajalt.clikt.parameters.types.long
-import io.github.cdsap.compare.model.Report
 import io.github.cdsap.compare.export.JsonExperimentResultExporter
+import io.github.cdsap.compare.model.Report
 import io.github.cdsap.compare.output.ExperimentView
 import io.github.cdsap.compare.report.DevelocityBuildDataProvider
 import io.github.cdsap.compare.report.ExperimentReport
@@ -77,19 +77,22 @@ class Experiment : CliktCommand() {
         "--report-title",
         help = "Optional report title for canonical JSON",
     )
+    private val fromInstant by option(
+        "--from-instant",
+        help = "Develocity fromInstant epoch millis. With reverse listing, builds processed before this instant.",
+    ).long()
 
     override fun run() {
         if (!taskPathReport && !taskTypeReport && !kotlinBuildReport && !processesReport) {
             throw IllegalArgumentException("You need to specify at least one type of report")
         }
         val filter =
-            Filter(
+            experimentFilter(
                 maxBuilds = maxBuilds,
                 project = project,
-                tags = variants,
+                variants = variants,
                 requestedTask = requestedTask,
-                exclusiveTags = false,
-                clientType = ClientType.CLI,
+                fromInstant = fromInstant,
             )
         runBlocking {
             val report =
@@ -131,3 +134,20 @@ class Experiment : CliktCommand() {
         }
     }
 }
+
+internal fun experimentFilter(
+    maxBuilds: Int,
+    project: String?,
+    variants: List<String>,
+    requestedTask: String?,
+    fromInstant: Long?,
+): Filter =
+    Filter(
+        maxBuilds = maxBuilds,
+        project = project,
+        tags = variants,
+        requestedTask = requestedTask,
+        exclusiveTags = false,
+        clientType = ClientType.CLI,
+        fromInstant = fromInstant,
+    )
