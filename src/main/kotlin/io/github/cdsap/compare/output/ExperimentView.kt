@@ -4,15 +4,15 @@ import ConsoleGenerator
 import io.github.cdsap.compare.model.Header
 import io.github.cdsap.compare.model.Report
 import io.github.cdsap.compare.model.SingleMeasurement
+import io.github.cdsap.compare.report.ExperimentArtifactWriter
 import io.github.cdsap.compare.report.ExperimentOutput
+import io.github.cdsap.compare.report.FileExperimentArtifactWriter
 import io.github.cdsap.geapi.client.model.BuildWithResourceUsage
-import java.io.File
-import java.text.SimpleDateFormat
-import java.util.Date
 
 /** Compatibility HTML/CSV/GHA output. Canonical machine-readable results are written by --output-json. */
 class ExperimentView(
     val report: Report,
+    private val artifactWriter: ExperimentArtifactWriter = FileExperimentArtifactWriter(),
 ) : ExperimentOutput {
     private val htmlGenerator: HtmlGenerator = HtmlGenerator(report, chartGenerator = ChartGenerator(report))
     private val csvGenerator: CsvGenerator = CsvGenerator(report)
@@ -23,10 +23,7 @@ class ExperimentView(
         buildsByVariant: Map<String, List<BuildWithResourceUsage>>,
     ) {
         val variants = measurement.keys.toList()
-        val timestamp = SimpleDateFormat("yyyyMMddHHmmss").format(Date())
-        val htmlFile = "experiment_results_$timestamp.html"
-        val csvFile = "experiment_results_$timestamp.csv"
-        val csvFileFiltered = "experiment_results_${timestamp}_filtered.csv"
+        val artifacts = artifactWriter.artifacts()
 
         val header =
             Header(
@@ -40,12 +37,13 @@ class ExperimentView(
                 experimentId = report.experimentId,
                 repository = report.repository,
                 url = report.url,
-                linkCsv = csvFile,
+                linkCsv = artifacts.csv,
                 experimentRunId = report.experimentRunId,
             )
         println(consoleGenerator.generate(measurement, variants, header, buildsByVariant))
-        println("generating html charts $htmlFile")
-        File(htmlFile).writeText(
+        println("generating html charts ${artifacts.html}")
+        artifactWriter.write(
+            artifacts.html,
             htmlGenerator.generate(
                 measurement,
                 variants,
@@ -53,10 +51,11 @@ class ExperimentView(
                 buildsByVariant,
             ),
         )
-        println("generating csv $csvFile")
-        File(csvFile).writeText(csvGenerator.generate(measurement, variants, header, false))
+        println("generating csv ${artifacts.csv}")
+        artifactWriter.write(artifacts.csv, csvGenerator.generate(measurement, variants, header, false))
         println("generating gha summary")
-        File("experiment_results_summary_gha").writeText(
+        artifactWriter.write(
+            artifacts.ghaSummary,
             htmlGenerator.generateTableSummary(
                 measurement,
                 variants,
@@ -64,34 +63,34 @@ class ExperimentView(
                 buildsByVariant,
             ),
         )
-        if (File(csvFile).exists() && report.openAiRequest) {
+        if (artifactWriter.exists(artifacts.csv) && report.openAiRequest) {
             println("generating open ai analysis")
-            File(csvFileFiltered).writeText(csvGenerator.generate(measurement, variants, header, true))
-            val analysis = OpenAiAnalysis(File(csvFileFiltered), report.openAiKey)
+            artifactWriter.write(artifacts.filteredCsv, csvGenerator.generate(measurement, variants, header, true))
+            val analysis = OpenAiAnalysis(artifactWriter.file(artifacts.filteredCsv), report.openAiKey)
             val result = analysis.request()
             println(result)
             val extractSummary = result.split("##")[1].replace("Summary", "")
             if (result.isNotEmpty()) {
-                File("experiment_results_openai_analysis_$timestamp").writeText(result)
-                File("experiment_results_openai_title_$timestamp").writeText(extractSummary)
+                artifactWriter.write(artifacts.openAiAnalysis, result)
+                artifactWriter.write(artifacts.openAiTitle, extractSummary)
             }
         }
-        if (File(csvFile).exists() && report.claudeRequest) {
-            if (!File(csvFileFiltered).exists()) {
-                File(csvFileFiltered).writeText(csvGenerator.generate(measurement, variants, header, true))
+        if (artifactWriter.exists(artifacts.csv) && report.claudeRequest) {
+            if (!artifactWriter.exists(artifacts.filteredCsv)) {
+                artifactWriter.write(artifacts.filteredCsv, csvGenerator.generate(measurement, variants, header, true))
             }
             if (!report.claudeKey.isNullOrEmpty()) {
                 println("generating claude analysis via API")
-                val analysis = ClaudeAnalysis(File(csvFileFiltered), report.claudeKey)
+                val analysis = ClaudeAnalysis(artifactWriter.file(artifacts.filteredCsv), report.claudeKey)
                 val result = analysis.request()
                 println(result)
                 val extractSummary = result.split("##")[1].replace("Summary", "")
                 if (result.isNotEmpty()) {
-                    File("experiment_results_claude_analysis_$timestamp").writeText(result)
-                    File("experiment_results_claude_title_$timestamp").writeText(extractSummary)
+                    artifactWriter.write(artifacts.claudeAnalysis, result)
+                    artifactWriter.write(artifacts.claudeTitle, extractSummary)
                 }
             } else {
-                println("generating filtered csv for claude code analysis: $csvFileFiltered")
+                println("generating filtered csv for claude code analysis: ${artifacts.filteredCsv}")
             }
         }
     }
