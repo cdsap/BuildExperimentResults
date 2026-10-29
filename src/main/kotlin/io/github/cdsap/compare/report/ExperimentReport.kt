@@ -25,7 +25,10 @@ class ExperimentReport(
             throw IllegalArgumentException("At least one variant is required")
         } else {
             val buildWithResourceUsage = buildDataProvider.getBuilds(filter)
-            val variants = checkVariantsData(FilterBuildsPerVariant(report).get(buildWithResourceUsage))
+            val variants =
+                checkVariantsData(
+                    FilterBuildsPerVariant(report.variants, report.isProfile, report.warmupsToDiscard).get(buildWithResourceUsage),
+                )
             val measurements = MeasurementsByReport(report).get(variants)
             val diagnosticsAugmentation =
                 diagnosticsMeasurementAugmenter.augmentWithDiagnostics(

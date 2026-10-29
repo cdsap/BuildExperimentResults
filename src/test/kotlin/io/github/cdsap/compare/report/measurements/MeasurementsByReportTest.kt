@@ -35,7 +35,10 @@ class MeasurementsByReportTest {
                 thresholdTaskDuration = -1,
                 gcReport = false,
             )
-        val measurements = MeasurementsByReport(report).get(FilterBuildsPerVariant(report).get(builds))
+        val measurements =
+            MeasurementsByReport(report).get(
+                FilterBuildsPerVariant(report.variants, report.isProfile, report.warmupsToDiscard).get(builds),
+            )
 
         assertTrue(measurements.isNotEmpty())
         assertTrue(measurements.values.any { it.any { it.metric == Metric.KOTLIN_BUILD_REPORT } })
@@ -65,7 +68,10 @@ class MeasurementsByReportTest {
                 thresholdTaskDuration = -1,
                 gcReport = false,
             )
-        val measurements = MeasurementsByReport(report).get(FilterBuildsPerVariant(report).get(builds))
+        val measurements =
+            MeasurementsByReport(report).get(
+                FilterBuildsPerVariant(report.variants, report.isProfile, report.warmupsToDiscard).get(builds),
+            )
 
         assertFalse(measurements.values.any { it.any { it.metric == Metric.KOTLIN_BUILD_REPORT } })
         assertTrue(measurements.values.any { it.any { it.metric == Metric.BUILD } })
@@ -94,7 +100,10 @@ class MeasurementsByReportTest {
                 thresholdTaskDuration = -1,
                 gcReport = false,
             )
-        val measurements = MeasurementsByReport(report).get(FilterBuildsPerVariant(report).get(builds))
+        val measurements =
+            MeasurementsByReport(report).get(
+                FilterBuildsPerVariant(report.variants, report.isProfile, report.warmupsToDiscard).get(builds),
+            )
 
         assertTrue(measurements.isNotEmpty())
         assertTrue(measurements.values.any { it.any { it.metric == Metric.KOTLIN_BUILD_REPORT } })
@@ -124,7 +133,10 @@ class MeasurementsByReportTest {
                 thresholdTaskDuration = -1,
                 gcReport = false,
             )
-        val measurements = MeasurementsByReport(report).get(FilterBuildsPerVariant(report).get(builds))
+        val measurements =
+            MeasurementsByReport(report).get(
+                FilterBuildsPerVariant(report.variants, report.isProfile, report.warmupsToDiscard).get(builds),
+            )
 
         assertTrue(measurements.isNotEmpty())
         assertTrue(measurements.values.any { it.any { it.metric == Metric.KOTLIN_BUILD_REPORT } })
@@ -154,7 +166,10 @@ class MeasurementsByReportTest {
                 thresholdTaskDuration = -1,
                 gcReport = false,
             )
-        val measurements = MeasurementsByReport(report).get(FilterBuildsPerVariant(report).get(builds))
+        val measurements =
+            MeasurementsByReport(report).get(
+                FilterBuildsPerVariant(report.variants, report.isProfile, report.warmupsToDiscard).get(builds),
+            )
 
         assertTrue(measurements.isNotEmpty())
         assertTrue(measurements.values.any { it.any { it.metric == Metric.KOTLIN_BUILD_REPORT } })
@@ -184,7 +199,10 @@ class MeasurementsByReportTest {
                 thresholdTaskDuration = -1,
                 gcReport = false,
             )
-        val measurements = MeasurementsByReport(report).get(FilterBuildsPerVariant(report).get(builds))
+        val measurements =
+            MeasurementsByReport(report).get(
+                FilterBuildsPerVariant(report.variants, report.isProfile, report.warmupsToDiscard).get(builds),
+            )
 
         assertTrue(measurements.isNotEmpty())
         assertTrue(measurements.values.any { it.any { it.metric == Metric.KOTLIN_BUILD_REPORT } })
