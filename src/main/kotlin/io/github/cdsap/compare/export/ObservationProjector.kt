@@ -105,8 +105,8 @@ class ObservationProjector {
 
     private fun projectResourceSeries(
         buildsByVariantId: Map<String, List<BuildWithResourceUsage>>,
-    ): Map<String, NamedSeriesDto> {
-        return linkedMapOf(
+    ): Map<String, NamedSeriesDto> =
+        linkedMapOf(
             "resource.build-process-memory-max" to
                 namedBytesSeries("Build process memory max", buildsByVariantId) {
                     resourceUsageTotalOrNull(it)!!.buildProcessMemory.max.toDouble()
@@ -116,7 +116,6 @@ class ObservationProjector {
                     resourceUsageTotalOrNull(it)!!.buildChildProcessesMemory.max.toDouble()
                 },
         )
-    }
 
     private fun namedBytesSeries(
         name: String,

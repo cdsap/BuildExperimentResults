@@ -269,6 +269,7 @@ class ExperimentResultAssembler(
                 .mapNotNull { (sourceTag, keys) -> sourceTagToId[sourceTag]?.let { it to keys } }
                 .toMap()
         val groups = mutableListOf<DiagnosticsGroupDto>()
+
         fun addGroup(
             id: String,
             family: String,

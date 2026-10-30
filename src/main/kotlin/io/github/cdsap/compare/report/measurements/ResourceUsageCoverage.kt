@@ -30,5 +30,4 @@ data class ResourceUsageCoverage(
     }
 }
 
-internal fun resourceUsageTotalOrNull(build: BuildWithResourceUsage): PerformanceMetrics? =
-    ResourceUsageTotals.orNull(build)
+internal fun resourceUsageTotalOrNull(build: BuildWithResourceUsage): PerformanceMetrics? = ResourceUsageTotals.orNull(build)
