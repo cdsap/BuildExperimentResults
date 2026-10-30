@@ -7,7 +7,6 @@ import io.github.cdsap.compare.report.diagnostics.DiagnosticsPackageLoader
 import io.github.cdsap.compare.report.diagnostics.DiagnosticsPackageSource
 import io.github.cdsap.compare.report.measurements.FilterBuildsPerVariant
 import io.github.cdsap.compare.report.measurements.MeasurementsByReport
-import io.github.cdsap.geapi.client.model.BuildWithResourceUsage
 import io.github.cdsap.geapi.client.model.Filter
 
 class ExperimentReport(
@@ -19,6 +18,7 @@ class ExperimentReport(
     private val canonicalJsonExporter: CanonicalJsonExporter,
 ) {
     private val diagnosticsMeasurementAugmenter = DiagnosticsMeasurementAugmenter(diagnosticsMeasurementsSource)
+    private val variantBuildsValidator = VariantBuildsValidator()
 
     suspend fun process() {
         if (report.variants.isEmpty()) {
@@ -26,7 +26,7 @@ class ExperimentReport(
         } else {
             val buildWithResourceUsage = buildDataProvider.getBuilds(filter)
             val variants =
-                checkVariantsData(
+                variantBuildsValidator.validate(
                     FilterBuildsPerVariant(report.variants, report.isProfile, report.warmupsToDiscard).get(buildWithResourceUsage),
                 )
             val measurements = MeasurementsByReport(report).get(variants)
@@ -53,13 +53,4 @@ class ExperimentReport(
         }
     }
 
-    private fun checkVariantsData(buildMap: Map<String, List<BuildWithResourceUsage>>): Map<String, List<BuildWithResourceUsage>> {
-        val keysWithEmptyLists = buildMap.filterValues { it.isEmpty() }.keys
-
-        if (keysWithEmptyLists.size == buildMap.size) {
-            throw IllegalArgumentException("All variants have empty lists. Please check your input data.")
-        }
-
-        return buildMap.filterValues { it.isNotEmpty() }
-    }
 }
