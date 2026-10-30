@@ -5,6 +5,7 @@ import io.github.cdsap.compare.model.Report
 import io.github.cdsap.compare.model.SingleMeasurement
 import io.github.cdsap.compare.output.removeExperimentId
 import io.github.cdsap.compare.report.diagnostics.DiagnosticsMeasurements
+import io.github.cdsap.compare.report.measurements.ResourceUsageCoverage
 import io.github.cdsap.geapi.client.model.BuildWithResourceUsage
 import java.time.Clock
 import java.time.temporal.ChronoUnit
@@ -85,6 +86,7 @@ class ExperimentResultAssembler(
         buildsByVariant: Map<String, List<BuildWithResourceUsage>>,
     ): List<VariantDto> {
         val used = mutableSetOf<String>()
+        val coverage = if (report.resourceUsageReport) ResourceUsageCoverage.of(buildsByVariant) else null
         return report.variants.mapIndexed { index, sourceTag ->
             val role =
                 when (index) {
@@ -94,12 +96,15 @@ class ExperimentResultAssembler(
                 }
             val label = sourceTag.removeExperimentId(report.experimentId)
             val id = uniqueVariantId(sourceTag, label, index, used)
+            val variantCoverage = coverage?.byVariant?.get(sourceTag)
             VariantDto(
                 id = id,
                 label = label,
                 sourceTag = sourceTag,
                 role = role,
                 buildCount = buildsByVariant[sourceTag]?.size ?: 0,
+                resourceUsageIncluded = variantCoverage?.includedCount,
+                resourceUsageOmitted = variantCoverage?.omitted,
             )
         }
     }
@@ -149,7 +154,7 @@ class ExperimentResultAssembler(
                         mean = finiteNumber(row?.variantMean),
                         p50 = finiteNumber(row?.variantP50),
                         p90 = finiteNumber(row?.variantP90),
-                        count = countFor(sample.metric, variant.buildCount),
+                        count = countFor(sample.metric, variant),
                     )
             }
             MetricDto(
@@ -173,8 +178,13 @@ class ExperimentResultAssembler(
 
     private fun countFor(
         metric: Metric,
-        buildCount: Int,
-    ): Int? = if (metric == Metric.CPU_DIAGNOSTICS || metric == Metric.JFR) null else buildCount.takeIf { it > 0 }
+        variant: VariantDto,
+    ): Int? =
+        when (metric) {
+            Metric.CPU_DIAGNOSTICS, Metric.JFR -> null
+            Metric.RESOURCE_USAGE -> variant.resourceUsageIncluded?.takeIf { it > 0 }
+            else -> variant.buildCount.takeIf { it > 0 }
+        }
 
     private fun scope(measurement: SingleMeasurement): Map<String, String>? =
         when (measurement.metric) {

@@ -4,6 +4,7 @@ import io.github.cdsap.compare.model.Header
 import io.github.cdsap.compare.model.Metric
 import io.github.cdsap.compare.model.Report
 import io.github.cdsap.compare.model.SingleMeasurement
+import io.github.cdsap.compare.report.measurements.BuildWithResourceUsageProvider
 import io.github.cdsap.geapi.client.model.AvoidanceSavingsSummary
 import io.github.cdsap.geapi.client.model.BuildWithResourceUsage
 import io.github.cdsap.geapi.client.model.CustomValue
@@ -60,6 +61,43 @@ class ChartGeneratorDiagnosticsTest {
         assertTrue(html.contains("type: 'bar'"))
         assertTrue(html.contains("text: 'Metric'"))
         assertTrue(!html.contains("<h2>JFR Diagnostics</h2>"))
+    }
+
+    @Test
+    fun resourceUsageChartsUseIncludedScansWhenEveryVariantHasATotal() {
+        val metrics = BuildWithResourceUsageProvider()
+        val html =
+            ChartGenerator(report().copy(resourceUsageReport = true)).generateCharts(
+                variants =
+                    mapOf(
+                        "variant-a" to listOf(build(), build()),
+                        "variant-b" to listOf(build(), metrics.withoutTotal(build())),
+                    ),
+                header = Header(task = "assemble", numberOfBuilds = listOf(2, 2), url = "https://ge/"),
+            )
+
+        assertTrue(html.contains("id=\"buildProcessMemoryChart\""))
+        assertTrue(html.contains("getElementById('buildProcessMemoryChart')"))
+        val memoryScript = html.substringAfter("getElementById('buildProcessMemoryChart')")
+        assertTrue(memoryScript.contains("data: [50.0,50.0]"))
+        assertTrue(memoryScript.contains("data: [50.0]"), memoryScript.take(800))
+    }
+
+    @Test
+    fun resourceUsageChartsAreOmittedWhenAVariantHasNoTotals() {
+        val metrics = BuildWithResourceUsageProvider()
+        val html =
+            ChartGenerator(report().copy(resourceUsageReport = true)).generateCharts(
+                variants =
+                    mapOf(
+                        "variant-a" to listOf(build(), build()),
+                        "variant-b" to listOf(metrics.withoutTotal(build()), metrics.withoutTotal(build())),
+                    ),
+                header = Header(task = "assemble", numberOfBuilds = listOf(2, 2), url = "https://ge/"),
+            )
+
+        assertTrue(!html.contains("id=\"buildProcessMemoryChart\""))
+        assertTrue(!html.contains("id=\"buildChildProcessMemoryChart\""))
     }
 
     @Test

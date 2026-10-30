@@ -1,6 +1,7 @@
 package io.github.cdsap.compare.report
 
 import io.github.cdsap.compare.export.CanonicalJsonExporter
+import io.github.cdsap.compare.model.Metric
 import io.github.cdsap.compare.model.Report
 import io.github.cdsap.compare.model.SingleMeasurement
 import io.github.cdsap.compare.report.diagnostics.DiagnosticsMeasurements
@@ -156,6 +157,49 @@ class ExperimentReportTest {
         }
 
         assertTrue(buildDataProviderInvoked)
+        assertTrue(outputInvoked)
+    }
+
+    @Test
+    fun processCompletesWhenResourceUsageTotalsAreMissingOnSomeBuilds() {
+        var outputInvoked = false
+        val fakeBuildDataProvider =
+            object : BuildDataProvider {
+                override suspend fun getBuilds(filter: Filter): List<BuildWithResourceUsage> =
+                    listOf(
+                        usageBuild(id = "a-1", tags = arrayOf("variant-a"), buildDuration = 10L),
+                        usageBuild(id = "a-2", tags = arrayOf("variant-a"), buildDuration = 20L),
+                        metrics.withoutTotal(usageBuild(id = "b-1", tags = arrayOf("variant-b"), buildDuration = 11L)),
+                        metrics.withoutTotal(usageBuild(id = "b-2", tags = arrayOf("variant-b"), buildDuration = 21L)),
+                    )
+            }
+
+        runBlocking {
+            ExperimentReport(
+                filter = filter(),
+                buildDataProvider = fakeBuildDataProvider,
+                report =
+                    report(
+                        variants = listOf("variant-a", "variant-b"),
+                        buildReport = true,
+                        taskPathReport = false,
+                        taskTypeReport = false,
+                    ).copy(resourceUsageReport = true),
+                output =
+                    object : ExperimentOutput {
+                        override fun generateOutputs(
+                            measurement: Map<String, List<SingleMeasurement>>,
+                            buildsByVariant: Map<String, List<BuildWithResourceUsage>>,
+                        ) {
+                            outputInvoked = true
+                            assertTrue(measurement.getValue("variant-a").none { it.metric == Metric.RESOURCE_USAGE })
+                            assertTrue(measurement.getValue("variant-b").none { it.metric == Metric.RESOURCE_USAGE })
+                        }
+                    },
+                canonicalJsonExporter = fakeCanonicalJsonExporter,
+            ).process()
+        }
+
         assertTrue(outputInvoked)
     }
 
