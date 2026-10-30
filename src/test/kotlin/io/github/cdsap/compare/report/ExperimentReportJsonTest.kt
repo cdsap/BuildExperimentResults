@@ -52,7 +52,7 @@ class ExperimentReportJsonTest {
 
         assertTrue(jsonPath.toFile().isFile)
         val json = JsonParser.parseString(jsonPath.toFile().readText()).asJsonObject
-        assertEquals("1.0.0", json.get("schemaVersion").asString)
+        assertEquals("1.1.0", json.get("schemaVersion").asString)
         assertTrue(json.getAsJsonArray("metrics").size() > 0)
         assertTrue(
             json.getAsJsonArray("metrics").any { metric ->
