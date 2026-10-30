@@ -8,7 +8,15 @@ class MeasurementsByReport(
     private val report: Report,
 ) {
     fun get(variants: Map<String, List<BuildWithResourceUsage>>): Map<String, List<SingleMeasurement>> {
-        val enabledProviders = measurementProviders.filter { it.enabled(report) }
+        val coverage = ResourceUsageCoverage.of(variants)
+        val enabledProviders =
+            measurementProviders.filter { provider ->
+                if (provider.requiresResourceUsageComparison) {
+                    report.resourceUsageReport && coverage.comparisonEligible
+                } else {
+                    provider.enabled(report)
+                }
+            }
         val measurementsPerVariant = mutableMapOf<String, List<SingleMeasurement>>()
         variants.forEach { (variant, builds) ->
             measurementsPerVariant[variant] = enabledProviders.flatMap { it.measure(builds, report) }
@@ -20,6 +28,7 @@ class MeasurementsByReport(
     private data class MeasurementProvider(
         val enabled: (Report) -> Boolean,
         val measure: (List<BuildWithResourceUsage>, Report) -> List<SingleMeasurement>,
+        val requiresResourceUsageComparison: Boolean = false,
     )
 
     private companion object {
@@ -48,6 +57,7 @@ class MeasurementsByReport(
                 MeasurementProvider(
                     enabled = { it.resourceUsageReport },
                     measure = { builds, _ -> ResourceUsageMeasurement(builds).get() },
+                    requiresResourceUsageComparison = true,
                 ),
                 MeasurementProvider(
                     enabled = { it.gcReport },
