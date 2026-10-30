@@ -1,5 +1,6 @@
 package io.github.cdsap.compare.report.measurements
 
+import io.github.cdsap.geapi.client.model.BuildWithResourceUsage
 import io.github.cdsap.geapi.client.model.Metric
 import io.github.cdsap.geapi.client.model.PerformanceMetrics
 
@@ -27,5 +28,12 @@ class BuildWithResourceUsageProvider {
             networkUploadThroughput = metric,
             networkDownloadThroughput = metric,
         )
+    }
+
+    fun withoutTotal(build: BuildWithResourceUsage): BuildWithResourceUsage {
+        val field = BuildWithResourceUsage::class.java.getDeclaredField("total")
+        field.isAccessible = true
+        field.set(build, null)
+        return build
     }
 }
