@@ -16,10 +16,10 @@ class ExperimentReport(
     private val output: ExperimentOutput,
     private val diagnosticsMeasurementsSource: DiagnosticsPackageSource = DiagnosticsPackageLoader(),
     private val canonicalJsonExporter: CanonicalJsonExporter,
+    private val diagnosticsMeasurementAugmenter: DiagnosticsMeasurementAugmenter =
+        DiagnosticsMeasurementAugmenter(diagnosticsMeasurementsSource),
+    private val variantBuildsValidator: VariantBuildsValidator = VariantBuildsValidator(),
 ) {
-    private val diagnosticsMeasurementAugmenter = DiagnosticsMeasurementAugmenter(diagnosticsMeasurementsSource)
-    private val variantBuildsValidator = VariantBuildsValidator()
-
     suspend fun process() {
         if (report.variants.isEmpty()) {
             throw IllegalArgumentException("At least one variant is required")

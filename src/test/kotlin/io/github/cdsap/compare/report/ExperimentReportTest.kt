@@ -3,6 +3,7 @@ package io.github.cdsap.compare.report
 import io.github.cdsap.compare.export.CanonicalJsonExporter
 import io.github.cdsap.compare.model.Report
 import io.github.cdsap.compare.model.SingleMeasurement
+import io.github.cdsap.compare.report.diagnostics.DiagnosticsMeasurementAugmenter
 import io.github.cdsap.compare.report.diagnostics.DiagnosticsMeasurements
 import io.github.cdsap.compare.report.diagnostics.DiagnosticsPackageSource
 import io.github.cdsap.compare.report.measurements.BuildWithResourceUsageProvider
@@ -53,6 +54,22 @@ class ExperimentReportTest {
         val diagnosticsSourceParameter = constructorParameters.single { it.name == "diagnosticsMeasurementsSource" }
 
         assertEquals(DiagnosticsPackageSource::class, diagnosticsSourceParameter.type.classifier)
+    }
+
+    @Test
+    fun dependsOnDiagnosticsMeasurementAugmenter() {
+        val constructorParameters = ExperimentReport::class.primaryConstructor!!.parameters
+        val augmenterParameter = constructorParameters.single { it.name == "diagnosticsMeasurementAugmenter" }
+
+        assertEquals(DiagnosticsMeasurementAugmenter::class, augmenterParameter.type.classifier)
+    }
+
+    @Test
+    fun dependsOnVariantBuildsValidator() {
+        val constructorParameters = ExperimentReport::class.primaryConstructor!!.parameters
+        val validatorParameter = constructorParameters.single { it.name == "variantBuildsValidator" }
+
+        assertEquals(VariantBuildsValidator::class, validatorParameter.type.classifier)
     }
 
     @Test
