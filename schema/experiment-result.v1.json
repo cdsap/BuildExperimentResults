@@ -92,7 +92,9 @@
           "label": { "type": "string" },
           "sourceTag": { "type": "string" },
           "role": { "type": "string" },
-          "buildCount": { "type": "integer", "minimum": 0 }
+          "buildCount": { "type": "integer", "minimum": 0 },
+          "resourceUsageIncluded": { "type": ["integer", "null"], "minimum": 0 },
+          "resourceUsageOmitted": { "type": ["integer", "null"], "minimum": 0 }
         }
       }
     },

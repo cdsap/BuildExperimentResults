@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "1.0.0",
+  "schemaVersion": "1.1.0",
   "generatedAt": "2026-10-20T21:00:00Z",
   "producer": {
     "name": "BuildExperimentResults",
@@ -35,14 +35,18 @@
       "label": "varianta_kgp-2.4.20",
       "sourceTag": "cdsap-410_varianta_kgp-2.4.20",
       "role": "baseline",
-      "buildCount": 2
+      "buildCount": 2,
+      "resourceUsageIncluded": null,
+      "resourceUsageOmitted": null
     },
     {
       "id": "kgp-2.4.21",
       "label": "variantb_kgp-2.4.21",
       "sourceTag": "cdsap-410_variantb_kgp-2.4.21",
       "role": "candidate",
-      "buildCount": 2
+      "buildCount": 2,
+      "resourceUsageIncluded": null,
+      "resourceUsageOmitted": null
     }
   ],
   "metrics": [

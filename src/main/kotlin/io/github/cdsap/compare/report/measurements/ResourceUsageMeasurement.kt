@@ -13,56 +13,58 @@ class ResourceUsageMeasurement(
     fun get(): List<SingleMeasurement> = processMeasurement()
 
     private fun processMeasurement(): List<SingleMeasurement> {
+        val totals = variant.mapNotNull { resourceUsageTotalOrNull(it) }
         val measurement = mutableListOf<SingleMeasurement>()
-        if (variant.isNotEmpty() && variant.first().total != null) {
-            extracted(
-                variant.flatMap { listOf(it.total.allProcessesCpu.max) },
-                "Max",
-                "All processes cpu",
-                measurement,
-                "percentage",
-            )
-
-            extracted(
-                variant.flatMap { listOf(it.total.allProcessesMemory.max) },
-                "Max",
-                "All processes memory",
-                measurement,
-                "bytes",
-            )
-
-            extracted(
-                variant.flatMap { listOf(it.total.buildProcessCpu.max) },
-                "Max",
-                "Build process cpu",
-                measurement,
-                "percentage",
-            )
-
-            extracted(
-                variant.flatMap { listOf(it.total.buildProcessMemory.max) },
-                "Max",
-                "Build processes memory",
-                measurement,
-                "bytes",
-            )
-
-            extracted(
-                variant.flatMap { listOf(it.total.buildChildProcessesCpu.max) },
-                "Max",
-                "Build child processes cpu",
-                measurement,
-                "percentage",
-            )
-
-            extracted(
-                variant.flatMap { listOf(it.total.buildChildProcessesMemory.max) },
-                "Max",
-                "Build child processes memory",
-                measurement,
-                "bytes",
-            )
+        if (totals.isEmpty()) {
+            return measurement
         }
+        extracted(
+            totals.map { it.allProcessesCpu.max },
+            "Max",
+            "All processes cpu",
+            measurement,
+            "percentage",
+        )
+
+        extracted(
+            totals.map { it.allProcessesMemory.max },
+            "Max",
+            "All processes memory",
+            measurement,
+            "bytes",
+        )
+
+        extracted(
+            totals.map { it.buildProcessCpu.max },
+            "Max",
+            "Build process cpu",
+            measurement,
+            "percentage",
+        )
+
+        extracted(
+            totals.map { it.buildProcessMemory.max },
+            "Max",
+            "Build processes memory",
+            measurement,
+            "bytes",
+        )
+
+        extracted(
+            totals.map { it.buildChildProcessesCpu.max },
+            "Max",
+            "Build child processes cpu",
+            measurement,
+            "percentage",
+        )
+
+        extracted(
+            totals.map { it.buildChildProcessesMemory.max },
+            "Max",
+            "Build child processes memory",
+            measurement,
+            "bytes",
+        )
         return measurement
     }
 

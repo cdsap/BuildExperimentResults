@@ -2,6 +2,8 @@ package io.github.cdsap.compare.export
 
 import io.github.cdsap.compare.model.Report
 import io.github.cdsap.compare.output.chart.KotlinBuildReportsConstants
+import io.github.cdsap.compare.report.measurements.ResourceUsageCoverage
+import io.github.cdsap.compare.report.measurements.resourceUsageTotalOrNull
 import io.github.cdsap.geapi.client.model.BuildWithResourceUsage
 import org.nield.kotlinstatistics.median
 import java.time.Instant
@@ -17,8 +19,7 @@ class ObservationProjector {
         return DatasetsDto(
             builds = projectBuilds(report.url, buildsByVariantId),
             taskSeries = projectTaskSeries(buildsByVariantId),
-            resourceSeries =
-                if (report.resourceUsageReport) projectResourceSeries(buildsByVariantId) else emptyMap(),
+            resourceSeries = resourceSeries(report, buildsByVariantId),
             processSeries = if (report.processesReport) projectProcessSeries(buildsByVariantId) else emptyMap(),
             gcSeries = if (report.gcReport) projectGcSeries(buildsByVariantId) else emptyMap(),
             kotlinBuildReportSeries =
@@ -92,20 +93,29 @@ class ObservationProjector {
         return result
     }
 
-    private fun projectResourceSeries(
+    private fun resourceSeries(
+        report: Report,
         buildsByVariantId: Map<String, List<BuildWithResourceUsage>>,
     ): Map<String, NamedSeriesDto> {
-        return linkedMapOf(
+        if (!report.resourceUsageReport) return emptyMap()
+        val coverage = ResourceUsageCoverage.of(buildsByVariantId)
+        if (!coverage.comparisonEligible) return emptyMap()
+        return projectResourceSeries(coverage.byVariant.mapValues { it.value.included })
+    }
+
+    private fun projectResourceSeries(
+        buildsByVariantId: Map<String, List<BuildWithResourceUsage>>,
+    ): Map<String, NamedSeriesDto> =
+        linkedMapOf(
             "resource.build-process-memory-max" to
                 namedBytesSeries("Build process memory max", buildsByVariantId) {
-                    it.total.buildProcessMemory.max.toDouble()
+                    resourceUsageTotalOrNull(it)!!.buildProcessMemory.max.toDouble()
                 },
             "resource.build-child-process-memory-max" to
                 namedBytesSeries("Build child processes memory max", buildsByVariantId) {
-                    it.total.buildChildProcessesMemory.max.toDouble()
+                    resourceUsageTotalOrNull(it)!!.buildChildProcessesMemory.max.toDouble()
                 },
         )
-    }
 
     private fun namedBytesSeries(
         name: String,

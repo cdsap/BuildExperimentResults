@@ -8,6 +8,8 @@ import io.github.cdsap.compare.output.chart.ChartColors
 import io.github.cdsap.compare.output.chart.ChartDataGenerator
 import io.github.cdsap.compare.output.chart.ChartOptions
 import io.github.cdsap.compare.output.chart.KotlinBuildReportsConstants
+import io.github.cdsap.compare.report.measurements.ResourceUsageCoverage
+import io.github.cdsap.compare.report.measurements.resourceUsageTotalOrNull
 import io.github.cdsap.geapi.client.model.BuildWithResourceUsage
 import org.nield.kotlinstatistics.median
 import java.util.Locale
@@ -363,9 +365,15 @@ class ChartGenerator(
         }
 
     private fun hasResourceUsageReports(variants: Map<String, List<BuildWithResourceUsage>>): Boolean =
-        !variants.any {
-            it.value.any { it.total == null }
-        }
+        includedResourceUsageVariants(variants) != null
+
+    private fun includedResourceUsageVariants(
+        variants: Map<String, List<BuildWithResourceUsage>>,
+    ): Map<String, List<BuildWithResourceUsage>>? {
+        val coverage = ResourceUsageCoverage.of(variants)
+        if (!coverage.comparisonEligible) return null
+        return coverage.byVariant.mapValues { it.value.included }
+    }
 
     private fun getUniqueTotalCollections(variants: Map<String, List<BuildWithResourceUsage>>): Set<String> {
         val uniqueCollections = mutableSetOf<String>()
@@ -513,16 +521,12 @@ class ChartGenerator(
         variants: Map<String, List<BuildWithResourceUsage>>,
         header: Header,
     ): String {
-        if (variants.any { it.value.any { it.total == null } }) return ""
+        val included = includedResourceUsageVariants(variants) ?: return ""
         return chartDataGenerator.generateChartData(
             "buildProcessMemoryChart",
-            variants,
+            included,
             "Memory Usage (MB)",
-            {
-                it.total!!
-                    .buildProcessMemory.max
-                    .toDouble()
-            },
+            { resourceUsageTotalOrNull(it)!!.buildProcessMemory.max.toDouble() },
             header,
         )
     }
@@ -531,16 +535,12 @@ class ChartGenerator(
         variants: Map<String, List<BuildWithResourceUsage>>,
         header: Header,
     ): String {
-        if (variants.any { it.value.any { it.total == null } }) return ""
+        val included = includedResourceUsageVariants(variants) ?: return ""
         return chartDataGenerator.generateChartData(
             "buildChildProcessMemoryChart",
-            variants,
+            included,
             "Memory Usage (MB)",
-            {
-                it.total!!
-                    .buildChildProcessesMemory.max
-                    .toDouble()
-            },
+            { resourceUsageTotalOrNull(it)!!.buildChildProcessesMemory.max.toDouble() },
             header,
         )
     }
