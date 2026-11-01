@@ -1,12 +1,14 @@
 package io.github.cdsap.compare.report
 
 import io.github.cdsap.compare.export.CanonicalJsonExporter
+import io.github.cdsap.compare.model.Metric
 import io.github.cdsap.compare.model.Report
 import io.github.cdsap.compare.model.SingleMeasurement
 import io.github.cdsap.compare.report.diagnostics.DiagnosticsMeasurementAugmenter
 import io.github.cdsap.compare.report.diagnostics.DiagnosticsMeasurements
 import io.github.cdsap.compare.report.diagnostics.DiagnosticsPackageSource
 import io.github.cdsap.compare.report.measurements.BuildWithResourceUsageProvider
+import io.github.cdsap.compare.report.measurements.ReportMeasurementCalculator
 import io.github.cdsap.geapi.client.model.AvoidanceSavingsSummary
 import io.github.cdsap.geapi.client.model.BuildWithResourceUsage
 import io.github.cdsap.geapi.client.model.ClientType
@@ -46,6 +48,14 @@ class ExperimentReportTest {
         val buildDataProviderParameter = constructorParameters.single { it.name == "buildDataProvider" }
 
         assertEquals(BuildDataProvider::class, buildDataProviderParameter.type.classifier)
+    }
+
+    @Test
+    fun dependsOnReportMeasurementCalculatorPort() {
+        val constructorParameters = ExperimentReport::class.primaryConstructor!!.parameters
+        val calculatorParameter = constructorParameters.single { it.name == "measurementCalculator" }
+
+        assertEquals(ReportMeasurementCalculator::class, calculatorParameter.type.classifier)
     }
 
     @Test
@@ -174,6 +184,50 @@ class ExperimentReportTest {
 
         assertTrue(buildDataProviderInvoked)
         assertTrue(outputInvoked)
+    }
+
+    @Test
+    fun processDeliversMeasurementsFromInjectedCalculatorToOutput() {
+        val expectedMeasurements =
+            mapOf(
+                "variant-a" to
+                    listOf(
+                        SingleMeasurement("Build", "Build time", "10", "10", "10", "ms", Metric.BUILD),
+                    ),
+            )
+        var deliveredMeasurements: Map<String, List<SingleMeasurement>>? = null
+        val fakeBuildDataProvider =
+            object : BuildDataProvider {
+                override suspend fun getBuilds(filter: Filter): List<BuildWithResourceUsage> =
+                    listOf(usageBuild(id = "build-1", tags = arrayOf("variant-a"), buildDuration = 10L))
+            }
+        val fakeMeasurementCalculator =
+            object : ReportMeasurementCalculator {
+                override fun get(variants: Map<String, List<BuildWithResourceUsage>>): Map<String, List<SingleMeasurement>> =
+                    expectedMeasurements
+            }
+        val output =
+            object : ExperimentOutput {
+                override fun generateOutputs(
+                    measurement: Map<String, List<SingleMeasurement>>,
+                    buildsByVariant: Map<String, List<BuildWithResourceUsage>>,
+                ) {
+                    deliveredMeasurements = measurement
+                }
+            }
+
+        runBlocking {
+            ExperimentReport(
+                filter = filter(),
+                buildDataProvider = fakeBuildDataProvider,
+                report = report(variants = listOf("variant-a")),
+                output = output,
+                measurementCalculator = fakeMeasurementCalculator,
+                canonicalJsonExporter = fakeCanonicalJsonExporter,
+            ).process()
+        }
+
+        assertEquals(expectedMeasurements, deliveredMeasurements)
     }
 
     @Test
