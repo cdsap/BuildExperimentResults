@@ -6,8 +6,8 @@ import io.github.cdsap.geapi.client.model.BuildWithResourceUsage
 
 class MeasurementsByReport(
     private val report: Report,
-) {
-    fun get(variants: Map<String, List<BuildWithResourceUsage>>): Map<String, List<SingleMeasurement>> {
+) : ReportMeasurementCalculator {
+    override fun get(variants: Map<String, List<BuildWithResourceUsage>>): Map<String, List<SingleMeasurement>> {
         val coverage = ResourceUsageCoverage.of(variants)
         val enabledProviders =
             measurementProviders.filter { provider ->

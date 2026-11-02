@@ -4,9 +4,11 @@ import io.github.cdsap.compare.export.CanonicalJsonExporter
 import io.github.cdsap.compare.model.Metric
 import io.github.cdsap.compare.model.Report
 import io.github.cdsap.compare.model.SingleMeasurement
+import io.github.cdsap.compare.report.diagnostics.DiagnosticsMeasurementAugmenter
 import io.github.cdsap.compare.report.diagnostics.DiagnosticsMeasurements
 import io.github.cdsap.compare.report.diagnostics.DiagnosticsPackageSource
 import io.github.cdsap.compare.report.measurements.BuildWithResourceUsageProvider
+import io.github.cdsap.compare.report.measurements.ReportMeasurementCalculator
 import io.github.cdsap.geapi.client.model.AvoidanceSavingsSummary
 import io.github.cdsap.geapi.client.model.BuildWithResourceUsage
 import io.github.cdsap.geapi.client.model.ClientType
@@ -49,11 +51,35 @@ class ExperimentReportTest {
     }
 
     @Test
+    fun dependsOnReportMeasurementCalculatorPort() {
+        val constructorParameters = ExperimentReport::class.primaryConstructor!!.parameters
+        val calculatorParameter = constructorParameters.single { it.name == "measurementCalculator" }
+
+        assertEquals(ReportMeasurementCalculator::class, calculatorParameter.type.classifier)
+    }
+
+    @Test
     fun dependsOnDiagnosticsPackageSourcePort() {
         val constructorParameters = ExperimentReport::class.primaryConstructor!!.parameters
         val diagnosticsSourceParameter = constructorParameters.single { it.name == "diagnosticsMeasurementsSource" }
 
         assertEquals(DiagnosticsPackageSource::class, diagnosticsSourceParameter.type.classifier)
+    }
+
+    @Test
+    fun dependsOnDiagnosticsMeasurementAugmenter() {
+        val constructorParameters = ExperimentReport::class.primaryConstructor!!.parameters
+        val augmenterParameter = constructorParameters.single { it.name == "diagnosticsMeasurementAugmenter" }
+
+        assertEquals(DiagnosticsMeasurementAugmenter::class, augmenterParameter.type.classifier)
+    }
+
+    @Test
+    fun dependsOnVariantBuildsValidator() {
+        val constructorParameters = ExperimentReport::class.primaryConstructor!!.parameters
+        val validatorParameter = constructorParameters.single { it.name == "variantBuildsValidator" }
+
+        assertEquals(VariantBuildsValidator::class, validatorParameter.type.classifier)
     }
 
     @Test
@@ -201,6 +227,50 @@ class ExperimentReportTest {
         }
 
         assertTrue(outputInvoked)
+    }
+
+    @Test
+    fun processDeliversMeasurementsFromInjectedCalculatorToOutput() {
+        val expectedMeasurements =
+            mapOf(
+                "variant-a" to
+                    listOf(
+                        SingleMeasurement("Build", "Build time", "10", "10", "10", "ms", Metric.BUILD),
+                    ),
+            )
+        var deliveredMeasurements: Map<String, List<SingleMeasurement>>? = null
+        val fakeBuildDataProvider =
+            object : BuildDataProvider {
+                override suspend fun getBuilds(filter: Filter): List<BuildWithResourceUsage> =
+                    listOf(usageBuild(id = "build-1", tags = arrayOf("variant-a"), buildDuration = 10L))
+            }
+        val fakeMeasurementCalculator =
+            object : ReportMeasurementCalculator {
+                override fun get(variants: Map<String, List<BuildWithResourceUsage>>): Map<String, List<SingleMeasurement>> =
+                    expectedMeasurements
+            }
+        val output =
+            object : ExperimentOutput {
+                override fun generateOutputs(
+                    measurement: Map<String, List<SingleMeasurement>>,
+                    buildsByVariant: Map<String, List<BuildWithResourceUsage>>,
+                ) {
+                    deliveredMeasurements = measurement
+                }
+            }
+
+        runBlocking {
+            ExperimentReport(
+                filter = filter(),
+                buildDataProvider = fakeBuildDataProvider,
+                report = report(variants = listOf("variant-a")),
+                output = output,
+                measurementCalculator = fakeMeasurementCalculator,
+                canonicalJsonExporter = fakeCanonicalJsonExporter,
+            ).process()
+        }
+
+        assertEquals(expectedMeasurements, deliveredMeasurements)
     }
 
     @Test
