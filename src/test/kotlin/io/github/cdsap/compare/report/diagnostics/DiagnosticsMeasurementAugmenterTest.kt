@@ -37,14 +37,15 @@ class DiagnosticsMeasurementAugmenterTest {
         val base = mapOf("variant-a" to listOf(baseMeasurement()))
 
         val result =
-            DiagnosticsMeasurementAugmenter(DiagnosticsPackageLoader()).augment(
+            DiagnosticsMeasurementAugmenter(DiagnosticsPackageLoader()).augmentWithDiagnostics(
                 measurements = base,
                 diagnosticsPackagePath = packageFile.path,
                 reportVariants = listOf("variant-a"),
             )
 
-        assertEquals(2, result.getValue("variant-a").size)
-        assertEquals(Metric.CPU_DIAGNOSTICS, result.getValue("variant-a")[1].metric)
+        assertEquals(2, result.measurements.getValue("variant-a").size)
+        assertEquals(Metric.CPU_DIAGNOSTICS, result.measurements.getValue("variant-a")[1].metric)
+        assertEquals(listOf("partial diagnostics"), result.diagnostics.warnings)
     }
 
     @Test

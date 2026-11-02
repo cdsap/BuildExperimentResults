@@ -231,6 +231,43 @@ class ExperimentReportTest {
     }
 
     @Test
+    fun processForwardsDiagnosticsWarningsToInjectedSink() {
+        val warnings = mutableListOf<String>()
+        val diagnosticsSource =
+            object : DiagnosticsPackageSource {
+                override fun load(
+                    diagnosticsPackagePath: String?,
+                    reportVariants: List<String>,
+                ) = DiagnosticsMeasurements(warnings = listOf("partial diagnostics"))
+            }
+        val fakeBuildDataProvider =
+            object : BuildDataProvider {
+                override suspend fun getBuilds(filter: Filter): List<BuildWithResourceUsage> =
+                    listOf(usageBuild(id = "build-1", tags = arrayOf("variant-a"), buildDuration = 10L))
+            }
+        val fakeMeasurementCalculator =
+            object : ReportMeasurementCalculator {
+                override fun get(variants: Map<String, List<BuildWithResourceUsage>>): Map<String, List<SingleMeasurement>> =
+                    mapOf("variant-a" to listOf(baseMeasurement()))
+            }
+
+        runBlocking {
+            ExperimentReport(
+                filter = filter(),
+                buildDataProvider = fakeBuildDataProvider,
+                report = report(variants = listOf("variant-a")),
+                output = fakeOutput,
+                canonicalJsonExporter = fakeCanonicalJsonExporter,
+                diagnosticsMeasurementsSource = diagnosticsSource,
+                warningSink = warnings::add,
+                measurementCalculator = fakeMeasurementCalculator,
+            ).process()
+        }
+
+        assertEquals(listOf("partial diagnostics"), warnings)
+    }
+
+    @Test
     fun processDeliversCanonicalResultToInjectedExporterWithoutFilesystemAccess() {
         var deliveredReport: Report? = null
         var deliveredMeasurements: Map<String, List<SingleMeasurement>>? = null
@@ -338,5 +375,16 @@ class ExperimentReportTest {
             nonExecution = metrics.get(),
             total = metrics.get(),
             totalMemory = 0L,
+        )
+
+    private fun baseMeasurement() =
+        SingleMeasurement(
+            category = "build",
+            name = "duration",
+            variantMean = 1.0,
+            variantP50 = 1.0,
+            variantP90 = 1.0,
+            qualifier = "",
+            metric = Metric.BUILD,
         )
 }
