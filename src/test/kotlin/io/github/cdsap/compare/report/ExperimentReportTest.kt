@@ -259,7 +259,11 @@ class ExperimentReportTest {
                 output = fakeOutput,
                 canonicalJsonExporter = fakeCanonicalJsonExporter,
                 diagnosticsMeasurementsSource = diagnosticsSource,
-                warningSink = warnings::add,
+                diagnosticsMeasurementAugmenter =
+                    DiagnosticsMeasurementAugmenter(
+                        diagnosticsMeasurementsSource = diagnosticsSource,
+                        warningSink = warnings::add,
+                    ),
                 measurementCalculator = fakeMeasurementCalculator,
             ).process()
         }

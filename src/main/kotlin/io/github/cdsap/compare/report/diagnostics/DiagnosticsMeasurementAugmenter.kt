@@ -4,6 +4,7 @@ import io.github.cdsap.compare.model.SingleMeasurement
 
 class DiagnosticsMeasurementAugmenter(
     private val diagnosticsMeasurementsSource: DiagnosticsPackageSource = DiagnosticsPackageLoader(),
+    private val warningSink: (String) -> Unit = { warning -> println("diagnostics warning: $warning") },
 ) {
 
     fun augment(
@@ -19,6 +20,7 @@ class DiagnosticsMeasurementAugmenter(
         reportVariants: List<String>,
     ): DiagnosticsAugmentation {
         val diagnostics = diagnosticsMeasurementsSource.load(diagnosticsPackagePath, reportVariants)
+        diagnostics.warnings.forEach(warningSink)
         if (diagnostics.measurements.isEmpty()) return DiagnosticsAugmentation(measurements, diagnostics)
 
         val merged = measurements.toMutableMap()
