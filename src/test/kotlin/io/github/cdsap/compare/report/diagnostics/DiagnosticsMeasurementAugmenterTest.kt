@@ -49,6 +49,31 @@ class DiagnosticsMeasurementAugmenterTest {
     }
 
     @Test
+    fun reportsWarningsToInjectedSink() {
+        val packageFile = File(tempDir, "diagnostics.json")
+        packageFile.writeText(
+            """
+            {
+              "schemaVersion": "1.0",
+              "warnings": ["partial diagnostics"]
+            }
+            """.trimIndent(),
+        )
+        val warnings = mutableListOf<String>()
+
+        DiagnosticsMeasurementAugmenter(
+            diagnosticsMeasurementsSource = DiagnosticsPackageLoader(),
+            warningSink = warnings::add,
+        ).augmentWithDiagnostics(
+            measurements = emptyMap(),
+            diagnosticsPackagePath = packageFile.path,
+            reportVariants = listOf("variant-a"),
+        )
+
+        assertEquals(listOf("partial diagnostics"), warnings)
+    }
+
+    @Test
     fun returnsBaseMeasurementsWhenPackageIsNotConfigured() {
         val base = mapOf("variant-a" to listOf(baseMeasurement()))
 

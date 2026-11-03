@@ -19,7 +19,6 @@ class ExperimentReport(
     private val canonicalJsonExporter: CanonicalJsonExporter,
     private val diagnosticsMeasurementAugmenter: DiagnosticsMeasurementAugmenter =
         DiagnosticsMeasurementAugmenter(diagnosticsMeasurementsSource),
-    private val warningSink: (String) -> Unit = { warning -> println("diagnostics warning: $warning") },
     private val variantBuildsValidator: VariantBuildsValidator = VariantBuildsValidator(),
     private val measurementCalculator: ReportMeasurementCalculator = MeasurementsByReport(report),
 ) {
@@ -39,7 +38,6 @@ class ExperimentReport(
                     diagnosticsPackagePath = report.diagnosticsPackagePath,
                     reportVariants = report.variants,
                 )
-            diagnosticsAugmentation.diagnostics.warnings.forEach(warningSink)
             val augmentedMeasurements = diagnosticsAugmentation.measurements
             if (augmentedMeasurements.isNotEmpty()) {
                 val outputJson = report.outputJson
