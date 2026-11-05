@@ -5,6 +5,7 @@ import io.github.cdsap.compare.model.Report
 import io.github.cdsap.compare.model.SingleMeasurement
 import io.github.cdsap.compare.report.diagnostics.DiagnosticsMeasurements
 import io.github.cdsap.compare.report.measurements.BuildWithResourceUsageProvider
+import io.github.cdsap.compare.report.measurements.MeasurementsByReport
 import io.github.cdsap.geapi.client.model.AvoidanceSavingsSummary
 import io.github.cdsap.geapi.client.model.BuildWithResourceUsage
 import io.github.cdsap.geapi.client.model.CustomValue
@@ -142,6 +143,56 @@ class ExperimentResultAssemblerTest {
         val missing = result.warnings.first { it.code == "DIAGNOSTICS_PACKAGE_MISSING" }
         assertTrue(missing.message.contains("missing.json"))
         assertTrue(!missing.message.contains("/tmp/private"))
+    }
+
+    @Test
+    fun resourceUsageSeriesAndCountsFollowCoverageGate() {
+        val report = report(variants = listOf("variant-a", "variant-b"))
+        val builds =
+            mapOf(
+                "variant-a" to listOf(usageBuild("a-1", arrayOf("variant-a"), 10, 5), usageBuild("a-2", arrayOf("variant-a"), 12, 6)),
+                "variant-b" to
+                    listOf(
+                        usageBuild("b-1", arrayOf("variant-b"), 11, 5),
+                        metrics.withoutTotal(usageBuild("b-2", arrayOf("variant-b"), 13, 6)),
+                    ),
+            )
+        val measurements = MeasurementsByReport(report).get(builds)
+
+        val result = assembler.assemble(report, measurements, builds, DiagnosticsMeasurements())
+
+        assertEquals(2, result.variants.first { it.id == "variant-a" }.resourceUsageIncluded)
+        assertEquals(0, result.variants.first { it.id == "variant-a" }.resourceUsageOmitted)
+        assertEquals(1, result.variants.first { it.id == "variant-b" }.resourceUsageIncluded)
+        assertEquals(1, result.variants.first { it.id == "variant-b" }.resourceUsageOmitted)
+        val series = result.datasets.resourceSeries.getValue("resource.build-process-memory-max")
+        assertEquals(2, series.observations.getValue("variant-a").size)
+        assertEquals(1, series.observations.getValue("variant-b").size)
+        val cpu =
+            result.metrics.first { it.family == "resource" && it.category == "All processes cpu" }
+        assertEquals(1, cpu.values.getValue("variant-b").count)
+    }
+
+    @Test
+    fun resourceUsageSeriesAreOmittedWhenAVariantHasNoTotals() {
+        val report = report(variants = listOf("variant-a", "variant-b"))
+        val builds =
+            mapOf(
+                "variant-a" to listOf(usageBuild("a-1", arrayOf("variant-a"), 10, 5), usageBuild("a-2", arrayOf("variant-a"), 12, 6)),
+                "variant-b" to
+                    listOf(
+                        metrics.withoutTotal(usageBuild("b-1", arrayOf("variant-b"), 11, 5)),
+                        metrics.withoutTotal(usageBuild("b-2", arrayOf("variant-b"), 13, 6)),
+                    ),
+            )
+        val measurements = MeasurementsByReport(report).get(builds)
+
+        val result = assembler.assemble(report, measurements, builds, DiagnosticsMeasurements())
+
+        assertEquals(0, result.variants.first { it.id == "variant-b" }.resourceUsageIncluded)
+        assertEquals(2, result.variants.first { it.id == "variant-b" }.resourceUsageOmitted)
+        assertTrue(result.datasets.resourceSeries.isEmpty())
+        assertTrue(result.metrics.none { it.family == "resource" })
     }
 
     @Test

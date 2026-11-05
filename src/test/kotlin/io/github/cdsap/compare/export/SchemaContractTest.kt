@@ -16,7 +16,7 @@ class SchemaContractTest {
         required.forEach { field ->
             assertTrue(example.has(field), "example is missing required field $field")
         }
-        assertEquals("1.0.0", example.get("schemaVersion").asString)
+        assertEquals("1.1.0", example.get("schemaVersion").asString)
         assertTrue(
             example.getAsJsonArray("metrics")[0].asJsonObject.getAsJsonObject("values")
                 .getAsJsonObject("kgp-2.4.20").get("mean").asJsonPrimitive.isNumber,

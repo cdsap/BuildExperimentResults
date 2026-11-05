@@ -5,6 +5,7 @@ import io.github.cdsap.compare.model.Report
 import io.github.cdsap.compare.model.SingleMeasurement
 import io.github.cdsap.compare.output.MeasurementProcessor
 import io.github.cdsap.compare.output.removeExperimentId
+import io.github.cdsap.compare.report.measurements.ResourceUsageCoverage
 import io.github.cdsap.geapi.client.model.BuildWithResourceUsage
 
 class ConsoleGenerator(
@@ -39,10 +40,18 @@ class ConsoleGenerator(
                 }
             }
 
+            val resourceUsageCoverage = if (report.resourceUsageReport) ResourceUsageCoverage.of(variants1) else null
             variants1.forEach { (variant, builds) ->
+                val coverage = resourceUsageCoverage?.byVariant?.get(variant)
+                val buildsCell =
+                    if (coverage == null) {
+                        "Builds processed: ${builds.size}"
+                    } else {
+                        "Builds processed: ${builds.size}; resource usage ${coverage.includedCount} included / ${coverage.omitted} omitted"
+                    }
                 row {
                     cell(variant.removeExperimentId(header.experimentId))
-                    cell("Builds processed: ${builds.size}") {
+                    cell(buildsCell) {
                         columnSpan = (variants.size * 3) + 1
                     }
                 }

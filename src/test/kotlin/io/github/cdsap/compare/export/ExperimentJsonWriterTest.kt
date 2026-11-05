@@ -31,7 +31,7 @@ class ExperimentJsonWriterTest {
         assertTrue(text.length < pretty.length)
 
         val json = JsonParser.parseString(text).asJsonObject
-        assertEquals("1.0.0", json.get("schemaVersion").asString)
+        assertEquals(EXPERIMENT_RESULT_SCHEMA_VERSION, json.get("schemaVersion").asString)
         assertTrue(json.getAsJsonArray("metrics")[0].asJsonObject.getAsJsonObject("values")
             .getAsJsonObject("baseline").get("mean").isJsonPrimitive)
         assertTrue(json.getAsJsonArray("metrics")[0].asJsonObject.getAsJsonObject("values")

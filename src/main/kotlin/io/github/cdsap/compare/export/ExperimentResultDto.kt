@@ -1,6 +1,6 @@
 package io.github.cdsap.compare.export
 
-const val EXPERIMENT_RESULT_SCHEMA_VERSION = "1.0.0"
+const val EXPERIMENT_RESULT_SCHEMA_VERSION = "1.1.0"
 const val PRODUCER_NAME = "BuildExperimentResults"
 const val PRODUCER_VERSION = "1.0-SNAPSHOT"
 
@@ -55,6 +55,8 @@ data class VariantDto(
     val sourceTag: String,
     val role: String,
     val buildCount: Int,
+    val resourceUsageIncluded: Int? = null,
+    val resourceUsageOmitted: Int? = null,
 )
 
 data class MetricDto(
