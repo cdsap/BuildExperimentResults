@@ -5,7 +5,9 @@ import io.github.cdsap.compare.model.SingleMeasurement
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
+import java.io.ByteArrayOutputStream
 import java.io.File
+import java.io.PrintStream
 
 class DiagnosticsMeasurementAugmenterTest {
     @TempDir
@@ -49,7 +51,7 @@ class DiagnosticsMeasurementAugmenterTest {
     }
 
     @Test
-    fun reportsWarningsToInjectedSink() {
+    fun doesNotWriteWarningsToStdout() {
         val packageFile = File(tempDir, "diagnostics.json")
         packageFile.writeText(
             """
@@ -59,18 +61,23 @@ class DiagnosticsMeasurementAugmenterTest {
             }
             """.trimIndent(),
         )
-        val warnings = mutableListOf<String>()
+        val originalOut = System.out
+        val capturedOut = ByteArrayOutputStream()
+        System.setOut(PrintStream(capturedOut))
 
-        DiagnosticsMeasurementAugmenter(
-            diagnosticsMeasurementsSource = DiagnosticsPackageLoader(),
-            warningSink = warnings::add,
-        ).augmentWithDiagnostics(
-            measurements = emptyMap(),
-            diagnosticsPackagePath = packageFile.path,
-            reportVariants = listOf("variant-a"),
-        )
+        try {
+            val result =
+                DiagnosticsMeasurementAugmenter(DiagnosticsPackageLoader()).augmentWithDiagnostics(
+                    measurements = emptyMap(),
+                    diagnosticsPackagePath = packageFile.path,
+                    reportVariants = listOf("variant-a"),
+                )
 
-        assertEquals(listOf("partial diagnostics"), warnings)
+            assertEquals(listOf("partial diagnostics"), result.diagnostics.warnings)
+            assertEquals("", capturedOut.toString())
+        } finally {
+            System.setOut(originalOut)
+        }
     }
 
     @Test
