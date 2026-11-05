@@ -20,6 +20,8 @@ import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
+import java.io.ByteArrayOutputStream
+import java.io.PrintStream
 import kotlin.reflect.full.primaryConstructor
 
 class ExperimentReportTest {
@@ -231,14 +233,13 @@ class ExperimentReportTest {
     }
 
     @Test
-    fun processForwardsDiagnosticsWarningsToInjectedSink() {
-        val warnings = mutableListOf<String>()
+    fun processPrintsDiagnosticsWarningsInOrder() {
         val diagnosticsSource =
             object : DiagnosticsPackageSource {
                 override fun load(
                     diagnosticsPackagePath: String?,
                     reportVariants: List<String>,
-                ) = DiagnosticsMeasurements(warnings = listOf("partial diagnostics"))
+                ) = DiagnosticsMeasurements(warnings = listOf("first warning", "second warning"))
             }
         val fakeBuildDataProvider =
             object : BuildDataProvider {
@@ -251,24 +252,33 @@ class ExperimentReportTest {
                     mapOf("variant-a" to listOf(baseMeasurement()))
             }
 
-        runBlocking {
-            ExperimentReport(
-                filter = filter(),
-                buildDataProvider = fakeBuildDataProvider,
-                report = report(variants = listOf("variant-a")),
-                output = fakeOutput,
-                canonicalJsonExporter = fakeCanonicalJsonExporter,
-                diagnosticsMeasurementsSource = diagnosticsSource,
-                diagnosticsMeasurementAugmenter =
-                    DiagnosticsMeasurementAugmenter(
-                        diagnosticsMeasurementsSource = diagnosticsSource,
-                        warningSink = warnings::add,
-                    ),
-                measurementCalculator = fakeMeasurementCalculator,
-            ).process()
+        val originalOut = System.out
+        val capturedOut = ByteArrayOutputStream()
+        System.setOut(PrintStream(capturedOut))
+        try {
+            runBlocking {
+                ExperimentReport(
+                    filter = filter(),
+                    buildDataProvider = fakeBuildDataProvider,
+                    report = report(variants = listOf("variant-a")),
+                    output = fakeOutput,
+                    canonicalJsonExporter = fakeCanonicalJsonExporter,
+                    diagnosticsMeasurementsSource = diagnosticsSource,
+                    diagnosticsMeasurementAugmenter = DiagnosticsMeasurementAugmenter(diagnosticsSource),
+                    measurementCalculator = fakeMeasurementCalculator,
+                ).process()
+            }
+        } finally {
+            System.setOut(originalOut)
         }
 
-        assertEquals(listOf("partial diagnostics"), warnings)
+        assertEquals(
+            listOf("first warning", "second warning")
+                .joinToString(separator = System.lineSeparator(), postfix = System.lineSeparator()) { warning ->
+                    "diagnostics warning: $warning"
+                },
+            capturedOut.toString(),
+        )
     }
 
     @Test

@@ -38,6 +38,9 @@ class ExperimentReport(
                     diagnosticsPackagePath = report.diagnosticsPackagePath,
                     reportVariants = report.variants,
                 )
+            diagnosticsAugmentation.diagnostics.warnings.forEach { warning ->
+                println("diagnostics warning: $warning")
+            }
             val augmentedMeasurements = diagnosticsAugmentation.measurements
             if (augmentedMeasurements.isNotEmpty()) {
                 val outputJson = report.outputJson
