@@ -4,8 +4,18 @@ import io.github.cdsap.compare.model.Report
 import io.github.cdsap.compare.model.SingleMeasurement
 import io.github.cdsap.geapi.client.model.BuildWithResourceUsage
 
+interface MeasurementProvider {
+    fun enabled(report: Report): Boolean
+
+    fun measure(
+        builds: List<BuildWithResourceUsage>,
+        report: Report,
+    ): List<SingleMeasurement>
+}
+
 class MeasurementsByReport(
     private val report: Report,
+    private val measurementProviders: List<MeasurementProvider> = defaultMeasurementProviders,
 ) : ReportMeasurementCalculator {
     override fun get(variants: Map<String, List<BuildWithResourceUsage>>): Map<String, List<SingleMeasurement>> {
         val enabledProviders = measurementProviders.filter { it.enabled(report) }
@@ -17,41 +27,48 @@ class MeasurementsByReport(
         return measurementsPerVariant
     }
 
-    private data class MeasurementProvider(
-        val enabled: (Report) -> Boolean,
-        val measure: (List<BuildWithResourceUsage>, Report) -> List<SingleMeasurement>,
-    )
+    private data class DefaultMeasurementProvider(
+        val enabledWhen: (Report) -> Boolean,
+        val measureWith: (List<BuildWithResourceUsage>, Report) -> List<SingleMeasurement>,
+    ) : MeasurementProvider {
+        override fun enabled(report: Report) = enabledWhen(report)
+
+        override fun measure(
+            builds: List<BuildWithResourceUsage>,
+            report: Report,
+        ) = measureWith(builds, report)
+    }
 
     private companion object {
-        private val measurementProviders =
+        private val defaultMeasurementProviders =
             listOf(
-                MeasurementProvider(
-                    enabled = { it.buildReport },
-                    measure = { builds, _ -> BuildMeasurement(builds).get() },
+                DefaultMeasurementProvider(
+                    enabledWhen = { it.buildReport },
+                    measureWith = { builds, _ -> BuildMeasurement(builds).get() },
                 ),
-                MeasurementProvider(
-                    enabled = { it.processesReport },
-                    measure = { builds, report -> ProcessMeasurement(builds, report.isProfile).get() },
+                DefaultMeasurementProvider(
+                    enabledWhen = { it.processesReport },
+                    measureWith = { builds, report -> ProcessMeasurement(builds, report.isProfile).get() },
                 ),
-                MeasurementProvider(
-                    enabled = { it.taskTypeReport },
-                    measure = { builds, report -> TasksTypeMeasurements(builds, report).get() },
+                DefaultMeasurementProvider(
+                    enabledWhen = { it.taskTypeReport },
+                    measureWith = { builds, report -> TasksTypeMeasurements(builds, report).get() },
                 ),
-                MeasurementProvider(
-                    enabled = { it.taskPathReport },
-                    measure = { builds, report -> TasksPathMeasurements(builds, report).get() },
+                DefaultMeasurementProvider(
+                    enabledWhen = { it.taskPathReport },
+                    measureWith = { builds, report -> TasksPathMeasurements(builds, report).get() },
                 ),
-                MeasurementProvider(
-                    enabled = { it.kotlinBuildReport },
-                    measure = { builds, _ -> KotlinBuildReportsMeasurements(builds).get() },
+                DefaultMeasurementProvider(
+                    enabledWhen = { it.kotlinBuildReport },
+                    measureWith = { builds, _ -> KotlinBuildReportsMeasurements(builds).get() },
                 ),
-                MeasurementProvider(
-                    enabled = { it.resourceUsageReport },
-                    measure = { builds, _ -> ResourceUsageMeasurement(builds).get() },
+                DefaultMeasurementProvider(
+                    enabledWhen = { it.resourceUsageReport },
+                    measureWith = { builds, _ -> ResourceUsageMeasurement(builds).get() },
                 ),
-                MeasurementProvider(
-                    enabled = { it.gcReport },
-                    measure = { builds, report -> GCReportMeasurement(builds, report.isProfile).get() },
+                DefaultMeasurementProvider(
+                    enabledWhen = { it.gcReport },
+                    measureWith = { builds, report -> GCReportMeasurement(builds, report.isProfile).get() },
                 ),
             )
     }
