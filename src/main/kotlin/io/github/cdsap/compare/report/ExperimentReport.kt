@@ -1,6 +1,5 @@
 package io.github.cdsap.compare.report
 
-import io.github.cdsap.compare.export.CanonicalJsonExporter
 import io.github.cdsap.compare.model.Report
 import io.github.cdsap.compare.report.diagnostics.DiagnosticsMeasurementAugmenter
 import io.github.cdsap.compare.report.diagnostics.DiagnosticsPackageLoader
@@ -16,7 +15,7 @@ class ExperimentReport(
     private val report: Report,
     private val output: ExperimentOutput,
     private val diagnosticsMeasurementsSource: DiagnosticsPackageSource = DiagnosticsPackageLoader(),
-    private val canonicalJsonExporter: CanonicalJsonExporter,
+    private val canonicalJsonExporter: ExperimentResultExporter,
     private val diagnosticsMeasurementAugmenter: DiagnosticsMeasurementAugmenter =
         DiagnosticsMeasurementAugmenter(diagnosticsMeasurementsSource),
     private val variantBuildsValidator: VariantBuildsValidator = VariantBuildsValidator(),
