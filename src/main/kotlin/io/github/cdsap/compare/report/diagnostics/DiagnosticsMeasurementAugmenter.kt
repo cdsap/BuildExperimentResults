@@ -19,7 +19,6 @@ class DiagnosticsMeasurementAugmenter(
         reportVariants: List<String>,
     ): DiagnosticsAugmentation {
         val diagnostics = diagnosticsMeasurementsSource.load(diagnosticsPackagePath, reportVariants)
-        diagnostics.warnings.forEach { println("diagnostics warning: $it") }
         if (diagnostics.measurements.isEmpty()) return DiagnosticsAugmentation(measurements, diagnostics)
 
         val merged = measurements.toMutableMap()

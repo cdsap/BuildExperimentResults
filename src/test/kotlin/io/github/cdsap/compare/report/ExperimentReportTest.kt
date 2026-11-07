@@ -20,6 +20,8 @@ import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
+import java.io.ByteArrayOutputStream
+import java.io.PrintStream
 import kotlin.reflect.full.primaryConstructor
 
 class ExperimentReportTest {
@@ -274,6 +276,55 @@ class ExperimentReportTest {
     }
 
     @Test
+    fun processPrintsDiagnosticsWarningsInOrder() {
+        val diagnosticsSource =
+            object : DiagnosticsPackageSource {
+                override fun load(
+                    diagnosticsPackagePath: String?,
+                    reportVariants: List<String>,
+                ) = DiagnosticsMeasurements(warnings = listOf("first warning", "second warning"))
+            }
+        val fakeBuildDataProvider =
+            object : BuildDataProvider {
+                override suspend fun getBuilds(filter: Filter): List<BuildWithResourceUsage> =
+                    listOf(usageBuild(id = "build-1", tags = arrayOf("variant-a"), buildDuration = 10L))
+            }
+        val fakeMeasurementCalculator =
+            object : ReportMeasurementCalculator {
+                override fun get(variants: Map<String, List<BuildWithResourceUsage>>): Map<String, List<SingleMeasurement>> =
+                    mapOf("variant-a" to listOf(baseMeasurement()))
+            }
+
+        val originalOut = System.out
+        val capturedOut = ByteArrayOutputStream()
+        System.setOut(PrintStream(capturedOut))
+        try {
+            runBlocking {
+                ExperimentReport(
+                    filter = filter(),
+                    buildDataProvider = fakeBuildDataProvider,
+                    report = report(variants = listOf("variant-a")),
+                    output = fakeOutput,
+                    canonicalJsonExporter = fakeCanonicalJsonExporter,
+                    diagnosticsMeasurementsSource = diagnosticsSource,
+                    diagnosticsMeasurementAugmenter = DiagnosticsMeasurementAugmenter(diagnosticsSource),
+                    measurementCalculator = fakeMeasurementCalculator,
+                ).process()
+            }
+        } finally {
+            System.setOut(originalOut)
+        }
+
+        assertEquals(
+            listOf("first warning", "second warning")
+                .joinToString(separator = System.lineSeparator(), postfix = System.lineSeparator()) { warning ->
+                    "diagnostics warning: $warning"
+                },
+            capturedOut.toString(),
+        )
+    }
+
+    @Test
     fun processDeliversCanonicalResultToInjectedExporterWithoutFilesystemAccess() {
         var deliveredReport: Report? = null
         var deliveredMeasurements: Map<String, List<SingleMeasurement>>? = null
@@ -381,5 +432,16 @@ class ExperimentReportTest {
             nonExecution = metrics.get(),
             total = metrics.get(),
             totalMemory = 0L,
+        )
+
+    private fun baseMeasurement() =
+        SingleMeasurement(
+            category = "build",
+            name = "duration",
+            variantMean = 1.0,
+            variantP50 = 1.0,
+            variantP90 = 1.0,
+            qualifier = "",
+            metric = Metric.BUILD,
         )
 }

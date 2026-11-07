@@ -5,7 +5,9 @@ import io.github.cdsap.compare.model.SingleMeasurement
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
+import java.io.ByteArrayOutputStream
 import java.io.File
+import java.io.PrintStream
 
 class DiagnosticsMeasurementAugmenterTest {
     @TempDir
@@ -37,14 +39,45 @@ class DiagnosticsMeasurementAugmenterTest {
         val base = mapOf("variant-a" to listOf(baseMeasurement()))
 
         val result =
-            DiagnosticsMeasurementAugmenter(DiagnosticsPackageLoader()).augment(
+            DiagnosticsMeasurementAugmenter(DiagnosticsPackageLoader()).augmentWithDiagnostics(
                 measurements = base,
                 diagnosticsPackagePath = packageFile.path,
                 reportVariants = listOf("variant-a"),
             )
 
-        assertEquals(2, result.getValue("variant-a").size)
-        assertEquals(Metric.CPU_DIAGNOSTICS, result.getValue("variant-a")[1].metric)
+        assertEquals(2, result.measurements.getValue("variant-a").size)
+        assertEquals(Metric.CPU_DIAGNOSTICS, result.measurements.getValue("variant-a")[1].metric)
+        assertEquals(listOf("partial diagnostics"), result.diagnostics.warnings)
+    }
+
+    @Test
+    fun doesNotWriteWarningsToStdout() {
+        val packageFile = File(tempDir, "diagnostics.json")
+        packageFile.writeText(
+            """
+            {
+              "schemaVersion": "1.0",
+              "warnings": ["partial diagnostics"]
+            }
+            """.trimIndent(),
+        )
+        val originalOut = System.out
+        val capturedOut = ByteArrayOutputStream()
+        System.setOut(PrintStream(capturedOut))
+
+        try {
+            val result =
+                DiagnosticsMeasurementAugmenter(DiagnosticsPackageLoader()).augmentWithDiagnostics(
+                    measurements = emptyMap(),
+                    diagnosticsPackagePath = packageFile.path,
+                    reportVariants = listOf("variant-a"),
+                )
+
+            assertEquals(listOf("partial diagnostics"), result.diagnostics.warnings)
+            assertEquals("", capturedOut.toString())
+        } finally {
+            System.setOut(originalOut)
+        }
     }
 
     @Test

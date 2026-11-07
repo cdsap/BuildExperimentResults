@@ -3,10 +3,12 @@ package io.github.cdsap.compare.report.measurements
 import com.google.gson.Gson
 import io.github.cdsap.compare.model.Metric
 import io.github.cdsap.compare.model.Report
+import io.github.cdsap.compare.model.SingleMeasurement
 import io.github.cdsap.geapi.client.model.AvoidanceSavingsSummary
 import io.github.cdsap.geapi.client.model.BuildWithResourceUsage
 import io.github.cdsap.geapi.client.model.CustomValue
 import io.github.cdsap.geapi.client.model.Task
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
@@ -15,6 +17,53 @@ import java.io.InputStreamReader
 
 class MeasurementsByReportTest {
     private val buildWithResourceUsageProvider = BuildWithResourceUsageProvider()
+
+    @Test
+    fun onlyEnabledInjectedProvidersAreMeasured() {
+        val report =
+            Report(
+                taskPathReport = false,
+                taskTypeReport = false,
+                kotlinBuildReport = false,
+                processesReport = false,
+                buildReport = true,
+                resourceUsageReport = false,
+                isProfile = false,
+                warmupsToDiscard = 0,
+                variants = listOf("variant-a"),
+                experimentId = "154",
+                onlyCacheableOutcome = false,
+                thresholdTaskDuration = -1,
+                gcReport = false,
+            )
+        val expectedMeasurement = SingleMeasurement("stub", "stub", "1", "1", "1", "ms", Metric.BUILD)
+        val enabledProvider =
+            object : MeasurementProvider {
+                override fun enabled(report: Report) = report.buildReport
+
+                override fun measure(
+                    builds: List<BuildWithResourceUsage>,
+                    report: Report,
+                ) = listOf(expectedMeasurement)
+            }
+        val disabledProvider =
+            object : MeasurementProvider {
+                override fun enabled(report: Report) = false
+
+                override fun measure(
+                    builds: List<BuildWithResourceUsage>,
+                    report: Report,
+                ): List<SingleMeasurement> = error("Disabled provider was measured")
+            }
+
+        val measurements =
+            MeasurementsByReport(
+                report,
+                measurementProviders = listOf(enabledProvider, disabledProvider),
+            ).get(mapOf("variant-a" to emptyList()))
+
+        assertEquals(mapOf("variant-a" to listOf(expectedMeasurement)), measurements)
+    }
 
     @Test
     fun allMetricsAreReturned() {
