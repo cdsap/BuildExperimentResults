@@ -3,6 +3,7 @@ package io.github.cdsap.compare.output
 import io.github.cdsap.compare.model.Header
 import io.github.cdsap.compare.model.Report
 import io.github.cdsap.compare.model.SingleMeasurement
+import io.github.cdsap.compare.report.measurements.ResourceUsageCoverage
 import io.github.cdsap.geapi.client.model.BuildWithResourceUsage
 
 /** Compatibility HTML renderer. Prefer experiment-result JSON for new consumers. */
@@ -264,12 +265,20 @@ class HtmlGenerator(
         }
         output += "<tr><td>Task</td><td colspan=${5 + variants.size * 3}>${header.task}</td></tr>"
 
+        val resourceUsageCoverage = if (report.resourceUsageReport) ResourceUsageCoverage.of(buildVariants) else null
         buildVariants.forEach { (variant, builds) ->
             val url = "${header.url}scans?search.startTimeMax=$oneWeekAfter&search.startTimeMin=$oneWeekBefore&search.tags=$variant"
+            val coverage = resourceUsageCoverage?.byVariant?.get(variant)
+            val buildsCell =
+                if (coverage == null) {
+                    "${builds.size} builds processed"
+                } else {
+                    "${builds.size} builds processed; resource usage ${coverage.includedCount} included / ${coverage.omitted} omitted"
+                }
             output +=
                 "<tr><td>${variant.removeExperimentId(
                     header.experimentId,
-                )}</td><td>${builds.size} builds processed</td><td colspan=${4 + variants.size * 3}><a href=\"$url\">Build Scans</a></td></tr>"
+                )}</td><td>$buildsCell</td><td colspan=${4 + variants.size * 3}><a href=\"$url\">Build Scans</a></td></tr>"
         }
         if (header.linkCsv.isNotEmpty() && header.htmlSummary) {
             output +=

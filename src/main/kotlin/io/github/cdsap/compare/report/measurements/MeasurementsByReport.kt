@@ -5,6 +5,9 @@ import io.github.cdsap.compare.model.SingleMeasurement
 import io.github.cdsap.geapi.client.model.BuildWithResourceUsage
 
 interface MeasurementProvider {
+    val requiresResourceUsageComparison: Boolean
+        get() = false
+
     fun enabled(report: Report): Boolean
 
     fun measure(
@@ -18,7 +21,15 @@ class MeasurementsByReport(
     private val measurementProviders: List<MeasurementProvider> = defaultMeasurementProviders,
 ) : ReportMeasurementCalculator {
     override fun get(variants: Map<String, List<BuildWithResourceUsage>>): Map<String, List<SingleMeasurement>> {
-        val enabledProviders = measurementProviders.filter { it.enabled(report) }
+        val coverage = ResourceUsageCoverage.of(variants)
+        val enabledProviders =
+            measurementProviders.filter { provider ->
+                if (provider.requiresResourceUsageComparison) {
+                    report.resourceUsageReport && coverage.comparisonEligible
+                } else {
+                    provider.enabled(report)
+                }
+            }
         val measurementsPerVariant = mutableMapOf<String, List<SingleMeasurement>>()
         variants.forEach { (variant, builds) ->
             measurementsPerVariant[variant] = enabledProviders.flatMap { it.measure(builds, report) }
@@ -30,6 +41,7 @@ class MeasurementsByReport(
     private data class DefaultMeasurementProvider(
         val enabledWhen: (Report) -> Boolean,
         val measureWith: (List<BuildWithResourceUsage>, Report) -> List<SingleMeasurement>,
+        override val requiresResourceUsageComparison: Boolean = false,
     ) : MeasurementProvider {
         override fun enabled(report: Report) = enabledWhen(report)
 
@@ -65,6 +77,7 @@ class MeasurementsByReport(
                 DefaultMeasurementProvider(
                     enabledWhen = { it.resourceUsageReport },
                     measureWith = { builds, _ -> ResourceUsageMeasurement(builds).get() },
+                    requiresResourceUsageComparison = true,
                 ),
                 DefaultMeasurementProvider(
                     enabledWhen = { it.gcReport },
