@@ -14,6 +14,8 @@ class ExperimentResultAssembler(
     private val producerRevision: String = System.getenv("GITHUB_SHA") ?: "unknown",
     private val observationProjector: ObservationProjector = ObservationProjector(),
 ) {
+    private val diagnosticsExportMapper = DiagnosticsExportMapper()
+
     fun assemble(
         report: Report,
         measurements: Map<String, List<SingleMeasurement>>,
@@ -28,8 +30,8 @@ class ExperimentResultAssembler(
             }
         val usedMetricIds = mutableSetOf<String>()
         val metrics = metricDtos(variants, measurements, sourceTagToId, usedMetricIds)
-        val warnings = warnings(variants, diagnostics, sourceTagToId)
-        val diagnosticsDto = diagnosticsDto(diagnostics, metrics, sourceTagToId)
+        val diagnosticsExport = diagnosticsExportMapper.map(diagnostics, metrics, sourceTagToId)
+        val warnings = warnings(variants, diagnosticsExport.warnings)
         val observedIds = variants.filter { it.buildCount > 0 }.map { it.id }
         val status = if (observedIds.size == variants.size) "complete" else "partial"
         val requestedTasks =
@@ -68,14 +70,14 @@ class ExperimentResultAssembler(
             variants = variants,
             metrics = metrics,
             datasets = observationProjector.project(report, buildsByVariantId.filterValues { it.isNotEmpty() }),
-            diagnostics = diagnosticsDto,
+            diagnostics = diagnosticsExport.diagnostics,
             warnings = warnings,
             completeness =
                 CompletenessDto(
                     requestedVariantIds = variants.map { it.id },
                     observedVariantIds = observedIds,
                     missingMetricIds = emptyList(),
-                    diagnostics = diagnosticsDto.status,
+                    diagnostics = diagnosticsExport.diagnostics.status,
                 ),
         )
     }
@@ -185,19 +187,12 @@ class ExperimentResultAssembler(
 
     private fun warnings(
         variants: List<VariantDto>,
-        diagnostics: DiagnosticsMeasurements,
-        sourceTagToId: Map<String, String>,
+        diagnosticsWarnings: List<WarningDto>,
     ): List<WarningDto> {
         val warnings = mutableListOf<WarningDto>()
-        if (diagnostics.status == "not-requested") {
-            warnings +=
-                WarningDto(
-                    code = "DIAGNOSTICS_NOT_REQUESTED",
-                    severity = "info",
-                    source = "ber",
-                    message = "Diagnostics package was not requested",
-                )
-        }
+        val (notRequestedWarnings, sourceWarnings) =
+            diagnosticsWarnings.partition { it.code == "DIAGNOSTICS_NOT_REQUESTED" }
+        warnings.addAll(notRequestedWarnings)
         variants.filter { it.buildCount == 0 }.forEach { variant ->
             warnings +=
                 WarningDto(
@@ -217,79 +212,8 @@ class ExperimentResultAssembler(
                     message = "Not all requested variants produced builds",
                 )
         }
-        diagnostics.warnings.forEach { message ->
-            warnings +=
-                WarningDto(
-                    code = warningCode(message),
-                    severity = "warning",
-                    source = "diagnostics",
-                    message = sanitizeWarning(message),
-                    variantId = variantIdFromWarning(message, sourceTagToId),
-                )
-        }
+        warnings.addAll(sourceWarnings)
         return warnings
-    }
-
-    private fun warningCode(message: String): String =
-        when {
-            message.contains("not found", ignoreCase = true) -> "DIAGNOSTICS_PACKAGE_MISSING"
-            message.contains("Unable to parse", ignoreCase = true) -> "DIAGNOSTICS_PACKAGE_MISSING"
-            message.contains("no unique match") -> "DIAGNOSTICS_VARIANT_UNMATCHED"
-            message.contains("unknown metric") -> "METRIC_UNAVAILABLE"
-            else -> "DIAGNOSTICS_SOURCE"
-        }
-
-    private fun variantIdFromWarning(
-        message: String,
-        sourceTagToId: Map<String, String>,
-    ): String? = sourceTagToId.entries.firstOrNull { message.contains(it.key) }?.value
-
-    private fun sanitizeWarning(message: String): String =
-        message.replace(Regex("""(/[\w.+~-]+)+""")) { match ->
-            match.value.substringAfterLast('/')
-        }
-
-    private fun diagnosticsDto(
-        diagnostics: DiagnosticsMeasurements,
-        metrics: List<MetricDto>,
-        sourceTagToId: Map<String, String>,
-    ): DiagnosticsDto {
-        val jobKeys =
-            diagnostics.jobKeysByVariant
-                .mapNotNull { (sourceTag, keys) -> sourceTagToId[sourceTag]?.let { it to keys } }
-                .toMap()
-        val groups = mutableListOf<DiagnosticsGroupDto>()
-        fun addGroup(
-            id: String,
-            family: String,
-            metricFamily: String,
-        ) {
-            val metricIds = metrics.filter { it.family == metricFamily }.map { it.id }
-            if (metricIds.isEmpty() && jobKeys.isEmpty()) return
-            if (metricIds.isEmpty()) return
-            groups +=
-                DiagnosticsGroupDto(
-                    id = id,
-                    family = family,
-                    sampleUnit = "diagnostic-sample",
-                    metricIds = metricIds,
-                    jobKeysByVariant = jobKeys,
-                )
-        }
-        addGroup("cpu", "cpu-diagnostics", "cpu-diagnostics")
-        addGroup("jfr", "jfr", "jfr")
-        val source =
-            if (diagnostics.status == "not-requested") {
-                null
-            } else {
-                DiagnosticsSourceDto(
-                    tool = "ExperimentDiagnosticsReport",
-                    schemaVersion = diagnostics.sourceSchemaVersion,
-                    experimentRunId = diagnostics.sourceExperimentRunId,
-                    sourceRepo = diagnostics.sourceRepo,
-                )
-            }
-        return DiagnosticsDto(status = diagnostics.status, source = source, groups = groups)
     }
 
     private fun reportId(
