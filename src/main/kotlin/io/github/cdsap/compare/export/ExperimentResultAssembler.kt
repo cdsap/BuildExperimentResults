@@ -11,7 +11,7 @@ import java.time.temporal.ChronoUnit
 
 class ExperimentResultAssembler(
     private val clock: Clock = Clock.systemUTC(),
-    private val producerRevision: String = System.getenv("GITHUB_SHA") ?: "unknown",
+    private val producerRevision: String = "unknown",
     private val observationProjector: ObservationProjector = ObservationProjector(),
 ) {
     private val diagnosticsExportMapper = DiagnosticsExportMapper()

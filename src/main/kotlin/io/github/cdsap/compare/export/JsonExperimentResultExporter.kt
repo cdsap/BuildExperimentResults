@@ -8,7 +8,8 @@ import io.github.cdsap.geapi.client.model.BuildWithResourceUsage
 import java.nio.file.Path
 
 class JsonExperimentResultExporter(
-    private val assembler: ExperimentResultAssembler = ExperimentResultAssembler(),
+    private val assembler: ExperimentResultAssembler =
+        ExperimentResultAssembler(producerRevision = System.getenv("GITHUB_SHA") ?: "unknown"),
     private val writer: ExperimentJsonWriter = ExperimentJsonWriter(),
 ) : ExperimentResultExporter {
     override fun export(
