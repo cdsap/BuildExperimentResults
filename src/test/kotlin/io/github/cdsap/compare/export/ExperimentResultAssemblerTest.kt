@@ -26,6 +26,21 @@ class ExperimentResultAssemblerTest {
         )
 
     @Test
+    fun defaultsProducerRevisionToUnknownWithoutReadingProcessEnvironment() {
+        val result =
+            ExperimentResultAssembler(
+                clock = Clock.fixed(Instant.parse("2026-10-20T21:00:00Z"), ZoneOffset.UTC),
+            ).assemble(
+                report(variants = listOf("variant-a")),
+                measurements = emptyMap(),
+                buildsByVariant = emptyMap(),
+                diagnostics = DiagnosticsMeasurements(),
+            )
+
+        assertEquals("unknown", result.producer.revision)
+    }
+
+    @Test
     fun exportsTypedBuildMetricsAndPerBuildObservations() {
         val report =
             report(
