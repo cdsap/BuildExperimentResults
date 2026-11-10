@@ -2,6 +2,7 @@ package io.github.cdsap.compare.report.measurements
 
 import io.github.cdsap.compare.model.Report
 import io.github.cdsap.compare.model.SingleMeasurement
+import io.github.cdsap.compare.report.MeasurementsCalculator
 import io.github.cdsap.geapi.client.model.BuildWithResourceUsage
 
 interface MeasurementProvider {
@@ -16,7 +17,7 @@ interface MeasurementProvider {
 class MeasurementsByReport(
     private val report: Report,
     private val measurementProviders: List<MeasurementProvider> = defaultMeasurementProviders,
-) : ReportMeasurementCalculator {
+) : MeasurementsCalculator {
     override fun get(variants: Map<String, List<BuildWithResourceUsage>>): Map<String, List<SingleMeasurement>> {
         val enabledProviders = measurementProviders.filter { it.enabled(report) }
         val measurementsPerVariant = mutableMapOf<String, List<SingleMeasurement>>()

@@ -7,7 +7,6 @@ import io.github.cdsap.compare.report.diagnostics.DiagnosticsMeasurementAugmente
 import io.github.cdsap.compare.report.diagnostics.DiagnosticsMeasurements
 import io.github.cdsap.compare.report.diagnostics.DiagnosticsPackageSource
 import io.github.cdsap.compare.report.measurements.BuildWithResourceUsageProvider
-import io.github.cdsap.compare.report.measurements.ReportMeasurementCalculator
 import io.github.cdsap.geapi.client.model.AvoidanceSavingsSummary
 import io.github.cdsap.geapi.client.model.BuildWithResourceUsage
 import io.github.cdsap.geapi.client.model.ClientType
@@ -52,11 +51,11 @@ class ExperimentReportTest {
     }
 
     @Test
-    fun dependsOnReportMeasurementCalculatorPort() {
+    fun dependsOnMeasurementsCalculatorPort() {
         val constructorParameters = ExperimentReport::class.primaryConstructor!!.parameters
         val calculatorParameter = constructorParameters.single { it.name == "measurementCalculator" }
 
-        assertEquals(ReportMeasurementCalculator::class, calculatorParameter.type.classifier)
+        assertEquals(MeasurementsCalculator::class, calculatorParameter.type.classifier)
     }
 
     @Test
@@ -203,7 +202,7 @@ class ExperimentReportTest {
                     listOf(usageBuild(id = "build-1", tags = arrayOf("variant-a"), buildDuration = 10L))
             }
         val fakeMeasurementCalculator =
-            object : ReportMeasurementCalculator {
+            object : MeasurementsCalculator {
                 override fun get(variants: Map<String, List<BuildWithResourceUsage>>): Map<String, List<SingleMeasurement>> =
                     expectedMeasurements
             }
@@ -246,7 +245,7 @@ class ExperimentReportTest {
                     listOf(usageBuild(id = "build-1", tags = arrayOf("variant-a"), buildDuration = 10L))
             }
         val fakeMeasurementCalculator =
-            object : ReportMeasurementCalculator {
+            object : MeasurementsCalculator {
                 override fun get(variants: Map<String, List<BuildWithResourceUsage>>): Map<String, List<SingleMeasurement>> =
                     mapOf("variant-a" to listOf(baseMeasurement()))
             }

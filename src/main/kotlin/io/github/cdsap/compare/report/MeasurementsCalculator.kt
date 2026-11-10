@@ -1,8 +1,8 @@
-package io.github.cdsap.compare.report.measurements
+package io.github.cdsap.compare.report
 
 import io.github.cdsap.compare.model.SingleMeasurement
 import io.github.cdsap.geapi.client.model.BuildWithResourceUsage
 
-interface ReportMeasurementCalculator {
+interface MeasurementsCalculator {
     fun get(variants: Map<String, List<BuildWithResourceUsage>>): Map<String, List<SingleMeasurement>>
 }
