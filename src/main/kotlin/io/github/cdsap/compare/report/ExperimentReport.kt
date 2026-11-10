@@ -6,7 +6,6 @@ import io.github.cdsap.compare.report.diagnostics.DiagnosticsPackageLoader
 import io.github.cdsap.compare.report.diagnostics.DiagnosticsPackageSource
 import io.github.cdsap.compare.report.measurements.FilterBuildsPerVariant
 import io.github.cdsap.compare.report.measurements.MeasurementsByReport
-import io.github.cdsap.compare.report.measurements.ReportMeasurementCalculator
 import io.github.cdsap.geapi.client.model.Filter
 
 class ExperimentReport(
@@ -19,7 +18,7 @@ class ExperimentReport(
     private val diagnosticsMeasurementAugmenter: DiagnosticsMeasurementAugmenter =
         DiagnosticsMeasurementAugmenter(diagnosticsMeasurementsSource),
     private val variantBuildsValidator: VariantBuildsValidator = VariantBuildsValidator(),
-    private val measurementCalculator: ReportMeasurementCalculator = MeasurementsByReport(report),
+    private val measurementCalculator: MeasurementsCalculator = MeasurementsByReport(report),
 ) {
     suspend fun process() {
         if (report.variants.isEmpty()) {
