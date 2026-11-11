@@ -4,6 +4,7 @@ import io.github.cdsap.compare.model.Header
 import io.github.cdsap.compare.model.Metric
 import io.github.cdsap.compare.model.Report
 import io.github.cdsap.compare.model.SingleMeasurement
+import io.github.cdsap.compare.model.removeExperimentId
 import io.github.cdsap.compare.output.chart.ChartColors
 import io.github.cdsap.compare.output.chart.ChartDataGenerator
 import io.github.cdsap.compare.output.chart.ChartOptions

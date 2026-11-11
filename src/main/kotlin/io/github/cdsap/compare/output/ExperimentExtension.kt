@@ -1,3 +1,5 @@
 package io.github.cdsap.compare.output
 
-fun String.removeExperimentId(experimentId: String?) = if (experimentId == null) this else this.replace("${experimentId}_", "")
+import io.github.cdsap.compare.model.removeExperimentId as removeModelExperimentId
+
+fun String.removeExperimentId(experimentId: String?) = removeModelExperimentId(experimentId)
