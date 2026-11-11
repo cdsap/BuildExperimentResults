@@ -3,6 +3,7 @@ package io.github.cdsap.compare.report.measurements
 import io.github.cdsap.compare.model.Report
 import io.github.cdsap.compare.model.SingleMeasurement
 import io.github.cdsap.compare.report.MeasurementsCalculator
+import io.github.cdsap.compare.report.measurements.gbos.GbosCustomValuesNormalizer
 import io.github.cdsap.geapi.client.model.BuildWithResourceUsage
 
 interface MeasurementProvider {
@@ -17,8 +18,12 @@ interface MeasurementProvider {
 class MeasurementsByReport(
     private val report: Report,
     private val measurementProviders: List<MeasurementProvider> = defaultMeasurementProviders,
+    private val gbosCustomValuesNormalizer: GbosCustomValuesNormalizer = GbosCustomValuesNormalizer(),
 ) : MeasurementsCalculator {
     override fun get(variants: Map<String, List<BuildWithResourceUsage>>): Map<String, List<SingleMeasurement>> {
+        if (report.processesReport || report.gcReport) {
+            gbosCustomValuesNormalizer.normalizeInPlace(variants.values.flatten())
+        }
         val enabledProviders = measurementProviders.filter { it.enabled(report) }
         val measurementsPerVariant = mutableMapOf<String, List<SingleMeasurement>>()
         variants.forEach { (variant, builds) ->

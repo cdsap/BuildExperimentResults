@@ -8,12 +8,14 @@ import io.github.cdsap.compare.output.chart.ChartColors
 import io.github.cdsap.compare.output.chart.ChartDataGenerator
 import io.github.cdsap.compare.output.chart.ChartOptions
 import io.github.cdsap.compare.output.chart.KotlinBuildReportsConstants
+import io.github.cdsap.compare.report.measurements.gbos.GbosCustomValuesNormalizer
 import io.github.cdsap.geapi.client.model.BuildWithResourceUsage
 import org.nield.kotlinstatistics.median
 import java.util.Locale
 
 class ChartGenerator(
     val report: Report,
+    private val gbosCustomValuesNormalizer: GbosCustomValuesNormalizer = GbosCustomValuesNormalizer(),
 ) {
     private val chartColors = ChartColors()
     private val chartOptions = ChartOptions()
@@ -29,6 +31,9 @@ class ChartGenerator(
         header: Header,
         measurements: Map<String, List<SingleMeasurement>> = emptyMap(),
     ): String {
+        if (report.processesReport || report.gcReport) {
+            gbosCustomValuesNormalizer.normalizeInPlace(variants.values.flatten())
+        }
         val commonTaskPathsRaw = getCommonTaskPaths(variants)
         val commonTaskPaths = filterTasksByMinAverageDuration(variants, commonTaskPathsRaw)
         val mostExpensiveTaskPath = findMostExpensiveTask(variants, commonTaskPaths)

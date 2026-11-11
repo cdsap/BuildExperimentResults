@@ -154,6 +154,41 @@ class BuildWithResourceUsageEnricherTest {
         assertEquals(listOf("clean-build", "assemble-build", "clean-and-assemble"), nonProfileResult.map { it.id })
     }
 
+    @Test
+    fun enrichNormalizesGbosOnlyCustomValuesIntoLegacyProcessAndGcNames() {
+        val values =
+            arrayOf(
+                CustomValue("gbos.schema", "1.0.0"),
+                CustomValue(
+                    "gbos.v1.producer.info_gradle_process.observation",
+                    "{\"scope\":\"jvm.process\",\"aggregationScope\":\"entity\"," +
+                        "\"attributes\":{\"process.pid\":9011,\"jvm.process.role\":\"gradle-daemon\"}," +
+                        "\"measurements\":[{\"name\":\"jvm.process.gc.time\",\"value\":15,\"unit\":\"s\"," +
+                        "\"aggregation\":\"sum\"},{\"name\":\"jvm.process.memory.heap.limit\"," +
+                        "\"value\":1073741824,\"unit\":\"By\",\"aggregation\":\"last\"}]}",
+                ),
+                CustomValue(
+                    "gbos.v1.producer.gc_report.observation",
+                    "{\"scope\":\"jvm.gc\",\"aggregationScope\":\"entity\"," +
+                        "\"attributes\":{\"log.file.name\":\"gradle_gc.log\",\"jvm.gc.action\":\"Pause Young\"}," +
+                        "\"measurements\":[{\"name\":\"jvm.gc.events\",\"value\":4,\"unit\":\"{collection}\"," +
+                        "\"aggregation\":\"count\"}]}",
+                ),
+            )
+        val enriched =
+            enricher.enrich(
+                outcome = listOf(build(id = "build-gbos", values = values)),
+                buildWithResourceUsage = listOf(usageBuild(id = "build-gbos")),
+                buildProfile = emptyList(),
+                isProfile = false,
+            )
+
+        val byName = enriched.single().values.associate { it.name to it.value }
+        assertEquals("0.25 minutes", byName["Gradle-Process-9011-gcTime"])
+        assertEquals("1.0 GB", byName["Gradle-Process-9011-max"])
+        assertEquals("4", byName["gc-gradle_gc.log-total-collections"])
+    }
+
     private fun build(
         id: String,
         builtTool: String = "gradle",

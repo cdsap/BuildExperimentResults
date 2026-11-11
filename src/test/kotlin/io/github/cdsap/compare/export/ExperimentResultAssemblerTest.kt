@@ -213,6 +213,58 @@ class ExperimentResultAssemblerTest {
         )
     }
 
+    @Test
+    fun projectsProcessAndGcSeriesFromGbosCustomValues() {
+        val report =
+            report(variants = listOf("variant-a")).copy(processesReport = true, gcReport = true)
+        val builds =
+            mapOf(
+                "variant-a" to
+                    listOf(
+                        usageBuild(
+                            id = "b-gbos",
+                            tags = arrayOf("variant-a"),
+                            buildDuration = 10,
+                            configuration = 5,
+                            values =
+                                arrayOf(
+                                    CustomValue("gbos.schema", "1.0.0"),
+                                    CustomValue(
+                                        "gbos.v1.producer.info_gradle_process.observation",
+                                        "{\"scope\":\"jvm.process\",\"aggregationScope\":\"entity\"," +
+                                            "\"attributes\":{\"process.pid\":1,\"jvm.process.role\":\"gradle-daemon\"}," +
+                                            "\"measurements\":[{\"name\":\"jvm.process.gc.time\",\"value\":11.4," +
+                                            "\"unit\":\"s\",\"aggregation\":\"sum\"}]}",
+                                    ),
+                                    CustomValue(
+                                        "gbos.v1.producer.gc_report.observation",
+                                        "{\"scope\":\"jvm.gc\",\"aggregationScope\":\"entity\"," +
+                                            "\"attributes\":{\"log.file.name\":\"gradle_gc.log\"," +
+                                            "\"jvm.gc.action\":\"Pause Young\"}," +
+                                            "\"measurements\":[{\"name\":\"jvm.gc.events\",\"value\":10," +
+                                            "\"unit\":\"{collection}\",\"aggregation\":\"count\"}]}",
+                                    ),
+                                ),
+                        ),
+                    ),
+            )
+        val measurements =
+            mapOf(
+                "variant-a" to listOf(SingleMeasurement("Build", "Build time", "10", "10", "10", "ms", Metric.BUILD)),
+            )
+
+        val result = assembler.assemble(report, measurements, builds, DiagnosticsMeasurements())
+
+        assertEquals(
+            0.19,
+            result.datasets.processSeries.values.single().observations.getValue("variant-a").single().value,
+        )
+        assertEquals(
+            10.0,
+            result.datasets.gcSeries.values.single().observations.getValue("variant-a").single().value,
+        )
+    }
+
     private fun report(
         variants: List<String>,
         experimentId: String? = null,

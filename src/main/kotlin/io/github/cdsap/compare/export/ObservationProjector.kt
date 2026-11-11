@@ -2,17 +2,23 @@ package io.github.cdsap.compare.export
 
 import io.github.cdsap.compare.model.Report
 import io.github.cdsap.compare.output.chart.KotlinBuildReportsConstants
+import io.github.cdsap.compare.report.measurements.gbos.GbosCustomValuesNormalizer
 import io.github.cdsap.geapi.client.model.BuildWithResourceUsage
 import org.nield.kotlinstatistics.median
 import java.time.Instant
 
-class ObservationProjector {
+class ObservationProjector(
+    private val gbosCustomValuesNormalizer: GbosCustomValuesNormalizer = GbosCustomValuesNormalizer(),
+) {
     fun project(
         report: Report,
         buildsByVariantId: Map<String, List<BuildWithResourceUsage>>,
     ): DatasetsDto {
         if (!report.includeObservations) {
             return emptyDatasets()
+        }
+        if (report.processesReport || report.gcReport) {
+            gbosCustomValuesNormalizer.normalizeInPlace(buildsByVariantId.values.flatten())
         }
         return DatasetsDto(
             builds = projectBuilds(report.url, buildsByVariantId),
