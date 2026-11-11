@@ -3,8 +3,8 @@ import com.jakewharton.picnic.table
 import io.github.cdsap.compare.model.Header
 import io.github.cdsap.compare.model.Report
 import io.github.cdsap.compare.model.SingleMeasurement
+import io.github.cdsap.compare.model.removeExperimentId
 import io.github.cdsap.compare.output.MeasurementProcessor
-import io.github.cdsap.compare.output.removeExperimentId
 import io.github.cdsap.geapi.client.model.BuildWithResourceUsage
 
 class ConsoleGenerator(
