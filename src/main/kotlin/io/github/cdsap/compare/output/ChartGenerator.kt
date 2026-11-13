@@ -8,7 +8,7 @@ import io.github.cdsap.compare.model.removeExperimentId
 import io.github.cdsap.compare.output.chart.ChartColors
 import io.github.cdsap.compare.output.chart.ChartDataGenerator
 import io.github.cdsap.compare.output.chart.ChartOptions
-import io.github.cdsap.compare.output.chart.KotlinBuildReportsConstants
+import io.github.cdsap.compare.report.measurements.KotlinBuildReportMetrics
 import io.github.cdsap.geapi.client.model.BuildWithResourceUsage
 import org.nield.kotlinstatistics.median
 import java.util.Locale
@@ -225,7 +225,7 @@ class ChartGenerator(
     private fun generateBuildReportsCharts(containsBuildReports: Boolean): String {
         if (!report.kotlinBuildReport || !containsBuildReports) return ""
 
-        return KotlinBuildReportsConstants.ALLOWED_LIST.joinToString("") { report ->
+        return KotlinBuildReportMetrics.ALLOWED_LIST.joinToString("") { report ->
             """
             <div class="chart-container">
                 <h2>Kotlin Build Report - $report</h2>
@@ -422,7 +422,7 @@ class ChartGenerator(
 
         // Build reports
         if (containsBuildReports) {
-            KotlinBuildReportsConstants.ALLOWED_LIST.forEach { report ->
+            KotlinBuildReportMetrics.ALLOWED_LIST.forEach { report ->
                 scripts.add(generateKotlinBuildReportsChart(variants, header, report))
             }
         }
