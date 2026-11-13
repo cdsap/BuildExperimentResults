@@ -1,7 +1,7 @@
 package io.github.cdsap.compare.export
 
 import io.github.cdsap.compare.model.Report
-import io.github.cdsap.compare.output.chart.KotlinBuildReportsConstants
+import io.github.cdsap.compare.report.measurements.KotlinBuildReportMetrics
 import io.github.cdsap.geapi.client.model.BuildWithResourceUsage
 import org.nield.kotlinstatistics.median
 import java.time.Instant
@@ -174,7 +174,7 @@ class ObservationProjector {
         buildsByVariantId: Map<String, List<BuildWithResourceUsage>>,
     ): Map<String, NamedSeriesDto> {
         val result = linkedMapOf<String, NamedSeriesDto>()
-        KotlinBuildReportsConstants.ALLOWED_LIST.forEach { reportName ->
+        KotlinBuildReportMetrics.ALLOWED_LIST.forEach { reportName ->
             result["kotlin.${MetricIdentity.slug(reportName)}"] =
                 NamedSeriesDto(
                     name = reportName,
