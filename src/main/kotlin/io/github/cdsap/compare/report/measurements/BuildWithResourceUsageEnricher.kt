@@ -1,10 +1,13 @@
 package io.github.cdsap.compare.report.measurements
 
+import io.github.cdsap.compare.report.measurements.gbos.GbosCustomValuesNormalizer
 import io.github.cdsap.geapi.client.model.Build
 import io.github.cdsap.geapi.client.model.BuildProfileOverview
 import io.github.cdsap.geapi.client.model.BuildWithResourceUsage
 
-class BuildWithResourceUsageEnricher {
+class BuildWithResourceUsageEnricher(
+    private val gbosCustomValuesNormalizer: GbosCustomValuesNormalizer = GbosCustomValuesNormalizer(),
+) {
     fun enrich(
         outcome: List<Build>,
         buildWithResourceUsage: List<BuildWithResourceUsage>,
@@ -14,7 +17,7 @@ class BuildWithResourceUsageEnricher {
         outcome.forEach { build ->
             val usage = buildWithResourceUsage.find { build.id == it.id }
             usage?.requestedTask = build.requestedTask
-            usage?.values = build.values
+            usage?.values = gbosCustomValuesNormalizer.normalize(build.values)
             usage?.tags = build.tags
             usage?.buildDuration = build.buildDuration
             usage?.buildStartTime = build.buildStartTime
