@@ -41,6 +41,29 @@ class ExperimentResultAssemblerTest {
     }
 
     @Test
+    fun preservesVariantLabelsAndFallbackIdsForExperimentIdMatches() {
+        val cases =
+            listOf(
+                Triple(null, "experiment_variant", "experiment_variant"),
+                Triple("experiment", "other_variant", "other_variant"),
+                Triple("experiment", "experiment_fast_experiment_build", "fast_build"),
+            )
+
+        cases.forEach { (experimentId, sourceTag, expected) ->
+            val result =
+                assembler.assemble(
+                    report(variants = listOf(sourceTag), experimentId = experimentId),
+                    measurements = emptyMap(),
+                    buildsByVariant = emptyMap(),
+                    diagnostics = DiagnosticsMeasurements(),
+                )
+
+            assertEquals(expected, result.variants.single().label)
+            assertEquals(expected, result.variants.single().id)
+        }
+    }
+
+    @Test
     fun exportsTypedBuildMetricsAndPerBuildObservations() {
         val report =
             report(

@@ -3,6 +3,7 @@ package io.github.cdsap.compare.output
 import io.github.cdsap.compare.model.Header
 import io.github.cdsap.compare.model.Report
 import io.github.cdsap.compare.model.SingleMeasurement
+import io.github.cdsap.compare.model.removeExperimentId
 
 class CsvGenerator(
     private val report: Report,

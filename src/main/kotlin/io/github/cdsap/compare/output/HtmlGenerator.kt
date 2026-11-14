@@ -3,6 +3,7 @@ package io.github.cdsap.compare.output
 import io.github.cdsap.compare.model.Header
 import io.github.cdsap.compare.model.Report
 import io.github.cdsap.compare.model.SingleMeasurement
+import io.github.cdsap.compare.model.removeExperimentId
 import io.github.cdsap.geapi.client.model.BuildWithResourceUsage
 
 /** Compatibility HTML renderer. Prefer experiment-result JSON for new consumers. */

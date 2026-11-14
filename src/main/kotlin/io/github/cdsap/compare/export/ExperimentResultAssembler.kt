@@ -3,7 +3,7 @@ package io.github.cdsap.compare.export
 import io.github.cdsap.compare.model.Metric
 import io.github.cdsap.compare.model.Report
 import io.github.cdsap.compare.model.SingleMeasurement
-import io.github.cdsap.compare.output.removeExperimentId
+import io.github.cdsap.compare.model.removeExperimentId
 import io.github.cdsap.compare.report.diagnostics.DiagnosticsMeasurements
 import io.github.cdsap.geapi.client.model.BuildWithResourceUsage
 import java.time.Clock

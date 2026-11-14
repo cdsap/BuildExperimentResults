@@ -1,6 +1,6 @@
-package io.github.cdsap.compare.output.chart
+package io.github.cdsap.compare.report.measurements
 
-object KotlinBuildReportsConstants {
+object KotlinBuildReportMetrics {
     val ALLOWED_LIST =
         listOf(
             "Run compilation",
