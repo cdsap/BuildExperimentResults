@@ -1,6 +1,7 @@
 package io.github.cdsap.compare.report
 
 import com.google.gson.JsonParser
+import io.github.cdsap.compare.export.ExperimentResultAssembler
 import io.github.cdsap.compare.export.JsonExperimentResultExporter
 import io.github.cdsap.compare.model.Report
 import io.github.cdsap.compare.output.ExperimentView
@@ -46,13 +47,17 @@ class ExperimentReportJsonTest {
                             javaClass.classLoader.getResource("diagnostics-cli/diagnostics-package.json")!!.path,
                     ),
                 output = ExperimentView(report(jsonPath.toString()), artifactWriter),
-                canonicalJsonExporter = JsonExperimentResultExporter(),
+                canonicalJsonExporter =
+                    JsonExperimentResultExporter(
+                        assembler = ExperimentResultAssembler(producerRevision = "test-revision"),
+                    ),
             ).process()
         }
 
         assertTrue(jsonPath.toFile().isFile)
         val json = JsonParser.parseString(jsonPath.toFile().readText()).asJsonObject
         assertEquals("1.0.0", json.get("schemaVersion").asString)
+        assertEquals("test-revision", json.getAsJsonObject("producer").get("revision").asString)
         assertTrue(json.getAsJsonArray("metrics").size() > 0)
         assertTrue(
             json.getAsJsonArray("metrics").any { metric ->

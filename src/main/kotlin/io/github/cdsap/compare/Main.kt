@@ -10,6 +10,7 @@ import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.options.required
 import com.github.ajalt.clikt.parameters.types.int
 import com.github.ajalt.clikt.parameters.types.long
+import io.github.cdsap.compare.export.ExperimentResultAssembler
 import io.github.cdsap.compare.export.JsonExperimentResultExporter
 import io.github.cdsap.compare.model.Report
 import io.github.cdsap.compare.output.ExperimentView
@@ -94,6 +95,7 @@ class Experiment : CliktCommand() {
                 requestedTask = requestedTask,
                 fromInstant = fromInstant,
             )
+        val producerRevision = System.getenv("GITHUB_SHA") ?: "unknown"
         runBlocking {
             val report =
                 Report(
@@ -129,7 +131,10 @@ class Experiment : CliktCommand() {
                 buildDataProvider = DevelocityBuildDataProvider(GEClient(apiKey, url), isProfile = profile),
                 report = report,
                 output = ExperimentView(report),
-                canonicalJsonExporter = JsonExperimentResultExporter(),
+                canonicalJsonExporter =
+                    JsonExperimentResultExporter(
+                        assembler = ExperimentResultAssembler(producerRevision = producerRevision),
+                    ),
             ).process()
         }
     }
