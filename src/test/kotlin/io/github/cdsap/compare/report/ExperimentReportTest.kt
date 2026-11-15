@@ -18,8 +18,6 @@ import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
-import java.io.ByteArrayOutputStream
-import java.io.PrintStream
 import kotlin.reflect.full.primaryConstructor
 
 class ExperimentReportTest {
@@ -231,7 +229,7 @@ class ExperimentReportTest {
     }
 
     @Test
-    fun processPrintsDiagnosticsWarningsInOrder() {
+    fun processEmitsDiagnosticsWarningsInOrder() {
         val diagnosticsSource =
             object : DiagnosticsPackageSource {
                 override fun load(
@@ -250,32 +248,27 @@ class ExperimentReportTest {
                     mapOf("variant-a" to listOf(baseMeasurement()))
             }
 
-        val originalOut = System.out
-        val capturedOut = ByteArrayOutputStream()
-        System.setOut(PrintStream(capturedOut))
-        try {
-            runBlocking {
-                ExperimentReport(
-                    filter = filter(),
-                    buildDataProvider = fakeBuildDataProvider,
-                    report = report(variants = listOf("variant-a")),
-                    output = fakeOutput,
-                    canonicalJsonExporter = fakeExperimentResultExporter,
-                    diagnosticsMeasurementsSource = diagnosticsSource,
-                    diagnosticsMeasurementAugmenter = DiagnosticsMeasurementAugmenter(diagnosticsSource),
-                    measurementCalculator = fakeMeasurementCalculator,
-                ).process()
-            }
-        } finally {
-            System.setOut(originalOut)
+        val emittedWarnings = mutableListOf<String>()
+        runBlocking {
+            ExperimentReport(
+                filter = filter(),
+                buildDataProvider = fakeBuildDataProvider,
+                report = report(variants = listOf("variant-a")),
+                output = fakeOutput,
+                canonicalJsonExporter = fakeExperimentResultExporter,
+                diagnosticsMeasurementsSource = diagnosticsSource,
+                diagnosticsMeasurementAugmenter = DiagnosticsMeasurementAugmenter(diagnosticsSource),
+                measurementCalculator = fakeMeasurementCalculator,
+                diagnosticsWarningSink = emittedWarnings::add,
+            ).process()
         }
 
         assertEquals(
-            listOf("first warning", "second warning")
-                .joinToString(separator = System.lineSeparator(), postfix = System.lineSeparator()) { warning ->
-                    "diagnostics warning: $warning"
-                },
-            capturedOut.toString(),
+            listOf(
+                "diagnostics warning: first warning",
+                "diagnostics warning: second warning",
+            ),
+            emittedWarnings,
         )
     }
 
