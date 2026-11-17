@@ -18,8 +18,6 @@ class GCReportMeasurement(
                 it.values.filter { it.name.contains("-total-collections") }.map { it.name.replace("-total-collections", "") },
             )
         }
-        uniqueCollections.flatMap { processMeasurement(profile, it) }
-
         return uniqueCollections.flatMap { processMeasurement(profile, it) }
     }
 
