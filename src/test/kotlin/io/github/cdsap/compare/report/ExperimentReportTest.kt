@@ -24,6 +24,8 @@ class ExperimentReportTest {
     private val metrics = BuildWithResourceUsageProvider()
     private val fakeOutput =
         object : ExperimentOutput {
+            override fun diagnosticsWarning(message: String) = Unit
+
             override fun generateOutputs(
                 measurement: Map<String, List<SingleMeasurement>>,
                 buildsByVariant: Map<String, List<BuildWithResourceUsage>>,
@@ -169,6 +171,8 @@ class ExperimentReportTest {
                     ),
                 output =
                     object : ExperimentOutput {
+                        override fun diagnosticsWarning(message: String) = Unit
+
                         override fun generateOutputs(
                             measurement: Map<String, List<SingleMeasurement>>,
                             buildsByVariant: Map<String, List<BuildWithResourceUsage>>,
@@ -206,6 +210,8 @@ class ExperimentReportTest {
             }
         val output =
             object : ExperimentOutput {
+                override fun diagnosticsWarning(message: String) = Unit
+
                 override fun generateOutputs(
                     measurement: Map<String, List<SingleMeasurement>>,
                     buildsByVariant: Map<String, List<BuildWithResourceUsage>>,
@@ -249,24 +255,34 @@ class ExperimentReportTest {
             }
 
         val emittedWarnings = mutableListOf<String>()
+        val recordingOutput =
+            object : ExperimentOutput {
+                override fun diagnosticsWarning(message: String) {
+                    emittedWarnings.add(message)
+                }
+
+                override fun generateOutputs(
+                    measurement: Map<String, List<SingleMeasurement>>,
+                    buildsByVariant: Map<String, List<BuildWithResourceUsage>>,
+                ) = Unit
+            }
         runBlocking {
             ExperimentReport(
                 filter = filter(),
                 buildDataProvider = fakeBuildDataProvider,
                 report = report(variants = listOf("variant-a")),
-                output = fakeOutput,
+                output = recordingOutput,
                 canonicalJsonExporter = fakeExperimentResultExporter,
                 diagnosticsMeasurementsSource = diagnosticsSource,
                 diagnosticsMeasurementAugmenter = DiagnosticsMeasurementAugmenter(diagnosticsSource),
                 measurementCalculator = fakeMeasurementCalculator,
-                diagnosticsWarningSink = emittedWarnings::add,
             ).process()
         }
 
         assertEquals(
             listOf(
-                "diagnostics warning: first warning",
-                "diagnostics warning: second warning",
+                "first warning",
+                "second warning",
             ),
             emittedWarnings,
         )

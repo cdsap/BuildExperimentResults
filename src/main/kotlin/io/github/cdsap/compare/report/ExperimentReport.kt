@@ -19,7 +19,6 @@ class ExperimentReport(
         DiagnosticsMeasurementAugmenter(diagnosticsMeasurementsSource),
     private val variantBuildsValidator: VariantBuildsValidator = VariantBuildsValidator(),
     private val measurementCalculator: MeasurementsCalculator = MeasurementsByReport(report),
-    private val diagnosticsWarningSink: (String) -> Unit = System.out::println,
 ) {
     suspend fun process() {
         if (report.variants.isEmpty()) {
@@ -38,7 +37,7 @@ class ExperimentReport(
                     reportVariants = report.variants,
                 )
             diagnosticsAugmentation.diagnostics.warnings.forEach { warning ->
-                diagnosticsWarningSink("diagnostics warning: $warning")
+                output.diagnosticsWarning(warning)
             }
             val augmentedMeasurements = diagnosticsAugmentation.measurements
             if (augmentedMeasurements.isNotEmpty()) {

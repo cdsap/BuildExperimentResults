@@ -20,6 +20,10 @@ class ExperimentView(
     private val csvGenerator: CsvGenerator = CsvGenerator(report)
     private val consoleGenerator: ConsoleGenerator = ConsoleGenerator(report)
 
+    override fun diagnosticsWarning(message: String) {
+        println("diagnostics warning: $message")
+    }
+
     override fun generateOutputs(
         measurement: Map<String, List<SingleMeasurement>>,
         buildsByVariant: Map<String, List<BuildWithResourceUsage>>,

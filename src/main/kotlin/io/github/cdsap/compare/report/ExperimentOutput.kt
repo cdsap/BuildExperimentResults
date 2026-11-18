@@ -7,6 +7,8 @@ import java.text.SimpleDateFormat
 import java.util.Date
 
 interface ExperimentOutput {
+    fun diagnosticsWarning(message: String)
+
     fun generateOutputs(
         measurement: Map<String, List<SingleMeasurement>>,
         buildsByVariant: Map<String, List<BuildWithResourceUsage>>,
