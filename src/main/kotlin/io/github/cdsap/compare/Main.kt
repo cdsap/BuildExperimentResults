@@ -116,9 +116,7 @@ class Experiment : CliktCommand() {
                     url = url,
                     experimentRunId = experimentRunId,
                     openAiRequest = openAiRequest,
-                    openAiKey = openAiKey,
                     claudeRequest = claudeRequest,
-                    claudeKey = claudeKey,
                     diagnosticsPackagePath = diagnosticsPackagePath,
                     outputJson = outputJson,
                     reportKind = reportKind,
@@ -130,7 +128,12 @@ class Experiment : CliktCommand() {
                 filter = filter,
                 buildDataProvider = DevelocityBuildDataProvider(GEClient(apiKey, url), isProfile = profile),
                 report = report,
-                output = ExperimentView(report),
+                output =
+                    ExperimentView(
+                        report = report,
+                        openAiKey = openAiKey,
+                        claudeKey = claudeKey,
+                    ),
                 canonicalJsonExporter =
                     JsonExperimentResultExporter(
                         assembler = ExperimentResultAssembler(producerRevision = producerRevision),

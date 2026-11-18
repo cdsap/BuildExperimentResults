@@ -13,6 +13,8 @@ import io.github.cdsap.geapi.client.model.BuildWithResourceUsage
 class ExperimentView(
     val report: Report,
     private val artifactWriter: ExperimentArtifactWriter = FileExperimentArtifactWriter(),
+    private val openAiKey: String? = null,
+    private val claudeKey: String? = null,
 ) : ExperimentOutput {
     private val htmlGenerator: HtmlGenerator = HtmlGenerator(report, chartGenerator = ChartGenerator(report))
     private val csvGenerator: CsvGenerator = CsvGenerator(report)
@@ -66,7 +68,7 @@ class ExperimentView(
         if (artifactWriter.exists(artifacts.csv) && report.openAiRequest) {
             println("generating open ai analysis")
             artifactWriter.write(artifacts.filteredCsv, csvGenerator.generate(measurement, variants, header, true))
-            val analysis = OpenAiAnalysis(artifactWriter.file(artifacts.filteredCsv), report.openAiKey)
+            val analysis = OpenAiAnalysis(artifactWriter.file(artifacts.filteredCsv), openAiKey)
             val result = analysis.request()
             println(result)
             val extractSummary = result.split("##")[1].replace("Summary", "")
@@ -79,9 +81,9 @@ class ExperimentView(
             if (!artifactWriter.exists(artifacts.filteredCsv)) {
                 artifactWriter.write(artifacts.filteredCsv, csvGenerator.generate(measurement, variants, header, true))
             }
-            if (!report.claudeKey.isNullOrEmpty()) {
+            if (!claudeKey.isNullOrEmpty()) {
                 println("generating claude analysis via API")
-                val analysis = ClaudeAnalysis(artifactWriter.file(artifacts.filteredCsv), report.claudeKey)
+                val analysis = ClaudeAnalysis(artifactWriter.file(artifacts.filteredCsv), claudeKey)
                 val result = analysis.request()
                 println(result)
                 val extractSummary = result.split("##")[1].replace("Summary", "")

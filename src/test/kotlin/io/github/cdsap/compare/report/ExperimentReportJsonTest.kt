@@ -3,7 +3,9 @@ package io.github.cdsap.compare.report
 import com.google.gson.JsonParser
 import io.github.cdsap.compare.export.ExperimentResultAssembler
 import io.github.cdsap.compare.export.JsonExperimentResultExporter
+import io.github.cdsap.compare.model.Metric
 import io.github.cdsap.compare.model.Report
+import io.github.cdsap.compare.model.SingleMeasurement
 import io.github.cdsap.compare.output.ExperimentView
 import io.github.cdsap.compare.report.measurements.BuildWithResourceUsageProvider
 import io.github.cdsap.geapi.client.model.AvoidanceSavingsSummary
@@ -13,11 +15,14 @@ import io.github.cdsap.geapi.client.model.Filter
 import io.github.cdsap.geapi.client.model.Task
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import java.io.File
 import java.nio.file.Path
+import kotlin.reflect.full.memberProperties
+import kotlin.reflect.full.primaryConstructor
 
 class ExperimentReportJsonTest {
     private val metrics = BuildWithResourceUsageProvider()
@@ -82,6 +87,36 @@ class ExperimentReportJsonTest {
         assertTrue(artifactWriter.writes.getValue(artifactWriter.artifacts.html).isNotEmpty())
         assertTrue(artifactWriter.writes.getValue(artifactWriter.artifacts.csv).isNotEmpty())
         assertTrue(artifactWriter.writes.getValue(artifactWriter.artifacts.ghaSummary).isNotEmpty())
+    }
+
+    @Test
+    fun llmCredentialsBelongToExperimentViewInsteadOfReport() {
+        val reportProperties = Report::class.memberProperties.map { it.name }
+        val viewParameters = ExperimentView::class.primaryConstructor!!.parameters.mapNotNull { it.name }
+
+        assertFalse("openAiKey" in reportProperties)
+        assertFalse("claudeKey" in reportProperties)
+        assertTrue("openAiKey" in viewParameters)
+        assertTrue("claudeKey" in viewParameters)
+    }
+
+    @Test
+    fun claudeRequestWithoutApiKeyStillWritesFilteredCsv() {
+        val report = report(tempDir.resolve("experiment-result.json").toString()).copy(claudeRequest = true)
+        val artifactWriter = RecordingArtifactWriter()
+
+        ExperimentView(report, artifactWriter).generateOutputs(
+            measurement =
+                mapOf(
+                    "cpu_test" to
+                        listOf(
+                            SingleMeasurement("Build", "Build time", "10", "10", "10", "ms", Metric.BUILD),
+                        ),
+                ),
+            buildsByVariant = mapOf("cpu_test" to listOf(usageBuild("build-1", arrayOf("cpu_test"), 10L))),
+        )
+
+        assertTrue(artifactWriter.writes.getValue(artifactWriter.artifacts.filteredCsv).isNotEmpty())
     }
 
     private fun filter() =
