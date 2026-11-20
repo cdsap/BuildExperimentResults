@@ -16,10 +16,9 @@ import io.ktor.http.contentType
 import io.ktor.http.isSuccess
 import io.ktor.serialization.gson.gson
 import kotlinx.coroutines.runBlocking
-import java.io.File
 
 class OpenAiAnalysis(
-    private val csvFile: File,
+    private val csvContent: String,
     private val openAiKey: String?,
 ) {
     private val model = "gpt-4-turbo"
@@ -45,7 +44,7 @@ class OpenAiAnalysis(
                 messages =
                     arrayOf(
                         Role("system", PromptAnalysis.prompt),
-                        Role("user", csvFile.readText()),
+                        Role("user", csvContent),
                     ),
                 temperature = temperature,
             )

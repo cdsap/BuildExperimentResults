@@ -49,8 +49,6 @@ interface ExperimentArtifactWriter {
     )
 
     fun exists(name: String): Boolean
-
-    fun file(name: String): File
 }
 
 class FileExperimentArtifactWriter : ExperimentArtifactWriter {
@@ -71,7 +69,7 @@ class FileExperimentArtifactWriter : ExperimentArtifactWriter {
 
     override fun exists(name: String) = file(name).exists()
 
-    override fun file(
+    private fun file(
         name: String,
     ) = File(name)
 }

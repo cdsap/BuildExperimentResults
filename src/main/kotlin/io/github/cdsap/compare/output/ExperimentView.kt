@@ -10,12 +10,28 @@ import io.github.cdsap.compare.report.FileExperimentArtifactWriter
 import io.github.cdsap.geapi.client.model.BuildWithResourceUsage
 
 /** Compatibility HTML/CSV/GHA output. Canonical machine-readable results are written by --output-json. */
-class ExperimentView(
+class ExperimentView internal constructor(
     val report: Report,
-    private val artifactWriter: ExperimentArtifactWriter = FileExperimentArtifactWriter(),
-    private val openAiKey: String? = null,
-    private val claudeKey: String? = null,
+    private val artifactWriter: ExperimentArtifactWriter,
+    private val openAiKey: String?,
+    private val claudeKey: String?,
+    private val openAiAnalysis: (String) -> String,
+    private val claudeAnalysis: (String) -> String,
 ) : ExperimentOutput {
+    constructor(
+        report: Report,
+        artifactWriter: ExperimentArtifactWriter = FileExperimentArtifactWriter(),
+        openAiKey: String? = null,
+        claudeKey: String? = null,
+    ) : this(
+        report = report,
+        artifactWriter = artifactWriter,
+        openAiKey = openAiKey,
+        claudeKey = claudeKey,
+        openAiAnalysis = { csv -> OpenAiAnalysis(csv, openAiKey).request() },
+        claudeAnalysis = { csv -> ClaudeAnalysis(csv, claudeKey).request() },
+    )
+
     private val htmlGenerator: HtmlGenerator = HtmlGenerator(report, chartGenerator = ChartGenerator(report))
     private val csvGenerator: CsvGenerator = CsvGenerator(report)
     private val consoleGenerator: ConsoleGenerator = ConsoleGenerator(report)
@@ -69,11 +85,18 @@ class ExperimentView(
                 buildsByVariant,
             ),
         )
+        var filteredCsvContent: String? = null
+
+        fun filteredCsv(): String =
+            filteredCsvContent
+                ?: csvGenerator.generate(measurement, variants, header, true).also {
+                    filteredCsvContent = it
+                    artifactWriter.write(artifacts.filteredCsv, it)
+                }
+
         if (artifactWriter.exists(artifacts.csv) && report.openAiRequest) {
             println("generating open ai analysis")
-            artifactWriter.write(artifacts.filteredCsv, csvGenerator.generate(measurement, variants, header, true))
-            val analysis = OpenAiAnalysis(artifactWriter.file(artifacts.filteredCsv), openAiKey)
-            val result = analysis.request()
+            val result = openAiAnalysis(filteredCsv())
             println(result)
             val extractSummary = result.split("##")[1].replace("Summary", "")
             if (result.isNotEmpty()) {
@@ -82,13 +105,10 @@ class ExperimentView(
             }
         }
         if (artifactWriter.exists(artifacts.csv) && report.claudeRequest) {
-            if (!artifactWriter.exists(artifacts.filteredCsv)) {
-                artifactWriter.write(artifacts.filteredCsv, csvGenerator.generate(measurement, variants, header, true))
-            }
+            val analysisInput = filteredCsv()
             if (!claudeKey.isNullOrEmpty()) {
                 println("generating claude analysis via API")
-                val analysis = ClaudeAnalysis(artifactWriter.file(artifacts.filteredCsv), claudeKey)
-                val result = analysis.request()
+                val result = claudeAnalysis(analysisInput)
                 println(result)
                 val extractSummary = result.split("##")[1].replace("Summary", "")
                 if (result.isNotEmpty()) {
