@@ -16,10 +16,9 @@ import io.ktor.http.contentType
 import io.ktor.http.isSuccess
 import io.ktor.serialization.gson.gson
 import kotlinx.coroutines.runBlocking
-import java.io.File
 
 class ClaudeAnalysis(
-    private val csvFile: File,
+    private val csvContent: String,
     private val claudeKey: String?,
 ) {
     private val model = "claude-sonnet-4-20250514"
@@ -47,7 +46,7 @@ class ClaudeAnalysis(
                 system = PromptAnalysis.prompt,
                 messages =
                     arrayOf(
-                        ClaudeMessage("user", csvFile.readText()),
+                        ClaudeMessage("user", csvContent),
                     ),
                 temperature = temperature,
             )

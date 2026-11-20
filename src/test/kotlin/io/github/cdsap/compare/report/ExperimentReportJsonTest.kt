@@ -19,7 +19,6 @@ import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
-import java.io.File
 import java.nio.file.Path
 import kotlin.reflect.full.memberProperties
 import kotlin.reflect.full.primaryConstructor
@@ -119,6 +118,54 @@ class ExperimentReportJsonTest {
         assertTrue(artifactWriter.writes.getValue(artifactWriter.artifacts.filteredCsv).isNotEmpty())
     }
 
+    @Test
+    fun openAiAnalysisReceivesThePersistedFilteredCsv() {
+        val report = report(tempDir.resolve("experiment-result.json").toString()).copy(openAiRequest = true)
+        val artifactWriter = RecordingArtifactWriter()
+        var analyzedCsv: String? = null
+
+        ExperimentView(
+            report = report,
+            artifactWriter = artifactWriter,
+            openAiKey = "open-ai-key",
+            claudeKey = null,
+            openAiAnalysis = { csv ->
+                analyzedCsv = csv
+                "## Summary\nOpenAI analysis"
+            },
+            claudeAnalysis = { error("Claude analysis should not be requested") },
+        ).generateOutputs(
+            measurement = singleMeasurement(),
+            buildsByVariant = singleBuild(),
+        )
+
+        assertEquals(artifactWriter.writes.getValue(artifactWriter.artifacts.filteredCsv), analyzedCsv)
+    }
+
+    @Test
+    fun claudeAnalysisReceivesThePersistedFilteredCsv() {
+        val report = report(tempDir.resolve("experiment-result.json").toString()).copy(claudeRequest = true)
+        val artifactWriter = RecordingArtifactWriter()
+        var analyzedCsv: String? = null
+
+        ExperimentView(
+            report = report,
+            artifactWriter = artifactWriter,
+            openAiKey = null,
+            claudeKey = "claude-key",
+            openAiAnalysis = { error("OpenAI analysis should not be requested") },
+            claudeAnalysis = { csv ->
+                analyzedCsv = csv
+                "## Summary\nClaude analysis"
+            },
+        ).generateOutputs(
+            measurement = singleMeasurement(),
+            buildsByVariant = singleBuild(),
+        )
+
+        assertEquals(artifactWriter.writes.getValue(artifactWriter.artifacts.filteredCsv), analyzedCsv)
+    }
+
     private fun filter() =
         Filter(
             maxBuilds = 10,
@@ -147,6 +194,16 @@ class ExperimentReportJsonTest {
             outputJson = outputJson,
         )
 
+    private fun singleMeasurement() =
+        mapOf(
+            "cpu_test" to
+                listOf(
+                    SingleMeasurement("Build", "Build time", "10", "10", "10", "ms", Metric.BUILD),
+                ),
+        )
+
+    private fun singleBuild() = mapOf("cpu_test" to listOf(usageBuild("build-1", arrayOf("cpu_test"), 10L)))
+
     private class RecordingArtifactWriter : ExperimentArtifactWriter {
         val artifacts = ExperimentArtifacts.timestamped("20261028203000")
         val writes = linkedMapOf<String, String>()
@@ -161,8 +218,6 @@ class ExperimentReportJsonTest {
         }
 
         override fun exists(name: String) = writes.containsKey(name)
-
-        override fun file(name: String) = File(name)
     }
 
     private fun usageBuild(
