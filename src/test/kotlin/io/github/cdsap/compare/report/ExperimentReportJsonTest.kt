@@ -7,6 +7,7 @@ import io.github.cdsap.compare.model.Metric
 import io.github.cdsap.compare.model.Report
 import io.github.cdsap.compare.model.SingleMeasurement
 import io.github.cdsap.compare.output.ExperimentView
+import io.github.cdsap.compare.report.diagnostics.DiagnosticsMeasurements
 import io.github.cdsap.compare.report.measurements.BuildWithResourceUsageProvider
 import io.github.cdsap.geapi.client.model.AvoidanceSavingsSummary
 import io.github.cdsap.geapi.client.model.BuildWithResourceUsage
@@ -28,6 +29,24 @@ class ExperimentReportJsonTest {
 
     @TempDir
     lateinit var tempDir: Path
+
+    @Test
+    fun defaultExporterWritesUnknownProducerRevisionRegardlessOfCiEnvironment() {
+        val jsonPath = tempDir.resolve("experiment-result.json")
+
+        JsonExperimentResultExporter().export(
+            report = report(jsonPath.toString()),
+            measurements = singleMeasurement(),
+            buildsByVariant = singleBuild(),
+            diagnostics = DiagnosticsMeasurements(),
+            outputJson = jsonPath.toString(),
+        )
+
+        val json = JsonParser.parseString(jsonPath.toFile().readText()).asJsonObject
+        assertEquals("unknown", json.getAsJsonObject("producer").get("revision").asString)
+        assertEquals("1.0.0", json.get("schemaVersion").asString)
+        assertTrue(json.getAsJsonArray("metrics").size() > 0)
+    }
 
     @Test
     fun processWritesCanonicalJsonWithoutChangingHtmlCsvDefaults() {
