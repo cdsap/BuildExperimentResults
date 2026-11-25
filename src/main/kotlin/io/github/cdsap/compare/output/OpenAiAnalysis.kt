@@ -1,20 +1,16 @@
 package io.github.cdsap.compare.output
 
+import io.github.cdsap.compare.output.ai.AiHttpClient
 import io.github.cdsap.compare.output.ai.OpenAiRequest
 import io.github.cdsap.compare.output.ai.OpenAiResponse
 import io.github.cdsap.compare.output.ai.Role
-import io.ktor.client.HttpClient
 import io.ktor.client.call.body
-import io.ktor.client.engine.cio.CIO
-import io.ktor.client.plugins.HttpTimeout
-import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import io.ktor.http.isSuccess
-import io.ktor.serialization.gson.gson
 import kotlinx.coroutines.runBlocking
 
 class OpenAiAnalysis(
@@ -23,15 +19,7 @@ class OpenAiAnalysis(
 ) {
     private val model = "gpt-4-turbo"
     private val temperature = 0.3
-    private val client =
-        HttpClient(CIO) {
-            install(ContentNegotiation) {
-                gson()
-            }
-            install(HttpTimeout) {
-                requestTimeoutMillis = 120_000
-            }
-        }
+    private val client = AiHttpClient.create()
 
     fun request(): String {
         if (openAiKey.isNullOrEmpty()) {
