@@ -45,6 +45,7 @@ class ExperimentResultAssemblerTest {
         val cases =
             listOf(
                 Triple(null, "experiment_variant", "experiment_variant"),
+                Triple("", "_experiment__variant_", "experimentvariant"),
                 Triple("experiment", "other_variant", "other_variant"),
                 Triple("experiment", "experiment_fast_experiment_build", "fast_build"),
             )
