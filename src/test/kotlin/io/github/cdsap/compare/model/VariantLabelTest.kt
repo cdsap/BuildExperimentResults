@@ -34,4 +34,9 @@ class VariantLabelTest {
     fun removesEveryMatchingOccurrence() {
         assertEquals("variant_middle_end", "experiment_variant_experiment_middle_experiment_end".removeExperimentId("experiment"))
     }
+
+    @Test
+    fun treatsExperimentIdAsLiteralText() {
+        assertEquals("variant_expX1_suffix", "exp.1_variant_expX1_exp.1_suffix".removeExperimentId("exp.1"))
+    }
 }
